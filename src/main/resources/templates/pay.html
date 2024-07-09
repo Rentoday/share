@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+</head>
+<body>
+    <script>
+        const IMP = window.IMP;
+    IMP.init("your_imp_key");
+
+    function requestPayment() {
+        // 백엔드에서 결제 정보 받아오기
+        fetch('/api/payments/request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reservationUid: 'your_reservation_uid' }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // 결제 요청
+            IMP.request_pay({
+                pg: "your_pg_provider",
+                pay_method: "card",
+                merchant_uid: data.reservationUid,
+                name: data.reservationName,
+                amount: data.price,
+                buyer_email: data.buyerEmail,
+                buyer_name: data.buyerName,
+            }, function (rsp) {
+                if (rsp.success) {
+                    // 결제 성공 시 백엔드에 결과 전송
+                    fetch('/api/payments/callback', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            paymentUid: rsp.imp_uid,
+                            reservationUid: rsp.merchant_uid,
+                        }),
+                    })
+                    .then(response => response.text())
+                    .then(result => {
+                        alert("결제가 완료되었습니다!");
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert("결제 처리 중 오류가 발생했습니다.");
+                    });
+                } else {
+                    alert("결제에 실패하였습니다. 에러 내용: " + rsp.error_msg);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("결제 요청 중 오류가 발생했습니다.");
+        });
+    }
+    </script>
+</body>
+</html>
