@@ -3,6 +3,7 @@ package com.project.rentoday.domain.payment.controller;
 import com.project.rentoday.domain.payment.dto.request.PayCallbackRequestDto;
 import com.project.rentoday.domain.payment.dto.request.PayRequestDto;
 import com.project.rentoday.domain.payment.service.PayService;
+import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Api(tags = "Pay")
 @RequestMapping("/api/pays")
 public class PayController {
 

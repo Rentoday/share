@@ -4,6 +4,7 @@ import com.project.rentoday.domain.reservation.dto.CreateReservationRequestDto;
 import com.project.rentoday.domain.reservation.dto.CreateReservationResponseDto;
 import com.project.rentoday.domain.reservation.dto.ReadReservationAllResponseDto;
 import com.project.rentoday.domain.reservation.service.ReservationService;
+import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 @RestController
+@Api(tags = "Reservation")
 @RequiredArgsConstructor
 @RequestMapping("/api/reservation")
 public class ReservationController {

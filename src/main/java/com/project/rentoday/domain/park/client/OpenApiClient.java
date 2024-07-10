@@ -1,32 +1,14 @@
 package com.project.rentoday.domain.park.client;
 
-import com.project.rentoday.domain.park.dto.ValidationResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import com.project.rentoday.domain.park.dto.ParkLocationInfo;
 
-@Component
-@RequiredArgsConstructor
-public class OpenApiClient {
+/**
+ * 의존성 역전 원칙. 고수준 모듈이 저수준 모듈에 직접 의존하지 않고, 추상화에 의존하게 된다. 이로 인해 코드의 유연성과 재사용성이 향상.
+ * 인터페이스 사용 시 -> 실제 API를 호출하지 않는 Mock 객체를 쉽게 만들 수 있어 단위 테스트가 용이해진다.
+ * 구현 교체 용이성 향상
+ */
+public interface OpenApiClient {
+    boolean validateParkNum(String parkNum);
 
-    private final RestTemplate restTemplate;
-
-    public OpenApiClient() {
-        this.restTemplate = new RestTemplate();
-    }
-
-    private final String endPoint = "http://api.data.go.kr/openapi/tn_pubr_public_residnt_prior_parkng_api";
-    private final String encodingKey = "1VzA6081jcO2iM6qu859rtrrZe1Owr9IXbAi0XAvg344mzs8uMDgzW8qKvmlAk8PzqtJirYGw%2FEbkYRD3YB9GA%3D%3D";
-    private final String decodingKey = "1VzA6081jcO2iM6qu859rtrrZe1Owr9IXbAi0XAvg344mzs8uMDgzW8qKvmlAk8PzqtJirYGw/EbkYRD3YB9GA==";
-
-
-
-    public boolean validateParkNum(String parkNum) {
-        String url = String.format("%s?encodingKey=%s&guhakNo=%s", endPoint, encodingKey, parkNum);
-        ValidationResponse response = restTemplate.getForObject(url, ValidationResponse.class);
-        return response != null && response.isValid();
-    }
-
+    ParkLocationInfo getParkLocationInfo(String parkNum);
 }

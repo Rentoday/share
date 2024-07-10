@@ -5,6 +5,7 @@ import com.project.rentoday.domain.park.dto.ParkResponse;
 import com.project.rentoday.domain.park.dto.UpdateParkRequest;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.service.ParkService;
+import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/parks")
+@Api(tags = "Park")
 public class ParkController {
 
     private final ParkService parkService;
@@ -25,7 +27,7 @@ public class ParkController {
         return registeredPark;
     }
 
-    @GetMapping("/member/{memberId}")
+    @GetMapping("/{memberId}")
     @ResponseStatus(HttpStatus.OK)
     public List<ParkResponse> getParkByMember(@PathVariable Long memberId) {
         List<ParkResponse> parkResponses = parkService.getParkByMember(memberId);
@@ -43,5 +45,11 @@ public class ParkController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePark(@PathVariable Long parkId) {
         parkService.delete(parkId);
+    }
+
+    @GetMapping("/confirmed")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ParkResponse> getConfirmedParks() {
+        return parkService.getConfirmedParks();
     }
 }

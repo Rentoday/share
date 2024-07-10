@@ -77,11 +77,12 @@
         private String content;
 
         @Builder
-        public Park(String carNum, String parkingNum,
+        public Park(Member member, String carNum, String parkingNum,
                     String latitude, String longitude,
                     String address, String agency, String agNum,
                     LocalDateTime startTime, LocalDateTime endTime, double price, String content,
                     String confirmation) {
+            this.member = member;
             this.carNum = carNum;
             this.parkingNum = parkingNum;
             this.latitude = latitude;
@@ -115,5 +116,13 @@
 
         public void setConfirmation(String confirmation) {
             this.confirmation = confirmation;
+        }
+
+        public void setRejected() {
+            this.parkStatus = ParkStatus.REJECTED;
+        }
+
+        public void setConfirmed() {
+            this.parkStatus = ParkStatus.CONFIRMED;
         }
     }
