@@ -6,16 +6,11 @@ import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 
 import com.project.rentoday.domain.park.client.OpenApiClient;
-import com.project.rentoday.domain.park.dto.CreateParkRequest;
-import com.project.rentoday.domain.park.dto.ParkResponse;
-import com.project.rentoday.domain.park.dto.UpdateParkRequest;
+import com.project.rentoday.domain.park.dto.*;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.entity.ParkImage;
 import com.project.rentoday.domain.park.entity.ParkStatus;
-import com.project.rentoday.domain.park.exception.EndTimeBeforeStartTimeException;
-import com.project.rentoday.domain.park.exception.ParkIdNotFoundException;
-import com.project.rentoday.domain.park.exception.ParkingNumException;
-import com.project.rentoday.domain.park.exception.PriceUnderZeroException;
+import com.project.rentoday.domain.park.exception.*;
 import com.project.rentoday.domain.park.repository.ParkRepository;
 import com.project.rentoday.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -37,17 +32,43 @@ public class ParkService {
 
     @Transactional
     public Park register(final CreateParkRequest request) {
-        //구획번호 유효성 검사부터
-        boolean isValid = openApiClient.validateParkNum(request.getParkNum());
-        if (!isValid) {
-            throw new ParkingNumException(ErrorCode.INVALID_PARK_NUM);
-        }
+        //입력값 유효성 검사부터
+        validateRequest(request);
+
         //회원 조회
-        Member member = memberRepository.findById(request.getMemberId())
+        Member member = memberRepository.findById(request.getMember().getId())
                 .orElseThrow(() -> new MemberNotFoundException(ErrorCode.INVALID_MEMBER));
-        //주차 엔티티 생성 및 저장
-        Park park = request.toEntity();
+
+        //주차 구획번호 유효성 검사
+        validateParkNum(request.getParkNum());
+
+        //주차장 위치 정보 조회 (OpenApi)
+        ParkLocationInfo parkLocationInfo = getParkLocationInfo(request.getParkNum());
+
+        //Park 엔티티 생성
+        Park park = Park.builder()
+                .member(member)
+                .carNum(request.getCarNum())
+                .parkingNum(request.getParkNum())
+                .address(parkLocationInfo.getAddress())
+                .latitude(parkLocationInfo.getLatitude())
+                .longitude(parkLocationInfo.getLongitude())
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .price(request.getPrice())
+                .content(request.getContent())
+                .confirmation(request.getConfirmation())
+                .build();
+
+        //주차 이미지 처리
+        if (request.getParkImages() != null) {
+            for (ParkImageRequest parkImageRequest : request.getParkImages()) {
+                park.addParkImages(parkImageRequest.toEntity());
+            }
+        }
+        //주차장 상태 초기 설정
         return parkRepository.save(park);
+        //주차장 정보 저장
     }
 
     @Transactional(readOnly = true)
@@ -106,6 +127,19 @@ public class ParkService {
         return parkRepository.save(park);
     }
 
+    @Transactional(readOnly = true)
+    public List<ParkResponse> getConfirmedParks() {
+        List<Park> confirmedParks = parkRepository.findByParkStatus(ParkStatus.CONFIRMED);
+
+        return confirmedParks.stream()
+                .map(park -> ParkResponse.readPark()
+                        .id(park.getId())
+                        .park(park)
+                        .confirmDate(park.getLastModifiedDate())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public void delete(Long parkId) {
         Park park = parkRepository.findById(parkId)
@@ -113,6 +147,37 @@ public class ParkService {
         parkRepository.delete(park);
     }
 
+    private void validateRequest(CreateParkRequest request) {
+        if (request.getEndTime().isBefore(request.getStartTime())) {
+            throw new EndTimeBeforeStartTimeException(ErrorCode.INVALID_END_TIME);
+        }
+        if (request.getPrice() <= 0) {
+            throw new PriceUnderZeroException(ErrorCode.INVALID_PRICE);
+        }
+    }
 
+    private void validateParkNum(String parkNum) {
+        boolean isValid = openApiClient.validateParkNum(parkNum);
+        if (!isValid) {
+            throw new ParkingNumException(ErrorCode.INVALID_PARK_NUM);
+        }
+    }
 
+    private ParkLocationInfo getParkLocationInfo(String parkNum) {
+        ParkLocationInfo parkLocationInfo = openApiClient.getParkLocationInfo(parkNum);
+        if (parkLocationInfo == null) {
+            throw new ParkLocationNotFoundException(ErrorCode.PARK_LOCATION_NOT_FOUND);
+        }
+        return parkLocationInfo;
+    }
+
+    private void processParkImage(Park park, List<ParkImageRequest> parkImageRequests) {
+        if (parkImageRequests != null) {
+            for (ParkImageRequest parkImageRequest : parkImageRequests) {
+                ParkImage parkImage = parkImageRequest.toEntity();
+                parkImage.setPark(park);
+                park.addParkImages(parkImage);
+            }
+        }
+    }
 }

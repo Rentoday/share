@@ -11,7 +11,7 @@ public enum ErrorCode {
     INVALID_PARK_NUM(BAD_REQUEST, "유효하지 않은 구획번호입니다."),
     INVALID_END_TIME(BAD_REQUEST, "종료 시간은 시작 시간보다 이후여야 합니다."),
     INVALID_PRICE(BAD_REQUEST, "가격은 1000원보다 커야 합니다."),
-    ;
+    PARK_LOCATION_NOT_FOUND(BAD_REQUEST, "주차 구역을 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;
