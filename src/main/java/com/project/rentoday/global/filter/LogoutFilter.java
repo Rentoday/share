@@ -1,5 +1,6 @@
 package com.project.rentoday.global.filter;
 
+import com.project.rentoday.domain.notification.service.NotificationService;
 import com.project.rentoday.global.jwt.repository.RefreshRepository;
 import com.project.rentoday.global.jwt.service.JwtService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -20,7 +21,7 @@ public class LogoutFilter extends GenericFilterBean {
 
     private final JwtService jwtService;
     private final RefreshRepository refreshRepository;
-//    private final NotificationService notificationService;
+    private final NotificationService notificationService;
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
@@ -89,7 +90,7 @@ public class LogoutFilter extends GenericFilterBean {
         //로그아웃 진행
         //Refresh 토큰 DB에서 제거
         refreshRepository.deleteByRefreshToken(refresh);
-//        notificationService.unSubscribe(email);
+        notificationService.unSubscribe(email);
 
         //Refresh token cookie 값 0
         Cookie cookie = new Cookie("refresh", null);
