@@ -1,8 +1,10 @@
 package com.project.rentoday.global.exception;
 
+import com.project.rentoday.domain.comment.exception.CommentException;
 import com.project.rentoday.domain.member.exception.EmailException;
 import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.exception.VerificationException;
+import com.project.rentoday.domain.notification.exception.NotificationException;
 import com.project.rentoday.domain.payment.exception.ResourceNotFoundException;
 import com.project.rentoday.global.jwt.exception.JwtException;
 import org.springframework.http.HttpStatus;
@@ -38,6 +40,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(VerificationException.class)
     public ResponseEntity<String> handleVerificationException(VerificationException exception) {
         return new ResponseEntity<>(exception.getMessage(), exception.getVerificationErrorCode().getHttpStatus());
+    }
+
+    //댓글예외 처리 핸들러
+    @ExceptionHandler(CommentException.class)
+    public ResponseEntity<String> handleCommentException(CommentException exception) {
+        return new ResponseEntity<>(exception.getMessage(), exception.getCommentErrorCode().getHttpStatus());
+    }
+
+    //댓글예외 처리 핸들러
+    @ExceptionHandler(NotificationException.class)
+    public ResponseEntity<String> handleNotificationException(NotificationException exception) {
+        return new ResponseEntity<>(exception.getMessage(), exception.getNotificationErrorCode().getHttpStatus());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

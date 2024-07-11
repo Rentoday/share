@@ -2,6 +2,7 @@ package com.project.rentoday.domain.member.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.project.rentoday.domain.comment.entity.Comment;
+import com.project.rentoday.domain.notification.entity.Notification;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.reservation.entity.Reservation;
 import com.project.rentoday.global.jwt.entity.RefreshToken;
@@ -75,9 +76,9 @@ public class Member {
 
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments;
-//
-//    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<NotificationEntity> notification;
+
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications;
 
     @Builder(builderMethodName = "createMember")
     public Member(
