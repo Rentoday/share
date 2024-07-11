@@ -12,5 +12,7 @@ public class ParkLocationInfo {
     private String address;
     private String latitude;
     private String longitude;
+    private String agency;
+    private String agNum;
 
 }
