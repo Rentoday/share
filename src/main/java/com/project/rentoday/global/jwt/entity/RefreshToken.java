@@ -14,7 +14,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "member_refresh_token")
+@Table(name = "refresh_token")
 @Entity
 public class RefreshToken {
 
@@ -25,11 +25,11 @@ public class RefreshToken {
 
     @NotNull
     @Size(max = 500)
-    @Column(name = "refresh_token", length = 256)
+    @Column(name = "token", length = 256)
     private String refreshToken;
 
     @NotNull
-    @Column(name = "refresh_expiration", length = 256)
+    @Column(length = 256)
     private String expiration;
 
     @ManyToOne(fetch = FetchType.LAZY)
