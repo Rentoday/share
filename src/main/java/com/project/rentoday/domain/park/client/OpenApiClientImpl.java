@@ -63,7 +63,9 @@ public class OpenApiClientImpl implements OpenApiClient {
                         return new ParkLocationInfo(
                                 item.getString("rdnmadr"),
                                 item.getString("latitude"),
-                                item.getString("longitude")
+                                item.getString("longitude"),
+                                item.getString("institutionNm"),
+                                item.getString("phoneNumber")
                         );
                     }
                 }
