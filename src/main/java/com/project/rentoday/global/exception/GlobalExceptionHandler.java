@@ -1,22 +1,44 @@
 package com.project.rentoday.global.exception;
 
+import com.project.rentoday.domain.member.exception.EmailException;
+import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.VerificationException;
 import com.project.rentoday.domain.payment.exception.ResourceNotFoundException;
-import com.project.rentoday.domain.reservation.exception.ReservationAlreadyExistsException;
-import com.project.rentoday.domain.reservation.exception.ReservationNotAvailableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.project.rentoday.global.jwt.exception.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailSendException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    //회원예외 처리 핸들러
+    @ExceptionHandler(EmailException.class)
+    public ResponseEntity<String> handleEmailException(EmailException exception) {
+        return new ResponseEntity<>(exception.getMessage(), exception.getEmailErrorCode().getHttpStatus());
+    }
+
+    //회원예외 처리 핸들러
+    @ExceptionHandler(MemberException.class)
+    public ResponseEntity<String> handleMemberException(MemberException exception) {
+        return new ResponseEntity<>(exception.getMessage(), exception.getMemberErrorCode().getHttpStatus());
+    }
+
+    //jwt예외 처리 핸들러
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<String> handleJwtException(JwtException exception) {
+        return new ResponseEntity<>(exception.getMessage(), exception.getJwtErrorCode().getHttpStatus());
+    }
+
+    //이메일검증예외 처리 핸들러
+    @ExceptionHandler(VerificationException.class)
+    public ResponseEntity<String> handleVerificationException(VerificationException exception) {
+        return new ResponseEntity<>(exception.getMessage(), exception.getVerificationErrorCode().getHttpStatus());
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<String> handleResourceNotFoundException(ResourceNotFoundException exception) {

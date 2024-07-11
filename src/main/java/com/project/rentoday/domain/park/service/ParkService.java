@@ -2,7 +2,8 @@ package com.project.rentoday.domain.park.service;
 
 
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberNotFoundException;
+import com.project.rentoday.domain.member.exception.MemberErrorCode;
+import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 
 import com.project.rentoday.domain.park.client.OpenApiClient;
@@ -37,7 +38,7 @@ public class ParkService {
 
         //회원 조회
         Member member = memberRepository.findById(request.getMember().getId())
-                .orElseThrow(() -> new MemberNotFoundException(ErrorCode.INVALID_MEMBER));
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
 
         //주차 구획번호 유효성 검사
         validateParkNum(request.getParkNum());
@@ -74,7 +75,7 @@ public class ParkService {
     @Transactional(readOnly = true)
     public List<ParkResponse> getParkByMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberNotFoundException(ErrorCode.INVALID_MEMBER));
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
         List<Park> parks = parkRepository.findByMember(member);
 
         return IntStream.range(0, parks.size())
