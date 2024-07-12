@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주차구역 판매 검토</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .frame_modal_verification {
+            width: 719px;
+            height: auto;
+            max-height: 877px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .close-btn {
+            float: right;
+            cursor: pointer;
+            font-size: 20px;
+            color: #888;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: inline-block;
+            width: 100px;
+            margin-right: 10px;
+        }
+        input[type="text"], input[type="time"] {
+            width: calc(100% - 115px);
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .time-group input[type="time"] {
+            width: calc(50% - 60px);
+            display: inline-block;
+        }
+        textarea {
+            width: calc(100% - 115px);
+            height: 100px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .image-group {
+            display: flex;
+            justify-content: space-between;
+        }
+        .image-placeholder {
+            width: 30%;
+            height: 100px;
+            border: 1px solid #ccc;
+            margin-top: 5px;
+        }
+        .button-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .button-group button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+        .request-btn {
+            background-color: #4CAF50;
+        }
+        .approve-btn {
+            background-color: #2196F3;
+        }
+    </style>
+</head>
+<body>
+<div class="frame_modal_verification">
+    <span class="close-btn">&times;</span>
+    <h2>주차구역 판매 검토</h2>
+    <div class="form-group">
+        <label for="car-number">차량번호</label>
+        <input type="text" id="car-number" value="12가1234">
+    </div>
+    <div class="form-group">
+        <label for="structure-number">구획번호</label>
+        <input type="text" id="structure-number" value="12가1234">
+    </div>
+    <div class="form-group">
+        <label for="address">주소</label>
+        <input type="text" id="address" value="12가1234">
+    </div>
+    <div class="form-group time-group">
+        <label>시간</label>
+        <input type="time" value="09:00"> ~
+        <input type="time" value="09:00">
+    </div>
+    <div class="form-group">
+        <label for="price">시간당 요금</label>
+        <input type="text" id="price" value="2000">
+    </div>
+    <div class="form-group">
+        <label for="description">상세설명</label>
+        <textarea id="description">12가1234</textarea>
+    </div>
+    <div class="form-group">
+        <label>이미지</label>
+        <div class="image-group">
+            <div class="image-placeholder"></div>
+            <div class="image-placeholder"></div>
+            <div class="image-placeholder"></div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="parking-cert">주차확인증</label>
+        <input type="text" id="parking-cert" value="12가1234">
+    </div>
+    <div class="button-group">
+        <button class="request-btn">재등록 요청</button>
+        <button class="approve-btn">승인</button>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+.modal-login {
+  width: 611px;
+  height: 100%;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  font-family: Arial, sans-serif;
+}
+
+.modal-content {
+  padding: 40px;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #888;
+  cursor: pointer;
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.logo img {
+  width: 60px;
+  height: 60px;
+}
+
+.logo h1 {
+  color: #20a43d;
+  font-size: 24px;
+  margin-top: 10px;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 96%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.forgot-password {
+  text-align: right;
+  margin-bottom: 20px;
+}
+
+.forgot-password a {
+  color: #888;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.login-button,
+.kakao-login {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.login-button {
+  background-color: #20a43d;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.divider {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #888;
+  position: relative;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background-color: #ccc;
+}
+
+.divider::before {
+  left: 0;
+}
+
+.divider::after {
+  right: 0;
+}
+
+.kakao-login {
+  background-color: #fee500;
+  color: #000;
+}
+    </style>
+</head>
+<body>
+<div class="modal-login">
+    <div class="modal-content">
+        <button class="close-button">✕</button>
+        <div class="logo">
+            <img src="../../image/member/logo.png" alt="오늘만세워 로고">
+            <h1>오늘만세워</h1>
+        </div>
+        <form>
+            <div class="input-group">
+                <label for="userid">아이디</label>
+                <input type="text" id="userid" name="userid" value="12가1234">
+            </div>
+            <div class="input-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" name="password" value="12가1234">
+            </div>
+            <div class="forgot-password">
+                <a href="/join">계정이 없으신가요?</a>
+            </div>
+            <button type="submit" class="login-button">로그인</button>
+            <div class="divider">또는</div>
+            <button type="button" class="kakao-login">카카오 로그인</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

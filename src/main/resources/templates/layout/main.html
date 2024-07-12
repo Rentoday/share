@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>오늘만세워</title>
+</head>
+<style>
+    body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: white;
+    padding: 20px 0;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    height: 40px;
+}
+
+.logo span {
+    font-size: 24px;
+    font-weight: bold;
+    color: #00B202;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    padding: 5px 15px;
+    width: 50%;
+    height: 40px;
+}
+
+.search-bar input {
+    border: none;
+    flex-grow: 0.6;
+    font-size: 16px;
+    outline: none;
+    height: auto;
+    right: 50px;
+
+}
+
+.divider {
+    width: 1px;
+    height: 100%;
+    background-color: #ccc;
+    margin: 0 10px;
+}
+
+.time {
+    color: #888;
+    flex-grow: 0.5;
+}
+
+.search-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.search-button img {
+    width: 30px;
+    height: 30px;
+
+}
+
+.login-button {
+    background-color: white;
+    border: 2px solid #00B202;
+    color: #00B202;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.notice {
+    background-color: #f8f8f8;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+}
+
+.map-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.map {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+footer {
+    background-color: #f8f8f8;
+    padding: 20px;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+}
+
+footer p {
+    margin: 5px 0;
+}
+   .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            /* 플렉스 컨테이너로 설정 */
+            justify-content: center;
+            align-items: center;
+        }
+        .frame-modal-notice {
+            width: 962px;
+            height: 660px;
+            border: 1px solid #ccc;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            background-color: white;
+            /* margin 제거 */
+            margin: 0;
+            /* 최대 높이 설정 및 스크롤 추가 */
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .frame-modal-notice .header {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: #1FBC21;
+            cursor: pointer;
+        }
+        .notice-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .notice-table th, .notice-table td {
+            border-top: 1px solid #1FBC21;
+            border-bottom: 1px solid #1FBC21;
+            border-left: none;
+            border-right: none;
+            padding: 10px;
+            text-align: center;
+        }
+        .notice-table th {
+            background-color: #f5f5f5;
+        }
+        .notice-table .expandable-content {
+            display: none;
+            padding: 10px;
+            text-align: left;
+        }
+        .toggle-button {
+            cursor: pointer;
+            text-align: right;
+            width: 30px;
+        }
+
+    /* 로그인 모달 스타일 */
+.modal-login {
+  width: 611px;
+  height: auto;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  font-family: Arial, sans-serif;
+}
+
+.modal-content {
+  padding: 40px;
+}
+
+.modal-login .close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #888;
+  cursor: pointer;
+}
+
+.modal-login .logo {
+    text-align: center;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.modal-login .logo img {
+width: 60px;
+  height: 60px;
+}
+
+.modal-login .logo h1 {
+  color: #20a43d;
+  font-size: 24px;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.modal-login label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.modal-login input[type="text"],
+.modal-login input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.forgot-password {
+  text-align: right;
+  margin-bottom: 20px;
+}
+
+.forgot-password a {
+  color: #888;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.modal-login .login-button,
+.kakao-login {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.modal-login .login-button {
+  background-color: #20a43d;
+  color: white;
+  margin-bottom: 20px;
+}
+
+#divider2 {
+  text-align: center;
+  color: #888;
+  position: relative;
+}
+
+.divider1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #888;
+  position: relative;
+}
+
+.divider1::before,
+.divider1::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background-color: #ccc;
+}
+
+.divider1::before {
+  left: 0;
+}
+
+.divider1::after {
+  right: 0;
+}
+
+.kakao-login {
+  background-color: #fee500;
+  color: #000;
+}
+
+    .time-dropdown {
+    position: relative;
+    cursor: pointer;
+}
+
+.time-display {
+    color: #888;
+}
+
+.time-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.time-option {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.time-option:hover {
+    background-color: #f0f0f0;
+}
+</style>
+<body>
+<header>
+    <div class="header-content">
+        <div class="logo">
+            <img src="../../image/member/logo.png" alt="오늘만세워 로고">
+            <span>오늘만세워</span>
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="주소를 입력해주세요.">
+            <div class="divider" id="divider2"></div>
+            <div class="time-dropdown">
+                <span class="time-display">시간</span>
+                <div class="time-options" style="display: none;">
+                    <!-- 시간 옵션들이 여기에 JavaScript로 추가됩니다 -->
+                </div>
+            </div>
+            <button class="search-button">
+                <img src="../../image/search.svg" alt="검색">
+            </button>
+        </div>
+        <button class="login-button">로그인</button>
+    </div>
+</header>
+<div class="notice">
+    <span>🚗 공지사항 🚗</span>
+    <span id="noticeText" style="cursor: pointer;">7월 19일부터 오픈이벤트 참여하고 쿠폰받자!</span>
+</div>
+<!-- 모달 추가 -->
+<div id="noticeModal" class="modal">
+    <div class="frame-modal-notice">
+        <div class="close-button" id="closeModal">&times;</div>
+        <div class="header">공지사항</div>
+        <table class="notice-table">
+            <thead>
+            <tr>
+                <th>번호</th>
+                <th>제목</th>
+                <th>작성일</th>
+                <th class="toggle-button"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>1</td>
+                <td>7월 19일부터 오픈이벤트 참여하고 쿠폰받자!</td>
+                <td>24/07/19</td>
+                <td class="toggle-button" onclick="toggleContent(this)">&#x25BC;</td>
+            </tr>
+            <tr class="expandable-content">
+                <td colspan="4" style="text-align: left;">
+                    안녕하세요. 7월 19일부터 서비스를 오픈했습니다.<br>
+                    오픈이벤트로 쿠폰을 받습~~~~<br>
+                    ~~~~~~~
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<main>
+    <div class="map-container">
+        <div id="map" style="width:100%;height:700px;"></div>
+    </div>
+</main>
+<!-- 로그인 모달 추가 -->
+<div id="loginModal" class="modal">
+    <div class="modal-login">
+        <div class="modal-content">
+            <button class="close-button" id="closeLoginModal">✕</button>
+            <div class="logo">
+                <img src="../../image/member/logo.png" alt="오늘만세워 로고">
+                <h1>오늘만세워</h1>
+            </div>
+            <form>
+                <div class="input-group">
+                    <label for="userid">아이디</label>
+                    <input type="text" id="userid" name="userid" value="12가1234">
+                </div>
+                <div class="input-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" value="12가1234">
+                </div>
+                <div class="forgot-password">
+                    <a href="/join">계정이 없으신가요?</a>
+                </div>
+                <button type="submit" class="login-button">로그인</button>
+                <div class="divider1">또는</div>
+                <button type="button" class="kakao-login">카카오 로그인</button>
+            </form>
+        </div>
+    </div>
+</div>
+<footer>
+    <p>2024 오늘만세워 Inc. 개인정보 처리방침 이용약관 사이트맵 한국어 변경된 환율 정책 취소 세부정보</p>
+    <p>웹사이트 제공자: Airbnb Ireland UC, private unlimited company, 8 Hanover Quay Dublin 2, D02 DP23 Ireland | 이사: Dermot Clarke, Killian Pattwell, Andrea Finnegan | VAT 번호: IE9827384L |</p>
+    <p>호스팅 서비스 제공업체: 아마존 웹서비스 | 사업자 등록 번호: IE 511825 | 연락처: terms@airbnb.com, 웹사이트, 080-822-0230 | 호스팅 서비스 제공업체 정보: 여기를 클릭하세요</p>
+    <p>아이콘 이름이어트 출신번미 단사사기 아닙니다. 에어비앤비 플랫폼을 통하여 예약된 숙소, 체험, 호스트 서비스에 관한 에어비 책임은 제한적 서비스를 제공하는 조드트에게 있습니다.</p>
+</footer>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=21a9c58904c9907bb95e9ebbf5a8e5e0"></script>
+<script>
+    var mapContainer = document.getElementById('map'), // 지도를 표시할 div
+        mapOption = {
+            center: new kakao.maps.LatLng(37.566826, 126.9786567), // 지도의 중심좌표 (서울시청)
+            level: 3 // 지도의 확대 레벨
+        };
+
+    // 지도를 표시할 div와  지도 옵션으로  지도를 생성합니다
+    var map = new kakao.maps.Map(mapContainer, mapOption);
+
+    document.addEventListener('DOMContentLoaded', function() {
+            var noticeText = document.getElementById('noticeText');
+            var modal = document.getElementById('noticeModal');
+            var closeModal = document.getElementById('closeModal');
+
+            noticeText.addEventListener('click', function() {
+                modal.style.display = 'flex';  // 'block' 대신 'flex' 사용
+            });
+
+            closeModal.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+
+            window.addEventListener('click', function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            // 로그인 모달 관련 코드 추가
+    var loginButton = document.querySelector('.header-content .login-button');
+    var loginModal = document.getElementById('loginModal');
+    var closeLoginModal = document.getElementById('closeLoginModal');
+
+    loginButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        loginModal.style.display = 'flex';
+    });
+
+    closeLoginModal.addEventListener('click', function() {
+        loginModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', function(event) {
+        if (event.target == loginModal) {
+            loginModal.style.display = 'none';
+        }
+    });
+
+     // 시간 드롭다운 관련 코드 추가
+    var timeDropdown = document.querySelector('.time-dropdown');
+    var timeDisplay = timeDropdown.querySelector('.time-display');
+    var timeOptions = timeDropdown.querySelector('.time-options');
+
+    // 시간 옵션 생성 (한 시간 간격)
+    function generateTimeOptions() {
+        for (let hour = 0; hour < 24; hour++) {
+            let timeString = `${hour.toString().padStart(2, '0')}:00`;
+            let option = document.createElement('div');
+            option.className = 'time-option';
+            option.textContent = timeString;
+            option.onclick = function() {
+                timeDisplay.textContent = this.textContent;
+                timeOptions.style.display = 'none';
+            };
+            timeOptions.appendChild(option);
+        }
+    }
+
+    generateTimeOptions();
+
+    timeDisplay.addEventListener('click', function(e) {
+        e.stopPropagation();
+        timeOptions.style.display = timeOptions.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.addEventListener('click', function() {
+        timeOptions.style.display = 'none';
+    });
+
+    timeOptions.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+        });
+
+        //공지사항 아코디언
+        function toggleContent(button) {
+            const row = button.closest('tr');
+            const nextRow = row.nextElementSibling;
+            const isExpanded = nextRow.style.display === 'table-row';
+            if (isExpanded) {
+                nextRow.style.display = 'none';
+                button.innerHTML = '&#x25BC;'; // Down arrow
+            } else {
+                nextRow.style.display = 'table-row';
+                button.innerHTML = '&#x25B2;'; // Up arrow
+            }
+        }
+
+</script>
+</body>
+</html>

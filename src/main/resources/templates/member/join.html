@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>join</title>
+    <link rel="stylesheet" th:href="@{/css/member/join.css}">
+</head>
+<body>
+<div class="frame-page-join">
+        <img class="arrow-main" id="arrowMain" src="../../image/arrow-left.svg">
+    <div class="container-logo">
+        <div class="icon-logo">
+        </div>
+        <div class="text-logo-name">
+            오늘만세워
+        </div>
+    </div>
+    <div class="container-7">
+        <div class="container-profile">
+            <input type="file" id="profileUpload" accept="image/*" style="display: none;" />
+            <img id="profilePreview" src="../../image/member/profile.svg" alt="Profile Preview" style="width: 100%; height: 100%;" />
+        </div>
+        <div class="container-join-input">
+            <div class="container">
+                <div class="container-email">
+                    <div class="text-title-email">
+                        이메일
+                    </div>
+                    <div class="container-8">
+                        <input type="email" class="text-input-email" name="email">
+                    </div>
+                </div>
+                <div class="button-email-check">
+          <span class="text-button-email-check">
+            인증
+          </span>
+                </div>
+            </div>
+            <div class="container-1">
+                <div class="container-email-check-num">
+                    <div class="text-title-email-check-num">
+                        인증번호
+                    </div>
+                    <div class="container-3">
+                        <input type="text" class="text-input-email-check-num" name="code">
+                    </div>
+                </div>
+                <div class="button-check-num">
+          <span class="text-button-check-num">
+            확인
+          </span>
+                </div>
+            </div>
+            <div class="container-password">
+                <div class="text-title-password">
+                    비밀번호
+                </div>
+                <div class="container-6">
+                    <input type="password" class="text-input-password" id="text-input-password" name="password">
+                </div>
+            </div>
+            <div class="container-password-check">
+                <div class="text-title-password-check">
+                    비밀번호 확인
+                </div>
+                <div class="container-4">
+                    <input type="password" class="text-input-password-check" id="text-input-password-check" name="passwordCheck">
+                </div>
+            </div>
+            <div class="text-password-wrong" id="text-password-wrong">
+                <span class="text-password-miss" id="text-password-miss">
+                    입력한 비밀번호와 일치하지 않습니다.
+                </span>
+            </div>
+            <div class="container-adress">
+                <div class="text-title-adress">
+                    이름
+                </div>
+                <div class="container-5">
+                    <input type="text" class="text-input-adress" name="name">
+                </div>
+            </div>
+            <div class="container-phone">
+                <div class="text-title-phone">
+                    전화번호
+                </div>
+                <div class="container-2">
+                    <input type="text" class="text-input-phone" name="phone">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="button-join">
+    <span class="text-button-join">
+      가입하기
+    </span>
+    </div>
+</div>
+<script>
+
+    //프로필 사진 미리보기
+    document.querySelector('.container-profile').addEventListener('click', function() {
+        document.getElementById('profileUpload').click();
+    });
+
+    document.getElementById('profileUpload').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('profilePreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    //비밀번호 2차 검증
+    document.getElementById('text-input-password-check').addEventListener('input', () => {
+        const password = document.getElementById('text-input-password').value;
+        const confirmPassword = document.getElementById('text-input-password-check').value;
+        const passwordMismatch = document.getElementById('text-password-miss');
+
+        if (password !== confirmPassword) {
+            passwordMismatch.style.display = 'inline';
+        } else {
+            passwordMismatch.style.display = 'none';
+        }
+    });
+
+    //뒤로가기
+    document.getElementById('arrowMain').addEventListener('click', function() {
+    window.location.href = '/main';
+});
+</script>
+</body>
+</html>

@@ -13,9 +13,49 @@ public class LoginController {
         return "login.html";
     }
 
+    @GetMapping("/index")
+    public String index(Model model) {
+        return "index.html";
+    }
+
+    @GetMapping("/notice")
+    public String notice(Model model) {
+        return "noticeModal.html";
+    }
+
+    @GetMapping("/registration")
+    public String registration(Model model) {
+        return "registrationModal.html";
+    }
+
+    @GetMapping("/refund")
+    public String refund(Model model) {
+        return "refund.html";
+    }
+
+    @GetMapping("/noticeAdd")
+    public String noticeAdd(Model model) {
+        return "member/noticeAdd.html";
+    }
+
+    @GetMapping("/withdrawal")
+    public String withdrawal (Model model) {
+        return "withdrawal.html";
+    }
+
+    @GetMapping("/verification")
+    public String verification (Model model) {
+        return "verificationModal.html";
+    }
+
+    @GetMapping("/layout")
+    public String layout(Model model) {
+        return "layout/layout.html";
+    }
+
     @GetMapping("/main")
     public String main() {
-        return "main.html";
+        return "layout/main.html";
     }
 
     @GetMapping("/my")
@@ -25,6 +65,11 @@ public class LoginController {
 
     @GetMapping("/join")
     public String join() {
-        return "join.html";
+        return "member/join.html";
+    }
+
+    @GetMapping("/loginModal")
+    public String loginModal() {
+        return "member/loginModal.html";
     }
 }

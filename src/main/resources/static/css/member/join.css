@@ -1,0 +1,373 @@
+.frame-page-join {
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 0 0 0;
+  box-sizing: border-box;
+}
+.frame-page-join .container {
+  margin-bottom: 41px;
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  box-sizing: border-box;
+}
+.frame-page-join .container-email {
+  margin-right: 10px;
+  display: flex;
+  flex-direction: row;
+  box-sizing: border-box;
+}
+.frame-page-join .text-title-email {
+  margin: 7px 22.8px 7px 0;
+  display: inline-block;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 600;
+  font-size: 20px;
+  color: #000000;
+}
+.frame-page-join .text-input-email {
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 500;
+  font-size: 20px;
+  color: #000000;
+  border: none;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+}
+.frame-page-join .container-email-check-num {
+  margin-right: 10px;
+  display: flex;
+  flex-direction: row;
+  box-sizing: border-box;
+}
+.frame-page-join .text-title-email-check-num {
+    margin: 7px 22.4px 7px 0;
+    display: inline-block;
+    overflow-wrap: break-word;
+    font-family: 'Inter';
+    font-style: italic;
+    font-weight: 600;
+    font-size: 20px;
+    color: #000000;
+}
+.frame-page-join .text-input-email-check-num {
+    overflow-wrap: break-word;
+    font-family: 'Inter';
+    font-weight: 500;
+    font-size: 20px;
+    color: #000000;
+    border: none;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+}
+.frame-page-join .container-adress {
+  margin-bottom: 41px;
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  box-sizing: border-box;
+}
+.frame-page-join .text-title-adress {
+  margin: 7px 22.2px 7px 0;
+  display: inline-block;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 600;
+  font-size: 20px;
+  color: #000000;
+}
+.frame-page-join .container-phone {
+  margin-left: 41px;
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  box-sizing: border-box;
+}
+.frame-page-join .text-title-phone {
+  margin: 7px 22.4px 7px 0;
+  display: inline-block;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 600;
+  font-size: 20px;
+  color: #000000;
+}
+.frame-page-join .container-profile {
+  background: url('../../image/member/profile.svg') 50% / cover no-repeat;
+  margin: 0 35px 224.1px 0;
+  width: 212px;
+  height: 212px;
+}
+.frame-page-join .container-password-check {
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  box-sizing: border-box;
+}
+.frame-page-join .text-title-password-check {
+  margin: 7px 21.6px 7px 0;
+  display: inline-block;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 600;
+  font-size: 20px;
+  color: #000000;
+}
+.frame-page-join .text-input-password-check {
+    overflow-wrap: break-word;
+    font-family: 'Inter';
+    font-weight: 500;
+    font-size: 20px;
+    color: #000000;
+    border: none;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+}
+.frame-page-join .button-join {
+  border-radius: 30px;
+  background: #00B202;
+  position: relative;
+  display: flex;
+  padding: 12px 2px 10px 0;
+  width: 765px;
+  box-sizing: border-box;
+  justify-content: center;
+}
+.frame-page-join .text-button-join {
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 600;
+  font-size: 22px;
+  color: #FFFFFF;
+}
+.frame-page-join .container-logo {
+  margin: 0 0 75px 2.2px;
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  box-sizing: border-box;
+}
+.frame-page-join .icon-logo {
+  background: url('../../image/member/logo.png') 50% / cover no-repeat;
+  margin-right: 1px;
+  width: 57px;
+  height: 64px;
+}
+
+.container-profile {
+    width: 212px;
+    height: 212px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+}
+
+.container-profile img {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+}
+.frame-page-join .text-logo-name {
+  margin: 11px 0 14px 0;
+  display: inline-block;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 600;
+  font-size: 32px;
+  color: #20A43D;
+}
+.frame-page-join .container-password {
+  margin: 0 0 43px 41px;
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  box-sizing: border-box;
+}
+.frame-page-join .text-title-password {
+  margin: 7px 22.4px 7px 0;
+  display: inline-block;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 600;
+  font-size: 20px;
+  color: #000000;
+}
+.frame-page-join .text-input-password {
+    overflow-wrap: break-word;
+    font-family: 'Inter';
+    font-weight: 500;
+    font-size: 20px;
+    color: #000000;
+    border: none;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+}
+.frame-page-join .button-email-check {
+  border-radius: 30px;
+  background: #00B202;
+  position: relative;
+  display: flex;
+  padding: 10px 1.6px 9px 0;
+  width: 77px;
+  box-sizing: border-box;
+  justify-content: center;
+}
+.frame-page-join .text-button-email-check {
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 600;
+  font-size: 16px;
+  color: #FFFFFF;
+}
+
+.frame-page-join .arrow-main {
+    margin: 0 723px 5px 0;
+    width: 70px;
+    height: auto;
+    cursor: pointer;
+}
+.frame-page-join .text-input-adress {
+    overflow-wrap: break-word;
+    font-family: 'Inter';
+    font-weight: 500;
+    font-size: 20px;
+    color: #000000;
+    border: none;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+}
+.frame-page-join .text-input-phone {
+    overflow-wrap: break-word;
+    font-family: 'Inter';
+    font-weight: 500;
+    font-size: 20px;
+    color: #000000;
+    border: none;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+}
+.frame-page-join .text-password-wrong {
+  margin: 0 54.4px 41px 30px;
+    display: inline-block;
+    align-self: center;
+    overflow-wrap: break-word;
+    font-family: 'Inter';
+    font-weight: 500;
+}
+.frame-page-join .text-password-miss {
+    display: inline-block;
+    align-self: center;
+    overflow-wrap: break-word;
+    font-family: 'Inter';
+    font-weight: 500;
+    font-size: 12px;
+    color: #FF0000;
+    display: none;
+}
+.frame-page-join .container-join-input {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  box-sizing: border-box;
+}
+.frame-page-join .button-check-num {
+  border-radius: 30px;
+  background: #00B202;
+  position: relative;
+  display: flex;
+  padding: 10px 1.6px 9px 0;
+  width: 77px;
+  box-sizing: border-box;
+  justify-content: center;
+}
+.frame-page-join .text-button-check-num {
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 600;
+  font-size: 16px;
+  color: #FFFFFF;
+}
+.frame-page-join .container-1 {
+  margin: 0 0 41px 41px;
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  box-sizing: border-box;
+}
+.frame-page-join .container-2 {
+  border: 1px solid #1FBC21;
+  background: #FFFFFF;
+  position: relative;
+  padding: 7px 12px;
+  width: 381px;
+  box-sizing: border-box;
+}
+.frame-page-join .container-3 {
+  border: 1px solid #1FBC21;
+  background: #FFFFFF;
+  position: relative;
+  padding: 7px 12px;
+  width: 294px;
+  box-sizing: border-box;
+}
+.frame-page-join .container-4 {
+  border: 1px solid #1FBC21;
+  background: #FFFFFF;
+  position: relative;
+  padding: 7px 12px;
+  width: 381px;
+  box-sizing: border-box;
+}
+.frame-page-join .container-5 {
+  border: 1px solid #1FBC21;
+  background: #FFFFFF;
+  position: relative;
+  padding: 7px 12px;
+  width: 381px;
+  box-sizing: border-box;
+}
+.frame-page-join .container-6 {
+  border: 1px solid #1FBC21;
+  background: #FFFFFF;
+  position: relative;
+  padding: 7px 12px;
+  width: 381px;
+  box-sizing: border-box;
+}
+.frame-page-join .container-7 {
+  margin-bottom: 75px;
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  box-sizing: border-box;
+}
+.frame-page-join .container-8 {
+  border: 1px solid #1FBC21;
+  background: #FFFFFF;
+  position: relative;
+  padding: 7px 12px;
+  width: 294px;
+  box-sizing: border-box;
+}
