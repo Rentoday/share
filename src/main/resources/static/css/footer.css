@@ -1,0 +1,25 @@
+.footer {
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  padding: 46px 66.4px 58.5px 77.5px;
+  width: 1920px;
+  box-sizing: border-box;
+}
+.footer .footer-content-top {
+  margin: 0 0.5px 89.5px 0.5px;
+  display: inline-block;
+  align-self: flex-start;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 300;
+  font-size: 20px;
+  color: #000000;
+}
+.footer .footer-content-bottom {
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 300;
+  font-size: 20px;
+  color: #000000;
+}

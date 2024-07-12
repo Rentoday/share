@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+             font-family: 'Noto Sans KR', sans-serif;
+             margin: 0;
+             padding: 20px;
+             background-color: #f7f9fc;
+             color: #333;
+         }
+         .container {
+             max-width: 1000px;
+             margin: 0 auto;
+             background-color: white;
+             padding: 30px;
+             border-radius: 12px;
+             box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+         }
+         h1 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-weight: 700;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 15px;
+        }
+         .layout {
+             display: flex;
+             gap: 30px;
+         }
+         .main-content {
+             flex: 2;
+         }
+         .sidebar-container {
+             flex: 1;
+             position: relative;
+         }
+         .sidebar {
+             position: sticky;
+             top: 20px;
+             background-color: #f8f9fa;
+             padding: 20px;
+             border-radius: 12px;
+             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+         }
+         .image-placeholder {
+             background-color: #e9ecef;
+             border-radius: 8px;
+             margin-bottom: 15px;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             color: #adb5bd;
+             font-size: 24px;
+         }
+         .main-image {
+             height: 300px;
+         }
+         .sub-images {
+             display: flex;
+             gap: 15px;
+         }
+         .sub-image {
+             flex: 1;
+             height: 150px;
+         }
+         .info-section {
+             margin-top: 20px;
+         }
+         .info-item {
+             display: flex;
+             justify-content: space-between;
+             margin-bottom: 10px;
+         }
+         .info-label {
+             font-weight: 500;
+             color: #495057;
+         }
+         .info-value {
+             text-align: right;
+         }
+         .description {
+             background-color: #e8f5e9;
+             padding: 15px;
+             border-radius: 8px;
+             margin-top: 20px;
+         }
+         .review-section {
+             margin-top: 30px;
+         }
+         .time-slots {
+             display: flex;
+             flex-wrap: wrap;
+             gap: 10px;
+             margin-bottom: 15px;
+         }
+         .time-slot {
+             background-color: #e9ecef;
+             border: none;
+             padding: 8px 12px;
+             border-radius: 20px;
+             cursor: pointer;
+             transition: background-color 0.3s;
+         }
+         .time-slot.active {
+             background-color: #4CAF50;
+             color: white;
+         }
+         .price-summary {
+             margin-top: 20px;
+             text-align: right;
+             font-weight: 500;
+         }
+         .reserve-button {
+             background-color: #4CAF50;
+             color: white;
+             border: none;
+             padding: 12px;
+             width: 100%;
+             border-radius: 8px;
+             font-size: 16px;
+             font-weight: 700;
+             cursor: pointer;
+             transition: background-color 0.3s;
+             margin-top: 15px;
+         }
+         .reserve-button:hover {
+             background-color: #45a049;
+         }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 class="page-title">주차 예약</h1>
+    <div class="layout">
+        <div class="main-content">
+            <div class="image-placeholder main-image">이미지</div>
+            <div class="sub-images">
+                <div class="image-placeholder sub-image">이미지</div>
+                <div class="image-placeholder sub-image">이미지</div>
+            </div>
+            <div class="info-section">
+                <div class="info-item">
+                    <span class="info-label">구획 번호</span>
+                    <span class="info-value">서울특별시 강남구 602-12 강남부재빌딩</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">운영 시간</span>
+                    <span class="info-value">09:00 - 21:00</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">시간당 요금</span>
+                    <span class="info-value">시간당 1,000원</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">해당 관할 공단</span>
+                    <span class="info-value">강남구시설관리공단</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">공단 전화번호</span>
+                    <span class="info-value">02)402-0000</span>
+                </div>
+            </div>
+            <div class="description">
+                <h3>주차구역 상세설명</h3>
+                <p>주차장 좋습니다.</p>
+            </div>
+            <div class="review-section">
+                <h3>리뷰</h3>
+                <p>000구매자 주차장 좋습니다.</p>
+            </div>
+        </div>
+        <div class="sidebar-container">
+            <div class="sidebar">
+                <h3>대여시간</h3>
+                <div class="time-slots">
+                    <button class="time-slot active">09:00</button>
+                    <button class="time-slot">10:00</button>
+                    <button class="time-slot">11:00</button>
+                    <button class="time-slot">12:00</button>
+                </div>
+                <div class="price-summary">
+                    1시간 X 7,000원
+                </div>
+                <button class="reserve-button">예약하기</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

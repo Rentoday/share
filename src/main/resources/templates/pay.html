@@ -3,8 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        h1 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-weight: 700;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 15px;
+        }
+        .reservation-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            gap: 30px;
+        }
+        .parking-info {
+            flex: 2;
+        }
+        .payment-summary {
+            flex: 1;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .image-placeholder {
+            width: 100%;
+            height: 150px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .info-item {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        .info-item span {
+            font-weight: 700;
+            color: #34495e;
+        }
+        .notice {
+            background-color: #e8f5e9;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+        .notice h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .price-summary {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 15px;
+            text-align: right;
+        }
+    </style>
 </head>
 <body>
+<div class="container">
+    <h1>확인 및 결제</h1>
+    <div class="reservation-info">
+        <div class="parking-info">
+            <h2>예약 정보</h2>
+            <div class="info-item"><span>구획 번호:</span> 서울특별시 강남구 602-12 강남부재빌딩</div>
+            <div class="info-item"><span>운영 시간:</span> 09:00 ~ 21:00</div>
+            <div class="info-item"><span>시간당 요금:</span> 시간당 1,000원</div>
+            <div class="info-item"><span>해당 관할 공단:</span> 강남구시설관리공단</div>
+            <div class="info-item"><span>공단 전화번호:</span> 02)402-0000</div>
+            <div class="info-item"><span>주차구역 상세설명:</span> 주차장 좋습니다.</div>
+        </div>
+        <div class="payment-summary">
+            <div class="image-placeholder"></div>
+            <h3>요금 세부정보</h3>
+            <div>1시간 x 7,000원</div>
+            <div class="price-summary">총 7,000 원</div>
+            <button class="button">결제하기</button>
+        </div>
+    </div>
+    <div class="notice">
+        <h3>환불 정책</h3>
+        <p>결제 완료시 취소하기 버튼에서 관련 내용을 확인하실 수 있습니다. 카카오페이 기준으로 작성되었습니다.</p>
+    </div>
+    <div class="notice">
+        <h3>이용 규칙</h3>
+        <p>각종 이용규칙이 명시되어있는 부분입니다. 주차장마다 다르게 작성될 수 있습니다.</p>
+    </div>
+</div>
     <script>
         const IMP = window.IMP;
     IMP.init("your_imp_key");
