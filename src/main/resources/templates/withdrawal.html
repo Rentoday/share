@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원탈퇴</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .frame_modal_withdrawal {
+            width: 519px;
+            height: 314px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: #4CAF50;
+            cursor: pointer;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #4CAF50;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        p {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .submit-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            font-size: 16px;
+            margin: 0 auto;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="frame_modal_withdrawal">
+    <span class="close-btn">&times;</span>
+    <h2>회원탈퇴</h2>
+    <div class="form-group">
+        <label for="secret-number">비밀번호</label>
+        <input type="text" id="secret-number" value="123123">
+    </div>
+    <p>오늘만세워를 이용해주셔서 감사합니다.</p>
+    <button class="submit-btn">탈퇴하기</button>
+</div>
+</body>
+</html>

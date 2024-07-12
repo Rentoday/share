@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주차구역 판매 등록</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .frame_modal_registration {
+            width: 719px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            background-color: white;
+            border-radius: 10px;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: #4CAF50;
+            cursor: pointer;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+        label {
+            width: 100px;
+            margin-right: 10px;
+            padding-top: 5px;
+            text-align: right;
+        }
+        .input-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        input[type="text"], textarea, input[type="file"] {
+            padding: 5px;
+            border: 1px solid #4CAF50;
+        }
+        .time-input {
+            display: flex;
+            align-items: center;
+        }
+        .time-input input {
+            width: 100px;
+        }
+        .time-input span {
+            margin: 0 10px;
+        }
+        textarea {
+            height: 100px;
+        }
+        .submit-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 5px;
+        }
+        input[type="file"] {
+            padding: 3px;
+        }
+        #image-preview {
+            display: flex;
+            justify-content: start;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        #image-preview img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+<div class="frame_modal_registration">
+    <span class="close-btn">&times;</span>
+    <h2>주차구역 판매 등록</h2>
+    <div class="form-group">
+        <label for="car-number">차량번호</label>
+        <div class="input-container">
+            <input type="text" id="car-number" value="12가1234">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="area-number">구획번호</label>
+        <div class="input-container">
+            <input type="text" id="area-number" value="12가1234">
+        </div>
+    </div>
+    <div class="form-group">
+        <label>시간</label>
+        <div class="input-container">
+            <div class="time-input">
+                <input type="text" value="09:00">
+                <span>~</span>
+                <input type="text" value="09:00">
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="price">시간당 요금</label>
+        <div class="input-container">
+            <input type="text" id="price" value="3000">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="details">상세설명</label>
+        <div class="input-container">
+            <textarea id="details">12가1234</textarea>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="image">이미지</label>
+        <div class="input-container">
+            <input type="file" id="image" accept="image/*" multiple>
+            <div id="image-preview"></div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="certificate">소유확인증</label>
+        <div class="input-container">
+            <input type="file" id="certificate" accept=".pdf,.jpg,.jpeg,.png">
+        </div>
+    </div>
+    <button class="submit-btn">판매신청</button>
+</div>
+
+<script>
+    document.getElementById('image').addEventListener('change', function(event) {
+        var preview = document.getElementById('image-preview');
+        preview.innerHTML = '';
+        var files = event.target.files;
+
+        if (files) {
+            for (var i = 0; i < Math.min(files.length, 3); i++) {
+                var file = files[i];
+                var reader = new FileReader();
+
+                reader.onload = function(e) {
+                    var img = document.createElement('img');
+                    img.src = e.target.result;
+                    preview.appendChild(img);
+                }
+
+                reader.readAsDataURL(file);
+            }
+        }
+
+        if (files.length > 3) {
+            alert('최대 3개의 이미지만 선택할 수 있습니다.');
+        }
+    });
+
+    document.querySelector('.close-btn').addEventListener('click', function() {
+        document.body.style.display = 'none';
+    });
+</script>
+</body>
+</html>
