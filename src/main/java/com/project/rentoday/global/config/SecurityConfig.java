@@ -1,6 +1,7 @@
 package com.project.rentoday.global.config;
 
 import com.project.rentoday.domain.member.repository.MemberRepository;
+import com.project.rentoday.domain.notification.service.NotificationService;
 import com.project.rentoday.global.filter.JwtFilter;
 import com.project.rentoday.global.filter.LoginFilter;
 import com.project.rentoday.global.filter.LogoutFilter;
@@ -39,7 +40,7 @@ public class SecurityConfig {
     private final OAuth2UserService oAuth2UserService;
     private final Oauth2SuccessHandler oauth2SuccessHandler;
     private final MemberRepository memberRepository;
-//    private final NotificationService notificationService;
+    private final NotificationService notificationService;
 
     //커스텀한 loginFilter의 생성자 인자로 넣기 위해 빈으로 등록
     @Bean
@@ -135,7 +136,7 @@ public class SecurityConfig {
                 .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
 
         http
-                .addFilterBefore(new LogoutFilter(jwtService, refreshRepository), org.springframework.security.web.authentication.logout.LogoutFilter.class);
+                .addFilterBefore(new LogoutFilter(jwtService, refreshRepository, notificationService), org.springframework.security.web.authentication.logout.LogoutFilter.class);
 
         //세션에 대한 설정부분
         http
