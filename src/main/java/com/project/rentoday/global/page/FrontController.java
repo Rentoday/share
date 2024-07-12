@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class FrontController {
 
-
-
     @GetMapping("/myPage")
     public String notification() {
         return "myPage/myPage.html";

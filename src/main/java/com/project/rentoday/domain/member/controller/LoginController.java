@@ -7,17 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class LoginController {
 
-
-    @GetMapping("/login")
-    public String login(Model model) {
-        return "login.html";
-    }
-
-    @GetMapping("/index")
-    public String index(Model model) {
-        return "index.html";
-    }
-
     @GetMapping("/notice")
     public String notice(Model model) {
         return "noticeModal.html";
@@ -58,15 +47,6 @@ public class LoginController {
         return "layout/main.html";
     }
 
-    @GetMapping("/my")
-    public String my() {
-        return "my.html";
-    }
-
-    @GetMapping("/join")
-    public String join() {
-        return "member/join.html";
-    }
 
     @GetMapping("/loginModal")
     public String loginModal() {
