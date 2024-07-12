@@ -47,7 +47,7 @@
         @Column
         private String confirmation;
 
-        @Column(name = "is_signed")
+        @Column(name = "")
         private ParkStatus parkStatus;
 
         @NotNull

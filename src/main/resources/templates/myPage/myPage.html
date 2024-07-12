@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>알림 내역</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            min-height: 350px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            color: #2c3e50;
+        }
+        .update-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .update-btn:hover {
+            background-color: #45a049;
+        }
+        .sidebar {
+            width: 200px;
+            float: left;
+            margin-right: 30px;
+        }
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar li {
+            padding: 10px 15px;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .sidebar li.active {
+            background-color: #e8f5e9;
+            border-left-color: #4CAF50;
+            font-weight: 500;
+        }
+        .sidebar li:hover {
+            background-color: #f1f8e9;
+        }
+        .main-content {
+            margin-left: 230px;
+        }
+        .content {
+            display: none;
+        }
+        .content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .checkbox {
+            width: 18px;
+            height: 18px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .pagination button {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .pagination button:hover, .pagination button.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1 id="page-title">알림 내역</h1>
+        <button class="update-btn">삭제하기</button>
+    </div>
+    <div class="sidebar">
+        <ul id="sidebar-menu">
+            <li data-content="info">내 정보</li>
+            <li data-content="notifications" class="active">알림 내역</li>
+            <li data-content="reservations">예약 정보</li>
+            <li data-content="sales-info">판매 정보</li>
+            <li data-content="approval-requests">승인 요청</li>
+            <li data-content="sales-history">판매 이력</li>
+            <li data-content="payment-history">결제 내역</li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <div id="info-content" class="content">
+            <h2>내 정보</h2>
+            <p>여기에 내 정보 관련 내용을 추가하세요.</p>
+        </div>
+        <div id="notifications-content" class="content active">
+            <table>
+                <thead>
+                <tr>
+                    <th>선택</th>
+                    <th>알림번호</th>
+                    <th>내용</th>
+                    <th>알림일</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td>1</td>
+                    <td>mong@naver.com</td>
+                    <td>24/07/21</td>
+                </tr>
+                <tr>
+                    <td colspan="4">조회된 알림이 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <button>&lt;</button>
+                <button class="active">1</button>
+                <button>2</button>
+                <button>3</button>
+                <button>&gt;</button>
+            </div>
+        </div>
+        <div id="reservations-content" class="content">
+            <table>
+                <thead>
+                <tr>
+                    <th>예약번호</th>
+                    <th>구획번호</th>
+                    <th>주소</th>
+                    <th>예약시간</th>
+                    <th>금액</th>
+                    <th>예약일</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td>1</td>
+                    <td>52루-5278</td>
+                    <td>강남구 센터필드빌딩 5층 구글코리아</td>
+                    <td>09:00~18:00</td>
+                    <td>24/07/11</td>
+                </tr>
+                <tr>
+                    <td colspan="6">조회된 예약 정보가 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <button>&lt;</button>
+                <button class="active">1</button>
+                <button>2</button>
+                <button>3</button>
+                <button>&gt;</button>
+            </div>
+        </div>
+        <div id="sales-info-content" class="content">
+            <table>
+                <thead>
+                <tr>
+                    <th>선택</th>
+                    <th>판매번호</th>
+                    <th>구획번호</th>
+                    <th>주소</th>
+                    <th>판매시간</th>
+                    <th>금액</th>
+                    <th>판매일</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td>1</td>
+                    <td>28루-5278</td>
+                    <td>강남구 센터필드빌딩 5층 구글코리아</td>
+                    <td>09:00~18:00</td>
+                    <td>3000</td>
+                    <td>24/07/12</td>
+                </tr>
+                <tr>
+                    <td colspan="7">조회된 판매 정보가 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <button>&lt;</button>
+                <button class="active">1</button>
+                <button>2</button>
+                <button>3</button>
+                <button>&gt;</button>
+            </div>
+        </div>
+        <div id="approval-requests-content" class="content">
+            <table>
+                <thead>
+                <tr>
+                    <th>선택</th>
+                    <th>검토번호</th>
+                    <th>판매자</th>
+                    <th>구획번호</th>
+                    <th>주소</th>
+                    <th>금액</th>
+                    <th>신청일</th>
+                    <th>상태</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td>1</td>
+                    <td>장성욱</td>
+                    <td>28루-5278</td>
+                    <td>강남구 센터필드빌딩 5층 구글코리아</td>
+                    <td>3000</td>
+                    <td>24/07/12</td>
+                    <td>대기</td>
+                </tr>
+                <tr>
+                    <td colspan="8">조회된 승인 요청이 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <button>&lt;</button>
+                <button class="active">1</button>
+                <button>2</button>
+                <button>3</button>
+                <button>&gt;</button>
+            </div>
+        </div>
+        <div id="sales-history-content" class="content">
+            <table>
+                <thead>
+                <tr>
+                    <th>판매번호</th>
+                    <th>구획번호</th>
+                    <th>주소</th>
+                    <th>판매시간</th>
+                    <th>금액</th>
+                    <th>판매일</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>52루-5278</td>
+                    <td>강남구 센터필드빌딩 5층 구글코리아</td>
+                    <td>09:00~18:00</td>
+                    <td>2000</td>
+                    <td>24/07/11</td>
+                </tr>
+                <tr>
+                    <td colspan="6">조회된 판매 이력이 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <button>&lt;</button>
+                <button class="active">1</button>
+                <button>2</button>
+                <button>3</button>
+                <button>&gt;</button>
+            </div>
+        </div>
+        <div id="payment-history-content" class="content">
+            <table>
+                <thead>
+                <tr>
+                    <th>결제번호</th>
+                    <th>구획번호</th>
+                    <th>주소</th>
+                    <th>판매시간</th>
+                    <th>금액</th>
+                    <th>결제일</th>
+                    <th>상태</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>52루-5278</td>
+                    <td>강남구 센터필드빌딩 5층 구글코리아</td>
+                    <td>09:00~18:00</td>
+                    <td>2000</td>
+                    <td>24/07/11</td>
+                    <td>결제</td>
+                </tr>
+                <tr>
+                    <td colspan="7">조회된 결제 내역이 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <button>&lt;</button>
+                <button class="active">1</button>
+                <button>2</button>
+                <button>3</button>
+                <button>&gt;</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebarMenu = document.getElementById('sidebar-menu');
+        const contents = document.querySelectorAll('.content');
+        const pageTitle = document.getElementById('page-title');
+
+        sidebarMenu.addEventListener('click', (e) => {
+            if (e.target.tagName === 'LI') {
+                // Remove active class from all sidebar items
+                Array.from(sidebarMenu.getElementsByTagName('li')).forEach(li => {
+                    li.classList.remove('active');
+                });
+
+                // Add active class to the clicked item
+                e.target.classList.add('active');
+
+                // Hide all contents
+                contents.forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                // Show the clicked content
+                const contentId = e.target.dataset.content + '-content';
+                document.getElementById(contentId).classList.add('active');
+
+                // Update the page title
+                pageTitle.textContent = e.target.textContent;
+            }
+        });
+                const salesInfoMenuItem = document.querySelector('li[data-content="sales-info"]');
+                salesInfoMenuItem.click();
+
+                const approvalRequestsItem = document.querySelector('li[data-content="approval-requests"]');
+                approvalRequestsItem.click();
+
+                const reservationsItem = document.querySelector('li[data-content="reservations"]');
+                reservationsItem.click();
+
+                const salesHistoryItem = document.querySelector('li[data-content="sales-history"]');
+                salesHistoryItem.click();
+
+                const paymentHistoryItem = document.querySelector('li[data-content="payment-history"]');
+                paymentHistoryItem.click();
+
+                const infoItem = document.querySelector('li[data-content="info"]');
+                infoItem.click();
+            });
+</script>
+</body>
+</html>
