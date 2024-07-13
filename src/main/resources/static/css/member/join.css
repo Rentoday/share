@@ -161,7 +161,7 @@
   box-sizing: border-box;
 }
 .frame-page-join .icon-logo {
-  background: url('../../image/member/logo.png') 50% / cover no-repeat;
+  background: url('../../image/common/icon_logo.png') 50% / cover no-repeat;
   margin-right: 1px;
   width: 57px;
   height: 64px;

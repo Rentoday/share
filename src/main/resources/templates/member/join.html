@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>join</title>
     <link rel="stylesheet" th:href="@{/css/member/join.css}">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
 <div class="frame-page-join">
@@ -133,6 +134,97 @@
     document.getElementById('arrowMain').addEventListener('click', function() {
     window.location.href = '/main';
 });
+</script>
+<script>
+    // 이메일 인증 요청
+    document.querySelector('.button-email-check').addEventListener('click', function() {
+        const email = document.querySelector('.text-input-email').value;
+        axios.post('/api/member/emailCheck',
+            JSON.stringify({ email: email }),
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        )
+        .then(function (response) {
+            if (response.status === 200) {
+                alert(response.data); // 응답 텍스트를 직접 표시
+            }
+        })
+        .catch(function (error) {
+            alert('이메일 인증 요청 중 오류가 발생했습니다.');
+        });
+    });
+
+    // 인증번호 확인
+    document.querySelector('.button-check-num').addEventListener('click', function() {
+        const email = document.querySelector('.text-input-email').value;
+        const code = document.querySelector('.text-input-email-check-num').value;
+        axios.post('/api/member/verification',
+            JSON.stringify({ email: email, accessCode: code }),
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        )
+        .then(function (response) {
+            if (response.status === 200) {
+                alert(response.data); // 응답 텍스트를 직접 표시
+            }
+        })
+        .catch(function (error) {
+            alert('인증번호 확인 중 오류가 발생했습니다.');
+        });
+    });
+
+    document.querySelector('.button-join').addEventListener('click', function() {
+    // 폼 데이터 수집
+    const email = document.querySelector('.text-input-email').value;
+    const password = document.querySelector('#text-input-password').value;
+    const name = document.querySelector('.text-input-adress').value;
+    const phone = document.querySelector('.text-input-phone').value;
+    const profileImage = document.querySelector('#profileUpload').files[0];
+
+    // FormData 객체 생성
+    const formData = new FormData();
+    const keyData = {
+        email: email,
+        password: password,
+        name: name,
+        phone: phone
+    };
+
+    formData.append('key', new Blob([JSON.stringify(keyData)], { type: 'application/json' }));
+    if (profileImage) {
+        formData.append('profileImage', profileImage);
+    }
+
+    // axios를 사용하여 POST 요청 보내기
+    axios.post('/api/member/join', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    })
+    .then(function (response) {
+        if (response.status === 200) {
+            alert(response.data);
+            window.location.href = '/main';
+        }
+    })
+    .catch(function (error) {
+        if (error.response) {
+            // 서버가 응답한 에러
+            alert(error.response.data);
+        } else {
+            // 요청을 보내지 못한 경우의 에러
+            alert('회원가입 처리 중 오류가 발생했습니다.');
+        }
+        console.error('Error:', error);
+    });
+});
+
 </script>
 </body>
 </html>

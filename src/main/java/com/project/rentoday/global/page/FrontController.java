@@ -26,9 +26,20 @@ public class FrontController {
     public String pay() {
         return "pay.html";
     }
+
     @GetMapping("/login")
-    public String login(Model model) {
+    public String login() {
         return "login.html";
+    }
+
+    @GetMapping("/modal/login")
+    public String modalLogin() {
+        return "member/loginModal.html";
+    }
+
+    @GetMapping("/test")
+    public String test() {
+        return "test.html";
     }
 
     @GetMapping("/index")
@@ -43,6 +54,6 @@ public class FrontController {
 
     @GetMapping("/join")
     public String join() {
-        return "join.html";
+        return "member/join.html";
     }
 }

@@ -3,374 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <title>오늘만세워</title>
+    <link rel="stylesheet" href="/css/common/main.css">
 </head>
-<style>
-    body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-}
-
-header {
-    background-color: white;
-    padding: 20px 0;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-}
-
-.logo img {
-    height: 40px;
-}
-
-.logo span {
-    font-size: 24px;
-    font-weight: bold;
-    color: #00B202;
-}
-
-.search-bar {
-    display: flex;
-    align-items: center;
-    border: 1px solid #ccc;
-    border-radius: 25px;
-    padding: 5px 15px;
-    width: 50%;
-    height: 40px;
-}
-
-.search-bar input {
-    border: none;
-    flex-grow: 0.6;
-    font-size: 16px;
-    outline: none;
-    height: auto;
-    right: 50px;
-
-}
-
-.divider {
-    width: 1px;
-    height: 100%;
-    background-color: #ccc;
-    margin: 0 10px;
-}
-
-.time {
-    color: #888;
-    flex-grow: 0.5;
-}
-
-.search-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin-left: auto;
-}
-
-.search-button img {
-    width: 30px;
-    height: 30px;
-
-}
-
-.login-button {
-    background-color: white;
-    border: 2px solid #00B202;
-    color: #00B202;
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.notice {
-    background-color: #f8f8f8;
-    text-align: center;
-    padding: 10px 0;
-    font-size: 14px;
-}
-
-.map-container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 0 20px;
-}
-
-.map {
-    width: 100%;
-    height: auto;
-    border-radius: 10px;
-}
-
-footer {
-    background-color: #f8f8f8;
-    padding: 20px;
-    font-size: 12px;
-    color: #666;
-    text-align: center;
-}
-
-footer p {
-    margin: 5px 0;
-}
-   .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-            /* 플렉스 컨테이너로 설정 */
-            justify-content: center;
-            align-items: center;
-        }
-        .frame-modal-notice {
-            width: 962px;
-            height: 660px;
-            border: 1px solid #ccc;
-            padding: 20px;
-            box-sizing: border-box;
-            position: relative;
-            background-color: white;
-            /* margin 제거 */
-            margin: 0;
-            /* 최대 높이 설정 및 스크롤 추가 */
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .frame-modal-notice .header {
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .close-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 24px;
-            color: #1FBC21;
-            cursor: pointer;
-        }
-        .notice-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .notice-table th, .notice-table td {
-            border-top: 1px solid #1FBC21;
-            border-bottom: 1px solid #1FBC21;
-            border-left: none;
-            border-right: none;
-            padding: 10px;
-            text-align: center;
-        }
-        .notice-table th {
-            background-color: #f5f5f5;
-        }
-        .notice-table .expandable-content {
-            display: none;
-            padding: 10px;
-            text-align: left;
-        }
-        .toggle-button {
-            cursor: pointer;
-            text-align: right;
-            width: 30px;
-        }
-
-    /* 로그인 모달 스타일 */
-.modal-login {
-  width: 611px;
-  height: auto;
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  position: relative;
-  font-family: Arial, sans-serif;
-}
-
-.modal-content {
-  padding: 40px;
-}
-
-.modal-login .close-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #888;
-  cursor: pointer;
-}
-
-.modal-login .logo {
-    text-align: center;
-    margin-bottom: 30px;
-    display: flex;
-    justify-content: center;
-}
-
-.modal-login .logo img {
-width: 60px;
-  height: 60px;
-}
-
-.modal-login .logo h1 {
-  color: #20a43d;
-  font-size: 24px;
-}
-
-.input-group {
-  margin-bottom: 20px;
-}
-
-.modal-login label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.modal-login input[type="text"],
-.modal-login input[type="password"] {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
-  box-sizing: border-box;
-}
-
-.forgot-password {
-  text-align: right;
-  margin-bottom: 20px;
-}
-
-.forgot-password a {
-  color: #888;
-  text-decoration: none;
-  font-size: 14px;
-}
-
-.modal-login .login-button,
-.kakao-login {
-  width: 100%;
-  padding: 15px;
-  border: none;
-  border-radius: 25px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.modal-login .login-button {
-  background-color: #20a43d;
-  color: white;
-  margin-bottom: 20px;
-}
-
-#divider2 {
-  text-align: center;
-  color: #888;
-  position: relative;
-}
-
-.divider1 {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #888;
-  position: relative;
-}
-
-.divider1::before,
-.divider1::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 40%;
-  height: 1px;
-  background-color: #ccc;
-}
-
-.divider1::before {
-  left: 0;
-}
-
-.divider1::after {
-  right: 0;
-}
-
-.kakao-login {
-  background-color: #fee500;
-  color: #000;
-}
-
-    .time-dropdown {
-    position: relative;
-    cursor: pointer;
-}
-
-.time-display {
-    color: #888;
-}
-
-.time-options {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background-color: white;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 1000;
-}
-
-.time-option {
-    padding: 5px 10px;
-    cursor: pointer;
-}
-
-.time-option:hover {
-    background-color: #f0f0f0;
-}
-</style>
 <body>
 <header>
     <div class="header-content">
         <div class="logo">
-            <img src="../../image/member/logo.png" alt="오늘만세워 로고">
+            <a href="/main" title="메인 페이지로 이동">
+            <img src="../../image/common/icon_logo.png" alt="오늘만세워 로고">
             <span>오늘만세워</span>
+            </a>
         </div>
         <div class="search-bar">
             <input type="text" placeholder="주소를 입력해주세요.">
             <div class="divider" id="divider2"></div>
-            <div class="time-dropdown">
+            <div class="time-selector">
                 <span class="time-display">시간</span>
-                <div class="time-options" style="display: none;">
-                    <!-- 시간 옵션들이 여기에 JavaScript로 추가됩니다 -->
+                <div class="time-dropdown" style="display: none;">
+                    <div class="time-list">
+                        <!-- JavaScript로 시간 옵션들이 여기에 추가됩니다 -->
+                    </div>
                 </div>
             </div>
             <button class="search-button">
-                <img src="../../image/search.svg" alt="검색">
+                <img src="../../image/common/search.svg" alt="검색">
             </button>
         </div>
-        <button class="login-button">로그인</button>
+        <div class="auth-section">
+        </div>
     </div>
 </header>
 <div class="notice">
@@ -420,7 +80,7 @@ width: 60px;
         <div class="modal-content">
             <button class="close-button" id="closeLoginModal">✕</button>
             <div class="logo">
-                <img src="../../image/member/logo.png" alt="오늘만세워 로고">
+                <img src="../../image/common/icon_logo.png" alt="오늘만세워 로고">
                 <h1>오늘만세워</h1>
             </div>
             <form>
@@ -450,6 +110,226 @@ width: 60px;
 </footer>
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=21a9c58904c9907bb95e9ebbf5a8e5e0"></script>
 <script>
+    // 전역 변수
+let authToken = null;
+let notifications = [];
+
+// 초기 로드 함수
+function initializeApp() {
+    authToken = localStorage.getItem('authToken');
+    updateUI();
+    if (authToken) {
+        fetchNotifications();
+        fetchProfileImage();
+    }
+}
+
+// UI 업데이트 함수
+function updateUI() {
+    const authSection = document.querySelector('.auth-section');
+    if (authToken) {
+        authSection.innerHTML = `
+            <button class="icon-button panmaetotal">판매등록</button>
+            <div class="notification-container">
+                <button class="icon-button notification">
+                    <img src="path/to/default-notification.svg" alt="알림" class="notification-icon">
+                    <img src="path/to/active-notification.svg" alt="새 알림" class="notification-icon-active" style="display: none;">
+                </button>
+                <div class="notification-dropdown" style="display: none;"></div>
+            </div>
+            <div class="profile-container">
+                <button class="icon-button profile">
+                    <img src="path/to/default-profile.svg" alt="프로필" class="profile-image">
+                </button>
+                <div class="profile-dropdown" style="display: none;">
+                    <button class="dropdown-item mypage">마이페이지</button>
+                    <button class="dropdown-item logout">로그아웃</button>
+                </div>
+            </div>
+        `;
+        setupLoggedInListeners();
+    } else {
+        authSection.innerHTML = '<button class="login-button">로그인</button>';
+        setupLoginListener();
+    }
+}
+
+// 로그인 리스너 설정
+function setupLoginListener() {
+    const loginButton = document.querySelector('.login-button');
+    loginButton.addEventListener('click', showLoginModal);
+}
+
+// 로그인 상태 리스너 설정
+function setupLoggedInListeners() {
+    setupNotificationListener();
+    setupProfileListener();
+}
+
+// 알림 리스너 설정
+function setupNotificationListener() {
+    const notificationButton = document.querySelector('.notification');
+    const notificationDropdown = document.querySelector('.notification-dropdown');
+
+    notificationButton.addEventListener('click', toggleNotificationDropdown);
+
+    // 드롭다운 외부 클릭 시 닫기
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.notification-container')) {
+            notificationDropdown.style.display = 'none';
+        }
+    });
+}
+
+// 프로필 리스너 설정
+function setupProfileListener() {
+    const profileButton = document.querySelector('.profile');
+    const profileDropdown = document.querySelector('.profile-dropdown');
+    const mypageButton = document.querySelector('.mypage');
+    const logoutButton = document.querySelector('.logout');
+
+    profileButton.addEventListener('click', toggleProfileDropdown);
+    mypageButton.addEventListener('click', goToMyPage);
+    logoutButton.addEventListener('click', logout);
+
+    // 드롭다운 외부 클릭 시 닫기
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.profile-container')) {
+            profileDropdown.style.display = 'none';
+        }
+    });
+}
+
+// 로그인 모달 표시
+function showLoginModal() {
+    // 로그인 모달 표시 로직
+}
+
+// 알림 드롭다운 토글
+function toggleNotificationDropdown() {
+    const dropdown = document.querySelector('.notification-dropdown');
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    if (dropdown.style.display === 'block') {
+        renderNotifications();
+    }
+}
+
+// 프로필 드롭다운 토글
+function toggleProfileDropdown() {
+    const dropdown = document.querySelector('.profile-dropdown');
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+// 알림 데이터 가져오기
+function fetchNotifications() {
+    // API 호출
+    // 성공 시: updateNotifications(data) 호출
+}
+
+// 알림 업데이트
+function updateNotifications(data) {
+    notifications = data;
+    updateNotificationIcon();
+}
+
+// 알림 아이콘 업데이트
+function updateNotificationIcon() {
+    const defaultIcon = document.querySelector('.notification-icon');
+    const activeIcon = document.querySelector('.notification-icon-active');
+    if (notifications.length > 0) {
+        defaultIcon.style.display = 'none';
+        activeIcon.style.display = 'inline';
+    } else {
+        defaultIcon.style.display = 'inline';
+        activeIcon.style.display = 'none';
+    }
+}
+
+// 알림 렌더링
+function renderNotifications() {
+    const dropdown = document.querySelector('.notification-dropdown');
+    if (notifications.length > 0) {
+        dropdown.innerHTML = notifications.map(notif => `
+            <div class="notification-item">
+                <div>${notif.content}</div>
+                <div>${notif.date}</div>
+            </div>
+        `).join('') + '<button class="view-all-notifications">모든 알림 내역 보기</button>';
+        dropdown.style.height = '247px';
+    } else {
+        dropdown.innerHTML = '<div class="no-notifications">표시할 알림이 없습니다.</div>' +
+                             '<button class="view-all-notifications">모든 알림 내역 보기</button>';
+        dropdown.style.height = 'auto';
+    }
+    document.querySelector('.view-all-notifications').addEventListener('click', viewAllNotifications);
+}
+
+// 프로필 이미지 가져오기
+function fetchProfileImage() {
+    // API 호출
+    // 성공 시: updateProfileImage(imageUrl) 호출
+}
+
+// 프로필 이미지 업데이트
+function updateProfileImage(imageUrl) {
+    document.querySelector('.profile-image').src = imageUrl;
+}
+
+// 마이페이지로 이동
+function goToMyPage() {
+    // API 호출 또는 페이지 이동
+}
+
+// 로그아웃
+function logout() {
+    // API 호출
+    // 성공 시:
+    authToken = null;
+    localStorage.removeItem('authToken');
+    updateUI();
+}
+
+// 모든 알림 보기
+function viewAllNotifications() {
+    // API 호출 또는 페이지 이동
+}
+
+// 앱 초기화
+document.addEventListener('DOMContentLoaded', initializeApp);
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const timeDisplay = document.querySelector('.time-display');
+      const timeDropdown = document.querySelector('.time-dropdown');
+      const timeList = document.querySelector('.time-list');
+
+      // 시간 옵션 생성
+      for (let i = 0; i < 24; i++) {
+        const timeOption = document.createElement('div');
+        timeOption.classList.add('time-option');
+        timeOption.textContent = `${i.toString().padStart(2, '0')}:00`;
+        timeOption.addEventListener('click', function() {
+          timeDisplay.textContent = this.textContent;
+          timeDropdown.style.display = 'none';
+        });
+        timeList.appendChild(timeOption);
+      }
+
+      // 시간 표시를 클릭하면 드롭다운 표시/숨김
+      timeDisplay.addEventListener('click', function() {
+        timeDropdown.style.display = timeDropdown.style.display === 'none' ? 'block' : 'none';
+      });
+
+      // 드롭다운 외부를 클릭하면 드롭다운 숨김
+      document.addEventListener('click', function(event) {
+        if (!timeDisplay.contains(event.target) && !timeDropdown.contains(event.target)) {
+          timeDropdown.style.display = 'none';
+        }
+      });
+    });
+</script>
+<script>
     var mapContainer = document.getElementById('map'), // 지도를 표시할 div
         mapOption = {
             center: new kakao.maps.LatLng(37.566826, 126.9786567), // 지도의 중심좌표 (서울시청)
@@ -477,7 +357,8 @@ width: 60px;
                     modal.style.display = 'none';
                 }
             });
-            // 로그인 모달 관련 코드 추가
+
+    // 로그인 모달 관련 코드 추가
     var loginButton = document.querySelector('.header-content .login-button');
     var loginModal = document.getElementById('loginModal');
     var closeLoginModal = document.getElementById('closeLoginModal');
@@ -497,40 +378,7 @@ width: 60px;
         }
     });
 
-     // 시간 드롭다운 관련 코드 추가
-    var timeDropdown = document.querySelector('.time-dropdown');
-    var timeDisplay = timeDropdown.querySelector('.time-display');
-    var timeOptions = timeDropdown.querySelector('.time-options');
 
-    // 시간 옵션 생성 (한 시간 간격)
-    function generateTimeOptions() {
-        for (let hour = 0; hour < 24; hour++) {
-            let timeString = `${hour.toString().padStart(2, '0')}:00`;
-            let option = document.createElement('div');
-            option.className = 'time-option';
-            option.textContent = timeString;
-            option.onclick = function() {
-                timeDisplay.textContent = this.textContent;
-                timeOptions.style.display = 'none';
-            };
-            timeOptions.appendChild(option);
-        }
-    }
-
-    generateTimeOptions();
-
-    timeDisplay.addEventListener('click', function(e) {
-        e.stopPropagation();
-        timeOptions.style.display = timeOptions.style.display === 'none' ? 'block' : 'none';
-    });
-
-    document.addEventListener('click', function() {
-        timeOptions.style.display = 'none';
-    });
-
-    timeOptions.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
         });
 
         //공지사항 아코디언
@@ -546,7 +394,35 @@ width: 60px;
                 button.innerHTML = '&#x25B2;'; // Up arrow
             }
         }
+javascriptCopydocument.addEventListener('DOMContentLoaded', function() {
+  const timeDisplay = document.querySelector('.time-display');
+  const timeDropdown = document.querySelector('.time-dropdown');
+  const timeList = document.querySelector('.time-list');
 
+  // 시간 옵션 생성
+  for (let i = 0; i < 24; i++) {
+    const timeOption = document.createElement('div');
+    timeOption.classList.add('time-option');
+    timeOption.textContent = `${i.toString().padStart(2, '0')}:00`;
+    timeOption.addEventListener('click', function() {
+      timeDisplay.textContent = this.textContent;
+      timeDropdown.style.display = 'none';
+    });
+    timeList.appendChild(timeOption);
+  }
+
+  // 시간 표시를 클릭하면 드롭다운 표시/숨김
+  timeDisplay.addEventListener('click', function() {
+    timeDropdown.style.display = timeDropdown.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // 드롭다운 외부를 클릭하면 드롭다운 숨김
+  document.addEventListener('click', function(event) {
+    if (!timeDisplay.contains(event.target) && !timeDropdown.contains(event.target)) {
+      timeDropdown.style.display = 'none';
+    }
+  });
+});
 </script>
 </body>
 </html>

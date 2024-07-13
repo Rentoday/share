@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>헤더 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        .logo img {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+        .search-bar {
+            display: flex;
+            align-items: center;
+        }
+        .auth-section {
+            display: flex;
+            align-items: center;
+        }
+        .user-icons {
+            display: flex;
+            align-items: center;
+        }
+        .icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .panmaetotal {
+            background-color: #00B202;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+        .login-button {
+            background-color: #00B202;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="header-content">
+        <div class="logo">
+            <img src="https://via.placeholder.com/30" alt="로고">
+            <span>오늘만세워</span>
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="주소를 입력해주세요.">
+            <span>시간</span>
+            <button>검색</button>
+        </div>
+        <div class="auth-section">
+            <!-- 이 div의 내용이 동적으로 변경될 것입니다 -->
+        </div>
+    </div>
+</header>
+
+<button id="toggleAuth">로그인/로그아웃 토글</button>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const authSection = document.querySelector('.auth-section');
+        const toggleButton = document.getElementById('toggleAuth');
+
+        function updateAuthSection() {
+            const token = localStorage.getItem('token');
+
+            if (token) {
+                authSection.innerHTML = `
+                    <div class="user-icons">
+                        <button class="icon-button panmaetotal">판매등록</button>
+                        <button class="icon-button notification">알림</button>
+                        <button class="icon-button profile">프로필</button>
+                    </div>
+                `;
+            } else {
+                authSection.innerHTML = '<button class="login-button">로그인</button>';
+            }
+        }
+
+        toggleButton.addEventListener('click', function() {
+            if (localStorage.getItem('token')) {
+                localStorage.removeItem('token');
+            } else {
+                localStorage.setItem('token', 'dummy-token');
+            }
+            updateAuthSection();
+        });
+
+        // 초기 로드 시 실행
+        updateAuthSection();
+    });
+</script>
+</body>
+</html>

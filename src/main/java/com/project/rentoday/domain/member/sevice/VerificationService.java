@@ -32,9 +32,12 @@ public class VerificationService {
         String accessCode = codeRequest.getAccessCode();
         String redisValue = redisTemplate.opsForValue().get(email);
         if (Boolean.TRUE.equals(redisTemplate.hasKey(email))) {
+            System.out.println("키값 존재 유");
             if (accessCode.equals(redisValue)) {
+                System.out.println("키값 체크 확인");
                 redisTemplate.delete(email);
                 redisTemplate.opsForValue().set(email, "TRUE");
+                return;
             }
             throw new VerificationException(VerificationErrorCode.VERIFICATION_CODE_NOT_FOUND_ERROR);
         }
