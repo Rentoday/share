@@ -26,6 +26,12 @@
             margin: 0;
             color: #2c3e50;
         }
+        .button-container {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 10px; /* 버튼 간의 간격 추가 */
+                    margin-bottom: 10px;
+        }
         .delete-btn {
             background-color: #ff5252;
             color: white;
@@ -35,10 +41,22 @@
             cursor: pointer;
             font-size: 12px;
             transition: background-color 0.3s;
-            margin-bottom: 10px; /* Add margin to separate button from content */
         }
         .delete-btn:hover {
             background-color: #ff1744;
+        }
+        .create-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+        .create-btn:hover {
+            background-color: #388E3C;
         }
         .sidebar {
             width: 200px;

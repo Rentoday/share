@@ -17,6 +17,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByMember(Member member);
 
+
+
     @Query("SELECT r FROM Reservation r WHERE r.reservationUid = :reservationUid")
     Optional<Reservation> findReservationAndPayAndMember(@Param("reservationUid") String reservationUid);
 

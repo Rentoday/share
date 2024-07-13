@@ -1,6 +1,8 @@
 package com.project.rentoday.domain.reservation.service;
 
 import com.project.rentoday.domain.member.entity.Member;
+import com.project.rentoday.domain.member.exception.MemberErrorCode;
+import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.repository.ParkRepository;
@@ -13,7 +15,6 @@ import com.project.rentoday.domain.reservation.entity.Reservation;
 import com.project.rentoday.domain.reservation.exception.ReservationAlreadyExistsException;
 import com.project.rentoday.domain.reservation.exception.ReservationNotAvailableException;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
-import com.siot.IamportRestClient.response.Payment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,4 +80,5 @@ public class ReservationService {
     public Reservation getReservationById(Long id) {
         return reservationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("해당 번호로 예약을 찾을 수 없습니다."));
     }
+
 }

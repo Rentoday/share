@@ -1,0 +1,97 @@
+#info-content {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+#info-content .profile-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+#info-content .profile-info {
+    text-align: center;
+}
+
+#info-content .profile-pic-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 15px;
+}
+
+#info-content .profile-pic {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+#info-content .profile-pic-edit {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: #4CAF50;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+#info-content .profile-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#info-content .info-form {
+
+    padding: 20px;
+    border-radius: 8px;
+}
+
+#info-content .form-group {
+    margin-bottom: 15px;
+}
+
+#info-content label {
+    display: block;
+    margin-bottom: 5px;
+    color: #666;
+    font-size: 14px;
+}
+
+#info-content input[type="text"],
+#info-content input[type="email"],
+#info-content input[type="password"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#info-content .buttons {
+    margin-top: 20px;
+    text-align: right;
+}
+
+#info-content button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#info-content .save-btn {
+    background-color: #4CAF50;
+    color: white;
+    margin-right: 10px;
+}
+
+#info-content .cancel-btn {
+    background-color: #f4f4f4;
+    color: #333;
+}
