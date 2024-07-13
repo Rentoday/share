@@ -5,19 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관리자</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../static/css/admin/admin.css">
-    출처: https://programmers.tistory.com/entry/VUEJS-css-외부-참조 [Programmers:티스토리]
+    <link rel="stylesheet" href="css/admin/admin.css">
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1 id="page-title">알림 내역</h1>
-        <button class="update-btn">삭제하기</button>
+        <h1 id="page-title">공지사항</h1>
     </div>
     <div class="sidebar">
         <ul id="sidebar-menu">
             <li data-content="members" class="active">회원 조회</li>
-            <li data-content="sellers">판매자 조회</li>
             <li data-content="sales">판매 상품 조회</li>
             <li data-content="confirm">판매 상품 검토</li>
             <li data-content="notice">공지사항</li>
@@ -27,38 +24,6 @@
         <div id="members-content" class="content active">
             <h2>회원 조회</h2>
             <p>여기에 내 정보 관련 내용을 추가하세요.</p>
-        </div>
-        <div id="sellers-content" class="content">
-            <table>
-                <thead>
-                <tr>
-                    <th>회원번호</th>
-                    <th>이름</th>
-                    <th>이메일</th>
-                    <th>폰번호</th>
-                    <th>가입일</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>장성욱</td>
-                    <td>mongdori00@naver.com</td>
-                    <td>010-3124-5923</td>
-                    <td>24/07/11</td>
-                </tr>
-                <tr>
-                    <td colspan="5">조회된 판매자가 없습니다.</td>
-                </tr>
-                </tbody>
-            </table>
-            <div class="pagination">
-                <button>&lt;</button>
-                <button class="active">1</button>
-                <button>2</button>
-                <button>3</button>
-                <button>&gt;</button>
-            </div>
         </div>
         <div id="sales-content" class="content">
             <table>
@@ -133,6 +98,10 @@
             </div>
         </div>
         <div id="notice-content" class="content">
+            <div class="button-container">
+                <button class="delete-btn">삭제하기</button>
+                <button class="create-btn">공지작성</button>
+            </div>
             <table>
                 <thead>
                 <tr>

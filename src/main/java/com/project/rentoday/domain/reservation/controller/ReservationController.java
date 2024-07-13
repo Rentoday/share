@@ -44,7 +44,7 @@ public class ReservationController {
     }
 
     // 사용자별 예약 조회
-    @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/members/{id}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<ReadReservationAllResponseDto> readAllReservationByMember(@PathVariable Long memberId) {
         ReadReservationAllResponseDto memberInfo = reservationService.findMemberCheckIn(memberId);
         return ResponseEntity.status(HttpStatus.OK).body(memberInfo);

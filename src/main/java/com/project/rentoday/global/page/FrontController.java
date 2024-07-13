@@ -45,4 +45,5 @@ public class FrontController {
     public String join() {
         return "join.html";
     }
+
 }

@@ -2,14 +2,14 @@ package com.project.rentoday.domain.payment.controller;
 
 import com.project.rentoday.domain.payment.dto.request.PayCallbackRequestDto;
 import com.project.rentoday.domain.payment.dto.request.PayRequestDto;
+import com.project.rentoday.domain.payment.dto.response.PayInfoResponse;
 import com.project.rentoday.domain.payment.service.PayService;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,3 +33,10 @@ public class PayController {
         return ResponseEntity.ok("결제가 성공적으로 진행되었습니다.");
     }
 }
+
+//    @GetMapping("/{id}")
+//    public ResponseEntity<List<PayInfoResponse>> getPayInfoByMember(@PathVariable Long memberId) {
+//        List<PayInfoResponse> pays = payService.getPayInfo(memberId);
+//        return ResponseEntity.ok().body(pays);
+//    }
+//}

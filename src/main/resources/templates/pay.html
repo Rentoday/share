@@ -3,94 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
-    <style>
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f7f9fc;
-            color: #333;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-        }
-        h1 {
-            margin-top: 0;
-            color: #2c3e50;
-            font-weight: 700;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 15px;
-        }
-        .reservation-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
-            gap: 30px;
-        }
-        .parking-info {
-            flex: 2;
-        }
-        .payment-summary {
-            flex: 1;
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .image-placeholder {
-            width: 100%;
-            height: 150px;
-            background-color: #e9ecef;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        .info-item {
-            margin-bottom: 12px;
-            line-height: 1.6;
-        }
-        .info-item span {
-            font-weight: 700;
-            color: #34495e;
-        }
-        .notice {
-            background-color: #e8f5e9;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border-left: 4px solid #4CAF50;
-        }
-        .notice h3 {
-            margin-top: 0;
-            color: #2c3e50;
-        }
-        .button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 700;
-            transition: background-color 0.3s;
-            width: 100%;
-            margin-top: 15px;
-        }
-        .button:hover {
-            background-color: #45a049;
-        }
-        .price-summary {
-            font-size: 18px;
-            font-weight: 700;
-            margin-top: 15px;
-            text-align: right;
-        }
-    </style>
+    <link rel="stylesheet" href="css/pay/pay.css">
 </head>
 <body>
 <div class="container">
@@ -122,61 +35,61 @@
         <p>각종 이용규칙이 명시되어있는 부분입니다. 주차장마다 다르게 작성될 수 있습니다.</p>
     </div>
 </div>
-    <script>
-        const IMP = window.IMP;
-    IMP.init("your_imp_key");
+<script>
+    const IMP = window.IMP;
+IMP.init("your_imp_key");
 
-    function requestPayment() {
-        // 백엔드에서 결제 정보 받아오기
-        fetch('/api/payments/request', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ reservationUid: 'your_reservation_uid' }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            // 결제 요청
-            IMP.request_pay({
-                pg: "your_pg_provider",
-                pay_method: "card",
-                merchant_uid: data.reservationUid,
-                name: data.reservationName,
-                amount: data.price,
-                buyer_email: data.buyerEmail,
-                buyer_name: data.buyerName,
-            }, function (rsp) {
-                if (rsp.success) {
-                    // 결제 성공 시 백엔드에 결과 전송
-                    fetch('/api/payments/callback', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            paymentUid: rsp.imp_uid,
-                            reservationUid: rsp.merchant_uid,
-                        }),
-                    })
-                    .then(response => response.text())
-                    .then(result => {
-                        alert("결제가 완료되었습니다!");
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert("결제 처리 중 오류가 발생했습니다.");
-                    });
-                } else {
-                    alert("결제에 실패하였습니다. 에러 내용: " + rsp.error_msg);
-                }
-            });
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("결제 요청 중 오류가 발생했습니다.");
+function requestPayment() {
+    // 백엔드에서 결제 정보 받아오기
+    fetch('/api/payments/request', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reservationUid: 'your_reservation_uid' }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        // 결제 요청
+        IMP.request_pay({
+            pg: "your_pg_provider",
+            pay_method: "card",
+            merchant_uid: data.reservationUid,
+            name: data.reservationName,
+            amount: data.price,
+            buyer_email: data.buyerEmail,
+            buyer_name: data.buyerName,
+        }, function (rsp) {
+            if (rsp.success) {
+                // 결제 성공 시 백엔드에 결과 전송
+                fetch('/api/payments/callback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        paymentUid: rsp.imp_uid,
+                        reservationUid: rsp.merchant_uid,
+                    }),
+                })
+                .then(response => response.text())
+                .then(result => {
+                    alert("결제가 완료되었습니다!");
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("결제 처리 중 오류가 발생했습니다.");
+                });
+            } else {
+                alert("결제에 실패하였습니다. 에러 내용: " + rsp.error_msg);
+            }
         });
-    }
-    </script>
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("결제 요청 중 오류가 발생했습니다.");
+    });
+}
+</script>
 </body>
 </html>

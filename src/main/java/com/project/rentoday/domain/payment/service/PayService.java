@@ -1,7 +1,12 @@
 package com.project.rentoday.domain.payment.service;
 
+import com.project.rentoday.domain.member.entity.Member;
+import com.project.rentoday.domain.member.exception.MemberErrorCode;
+import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.payment.dto.request.PayCallbackRequestDto;
 import com.project.rentoday.domain.payment.dto.request.PayRequestDto;
+import com.project.rentoday.domain.payment.dto.response.PayInfoResponse;
 import com.project.rentoday.domain.payment.entity.Pay;
 import com.project.rentoday.domain.payment.entity.PaymentStatus;
 import com.project.rentoday.domain.payment.repository.PayRepository;
@@ -18,6 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +35,7 @@ public class PayService {
     private final ReservationRepository reservationRepository;
     private final PayRepository payRepository;
     private final IamportClient iamportClient;
+    private final MemberRepository memberRepository;
 
     public PayRequestDto requestPay(String reservationUid) {
 
@@ -41,6 +50,20 @@ public class PayService {
                 .reservationUid(reservation.getReservationUid())
                 .build();
     }
+
+//    public List<PayInfoResponse> getPayInfo(Long memberId) {
+//        Member member = memberRepository.findById(memberId)
+//                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+//        List<Pay> pays = payRepository.findByMember(member);
+//
+//        List<PayInfoResponse> payInfoResponses = pays.stream()
+//                .map(pay -> new PayInfoResponse(pay.getId(), pay.getReservation().getPark().getParkingNum(),
+//                        pay.getReservation().getPark().getAddress(), pay.getReservation().getCheckIn(),
+//                        pay.getReservation().getCheckOut(), pay.getAmount(), pay.getCreatedDate(), pay.getPaymentStatus()))
+//                .collect(Collectors.toList());
+//
+//        return payInfoResponses;
+//    }
 
     public void payByCallback(PayCallbackRequestDto requestDto) {
 

@@ -2,6 +2,7 @@
 
     import com.project.rentoday.domain.member.entity.Member;
     import com.project.rentoday.global.entity.BaseEntity;
+    import com.project.rentoday.global.type.RoleType;
     import jakarta.persistence.*;
     import jakarta.validation.constraints.NotNull;
     import jakarta.validation.constraints.Positive;
