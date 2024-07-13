@@ -1,0 +1,537 @@
+/*main화면 */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: white;
+    padding: 20px 0;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    height: 40px;
+}
+
+.logo span {
+    font-size: 24px;
+    font-weight: bold;
+    color: #00B202;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    padding: 5px 15px;
+    width: 50%;
+    height: 40px;
+}
+
+.search-bar input {
+    border: none;
+    flex-grow: 0.6;
+    font-size: 16px;
+    outline: none;
+    height: auto;
+    right: 50px;
+
+}
+
+.divider {
+    width: 1px;
+    height: 100%;
+    background-color: #ccc;
+    margin: 0 10px;
+}
+
+.time {
+    color: #888;
+    flex-grow: 0.5;
+}
+
+.search-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.search-button img {
+    width: 30px;
+    height: 30px;
+
+}
+
+.login-button {
+    background-color: white;
+    border: 2px solid #00B202;
+    color: #00B202;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.notice {
+    background-color: #f8f8f8;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+}
+
+.map-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.map {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+footer {
+    background-color: #f8f8f8;
+    padding: 20px;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+}
+
+footer p {
+    margin: 5px 0;
+}
+
+.logo a {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+}
+
+
+
+/*공지사항 모달*/
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    /* 플렉스 컨테이너로 설정 */
+    justify-content: center;
+    align-items: center;
+}
+.frame-modal-notice {
+    width: 962px;
+    height: 660px;
+    border: 1px solid #ccc;
+    padding: 20px;
+    box-sizing: border-box;
+    position: relative;
+    background-color: white;
+/* margin 제거 */
+margin: 0;
+    /* 최대 높이 설정 및 스크롤 추가 */
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.frame-modal-notice .header {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+}
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    color: #1FBC21;
+    cursor: pointer;
+}
+.notice-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.notice-table th, .notice-table td {
+    border-top: 1px solid #1FBC21;
+    border-bottom: 1px solid #1FBC21;
+    border-left: none;
+    border-right: none;
+    padding: 10px;
+    text-align: center;
+}
+.notice-table th {
+    background-color: #f5f5f5;
+}
+.notice-table .expandable-content {
+    display: none;
+    padding: 10px;
+    text-align: left;
+}
+.toggle-button {
+    cursor: pointer;
+    text-align: right;
+    width: 30px;
+}
+
+
+
+
+/* 로그인 모달 스타일 */
+.modal-login {
+  width: 611px;
+  height: auto;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  font-family: Arial, sans-serif;
+}
+
+.modal-content {
+  padding: 40px;
+}
+
+.modal-login .close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #888;
+  cursor: pointer;
+}
+
+.modal-login .logo {
+    text-align: center;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.modal-login .logo img {
+width: 60px;
+  height: 60px;
+}
+
+.modal-login .logo h1 {
+  color: #20a43d;
+  font-size: 24px;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.modal-login label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.modal-login input[type="text"],
+.modal-login input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.forgot-password {
+  text-align: right;
+  margin-bottom: 20px;
+}
+
+.forgot-password a {
+  color: #888;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.modal-login .login-button,
+.kakao-login {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.modal-login .login-button {
+  background-color: #20a43d;
+  color: white;
+  margin-bottom: 20px;
+}
+
+#divider2 {
+  text-align: center;
+  color: #888;
+  position: relative;
+}
+
+.divider1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #888;
+  position: relative;
+}
+
+.divider1::before,
+.divider1::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background-color: #ccc;
+}
+
+.divider1::before {
+  left: 0;
+}
+
+.divider1::after {
+  right: 0;
+}
+
+.kakao-login {
+  background-color: #fee500;
+  color: #000;
+}
+
+    .time-dropdown {
+    position: relative;
+    cursor: pointer;
+}
+
+.time-display {
+    color: #888;
+}
+
+.time-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.time-option {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.time-option:hover {
+    background-color: #f0f0f0;
+}
+
+
+
+/* 시간 창 */
+cssCopy.time-selector {
+  position: relative;
+}
+
+.time-display {
+  cursor: pointer;
+}
+
+.time-dropdown {
+  position: absolute;
+  width: 110px;
+  height: 250px;
+  border: 1px solid #00B202;
+  background-color: white;
+  overflow-y: auto;
+  z-index: 1000; /* 최상단에 표시하기 위한 높은 z-index 값 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.time-dropdown::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
+.time-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.time-option {
+    border-bottom: 1px solid #00B202;
+    cursor: pointer;
+    display: flex; /* Flexbox 사용 */
+    justify-content: center; /* 가로 중앙 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+    height: 40px; /* 각 옵션의 높이 지정 (필요에 따라 조정) */
+    text-align: center; /* 텍스트 중앙 정렬 */
+}
+
+.time-option:hover {
+  background-color: #f0f0f0;
+}
+
+.time-option:last-child {
+  border-bottom: none;
+}
+
+
+/*로그인 했을 경우*/
+.auth-section {
+    display: flex;
+    align-items: center;
+}
+
+.user-icons {
+    display: flex;
+    align-items: center;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.panmaetotal {
+    background-color: #00B202;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+}
+
+.notification img, .profile img {
+    width: 24px;
+    height: 24px;
+}
+
+
+
+
+/*프로필 클릭*/
+.profile-container {
+    position: relative;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 150px;
+    height: 100px;
+    background-color: white;
+    border: 1px solid #00B202;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1000;
+}
+
+.dropdown-item {
+    width: 100%;
+    height: 62px; /* 124px / 2 */
+    border: none;
+    background: none;
+    text-align: center;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+.dropdown-item:first-child {
+    border-bottom: 1px solid #00B202;
+}
+
+
+
+/*알림 표시*/
+.notification-container {
+    position: relative;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 302px;
+    max-height: 247px;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.notification-list {
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.notification-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.view-all-notifications {
+    padding: 10px;
+    text-align: center;
+    border-top: 1px solid #eee;
+}
+
+.view-all-notifications button {
+    background: none;
+    border: none;
+    color: #00B202;
+    cursor: pointer;
+}
+
+.no-notifications {
+    padding: 20px;
+    text-align: center;
+    color: #888;
+}

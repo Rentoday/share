@@ -70,7 +70,7 @@ public class SecurityConfig {
                             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                                 CorsConfiguration configuration = new CorsConfiguration();
                                 //CORS 허용 URL
-                                configuration.setAllowedOrigins(Collections.singletonList("http://localhost:8888"));
+                                configuration.setAllowedOrigins(Collections.singletonList("http://localhost:81"));
                                 //GET, POST등의 메서드 허용
                                 configuration.setAllowedMethods(Collections.singletonList("*"));
                                 //★★★★★★★★★★★★★★★★★★

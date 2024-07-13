@@ -48,8 +48,7 @@ public class JoinService {
         String email = createRequest.getEmail();
 
         //회원 아이디 중복에 대한 처리
-        Boolean isExist = memberRepository.existsByEmail(email);
-        if (isExist) {
+        if (memberRepository.existsByEmail(email)) {
             throw new MemberException(MemberErrorCode.MEMBER_DUPLICATE_EMAIL_ERROR);
         }
         //
@@ -65,6 +64,5 @@ public class JoinService {
             //DB에 저장(회원가입 완료)
             memberRepository.save(member);
         }
-        throw new MemberException(MemberErrorCode.MEMBER_DUPLICATE_EMAIL_ERROR);
     }
 }
