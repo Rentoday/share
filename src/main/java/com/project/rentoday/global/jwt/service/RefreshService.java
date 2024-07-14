@@ -11,6 +11,7 @@ import com.project.rentoday.global.jwt.exception.JwtException;
 import com.project.rentoday.global.jwt.repository.RefreshRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
@@ -22,6 +23,7 @@ public class RefreshService {
     private final RefreshRepository refreshRepository;
     private final MemberRepository memberRepository;
 
+    @Transactional
     public JwtDto reissue(String refreshToken) {
 
         //저장한 refresh의 값이 null이라면

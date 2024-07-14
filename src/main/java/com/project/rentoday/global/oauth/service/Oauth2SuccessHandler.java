@@ -55,7 +55,7 @@ public class Oauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         //쿠키에 JWT 담아서 리다이렉트(리다이렉트이기때문에 header로 응답 불가능)
         response.addCookie(createCookie("Authorization", accessToken));
         response.addCookie(createCookie("Refresh", refreshToken));
-        response.sendRedirect("http://localhost:8888/reissue");
+        response.sendRedirect("http://localhost:81/main");
 
     }
 

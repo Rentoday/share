@@ -5,6 +5,7 @@ import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.global.oauth.dto.KakaoResponseDto;
 import com.project.rentoday.global.oauth.dto.OAuth2Response;
 import com.project.rentoday.global.oauth.dto.OauthUserDto;
+import com.project.rentoday.global.type.RoleType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -46,6 +47,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         if (existData == null) {
 
             Member memberEntity = Member.createMember()
+                    .oauthId(oAuth2Response.getProviderId())
                     .email(oAuth2Response.getEmail())
                     .name(oAuth2Response.getName())
                     .profileImage(oAuth2Response.getProfileImage())
@@ -55,12 +57,12 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             OauthUserDto userDTO = new OauthUserDto();
             userDTO.setUsername(oAuth2Response.getEmail());
             userDTO.setName(oAuth2Response.getName());
-            userDTO.setRole("ROLE_USER");
+            userDTO.setRole(RoleType.USER.toString());
 
             return new OAuth2UserDetails(userDTO);
 
         }else {
-            existData.updateProfile("욘트리", oAuth2Response.getProfileImage());
+            existData.updateKakaoProfile(oAuth2Response.getName(), oAuth2Response.getProfileImage());
             memberRepository.save(existData);
 
             OauthUserDto userDTO = new OauthUserDto();

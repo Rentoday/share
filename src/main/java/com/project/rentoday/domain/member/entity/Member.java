@@ -5,6 +5,7 @@ import com.project.rentoday.domain.comment.entity.Comment;
 import com.project.rentoday.domain.notification.entity.Notification;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.reservation.entity.Reservation;
+import com.project.rentoday.global.entity.BaseEntity;
 import com.project.rentoday.global.jwt.entity.RefreshToken;
 import com.project.rentoday.global.type.RoleType;
 import jakarta.persistence.*;
@@ -20,7 +21,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor
-public class Member {
+public class Member extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

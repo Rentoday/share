@@ -17,6 +17,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,7 +31,6 @@ import org.springframework.util.StreamUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 
 //UsernamePasswordAuthenticationFilter를 커스텀하여 활성화 시킴
@@ -97,6 +99,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         //refresh Token db에 저장
         saveRefreshToken(email, refreshToken);
 
+
         //jwt를 헤더를 통해 응답
         //HTTP 인증 방식은 RFC7235정의에 따라서 아래 인증 헤더 형태를 가져야한다. Bearer 접두사가 필수다
         response.addHeader("Authorization", "Bearer " + accessToken);
@@ -115,8 +118,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private void saveRefreshToken(String email, String refreshToken) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-        Date date = new Date(System.currentTimeMillis() + 86400000L);
-        RefreshToken refresh = new RefreshToken(refreshToken, member, date.toString());
+        String expiration = jwtService.expiredDate(refreshToken).toString();
+        RefreshToken refresh = new RefreshToken(refreshToken, member, expiration);
         refreshRepository.save(refresh);
     }
 

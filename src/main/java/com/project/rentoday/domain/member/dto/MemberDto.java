@@ -36,12 +36,12 @@ public class MemberDto {
     //회원 조회
     @Getter
     @Setter
+    @AllArgsConstructor
     public static class ReadResponse {
         private String email;
-        private String password;
         private String name;
         private String phone;
-        private MultipartFile profileImage;
+        private String profileImage;
     }
 
     //회원 정보 수정

@@ -56,13 +56,18 @@ public class JwtFilter extends OncePerRequestFilter {
         Member member = memberRepository.findByEmail(username)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
         String password = member.getPassword();
+        System.out.println(member.getEmail());
+        System.out.println(member.getName());
+        System.out.println(member.getPassword());
 
         MemberDto.createDetails memberDto = new MemberDto.createDetails(username, role, password);
         CustomMemberDetails customMemberDetails = new CustomMemberDetails(memberDto);
+        System.out.println(customMemberDetails.getUsername());
 
         Authentication authToken = new UsernamePasswordAuthenticationToken(customMemberDetails, null, customMemberDetails.getAuthorities());
         //일시적인 세션을 생성
         SecurityContextHolder.getContext().setAuthentication(authToken);
+
 
         filterChain.doFilter(request, response);
     }

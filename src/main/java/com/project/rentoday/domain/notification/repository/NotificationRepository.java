@@ -11,4 +11,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByMember(Member member);
 
     Boolean existsByMember(Member member);
+
+    List<Notification> findByMemberAndReadFalseOrderByCreatedAtAsc(Member member);
 }

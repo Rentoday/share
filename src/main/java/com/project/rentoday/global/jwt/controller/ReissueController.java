@@ -17,12 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ReissueController {
 
-    private final JwtService jwtService;
-    private final RefreshRepository refreshRepository;
     private final RefreshService refreshService;
 
-    @GetMapping("/reissue")
+    @GetMapping("/api/token/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("reissue 진입");
 
         String refreshToken = null;
         //request로 부터 Cookie를 받아온다,
@@ -30,7 +29,7 @@ public class ReissueController {
         for (Cookie cookie : cookies) {
 
             //받아온 cookie에서 refresh를 찾아 refresh 변수에 해당 값을 저장한다.
-            if (cookie.getName().equals("Refresh")) {
+            if (cookie.getName().equals("refresh")) {
                 refreshToken = cookie.getValue();
             }
         }
