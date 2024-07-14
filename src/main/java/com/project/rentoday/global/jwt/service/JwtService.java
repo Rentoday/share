@@ -63,6 +63,18 @@ public class JwtService {
                 .before(new Date());
     }
 
+    //jwt 만료시간 체크
+    public Date expiredDate(String token) {
+
+        return Jwts
+                .parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getExpiration();
+    }
+
     //jwt access token생성
     public String createAccessJwt(String username, String role) {
         return Jwts

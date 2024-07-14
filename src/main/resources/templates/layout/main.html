@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>오늘만세워</title>
     <link rel="stylesheet" href="/css/common/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
 <header>
@@ -17,6 +18,7 @@
         <div class="search-bar">
             <input type="text" placeholder="주소를 입력해주세요.">
             <div class="divider" id="divider2"></div>
+            <!-- 시간 선택 -->
             <div class="time-selector">
                 <span class="time-display">시간</span>
                 <div class="time-dropdown" style="display: none;">
@@ -37,7 +39,7 @@
     <span>🚗 공지사항 🚗</span>
     <span id="noticeText" style="cursor: pointer;">7월 19일부터 오픈이벤트 참여하고 쿠폰받자!</span>
 </div>
-<!-- 모달 추가 -->
+<!-- 공지사항 모달 -->
 <div id="noticeModal" class="modal">
     <div class="frame-modal-notice">
         <div class="close-button" id="closeModal">&times;</div>
@@ -69,12 +71,13 @@
         </table>
     </div>
 </div>
+<!-- 카카오맵 -->
 <main>
     <div class="map-container">
         <div id="map" style="width:100%;height:700px;"></div>
     </div>
 </main>
-<!-- 로그인 모달 추가 -->
+<!-- 로그인 모달 -->
 <div id="loginModal" class="modal">
     <div class="modal-login">
         <div class="modal-content">
@@ -83,14 +86,14 @@
                 <img src="../../image/common/icon_logo.png" alt="오늘만세워 로고">
                 <h1>오늘만세워</h1>
             </div>
-            <form>
+            <form id="loginForm" onsubmit="return false;">
                 <div class="input-group">
                     <label for="userid">아이디</label>
-                    <input type="text" id="userid" name="userid" value="12가1234">
+                    <input type="text" id="userid" name="email">
                 </div>
                 <div class="input-group">
                     <label for="password">비밀번호</label>
-                    <input type="password" id="password" name="password" value="12가1234">
+                    <input type="password" id="password" name="password">
                 </div>
                 <div class="forgot-password">
                     <a href="/join">계정이 없으신가요?</a>
@@ -110,226 +113,210 @@
 </footer>
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=21a9c58904c9907bb95e9ebbf5a8e5e0"></script>
 <script>
-    // 전역 변수
-let authToken = null;
-let notifications = [];
+    document.addEventListener('DOMContentLoaded', async function () {
+        const authSection = document.querySelector('.auth-section');
+        let jwtToken = localStorage.getItem('Authorization');
 
-// 초기 로드 함수
-function initializeApp() {
-    authToken = localStorage.getItem('authToken');
-    updateUI();
-    if (authToken) {
-        fetchNotifications();
-        fetchProfileImage();
-    }
-}
+<!--        function clearAllStorageAndCookies() {-->
+<!--    // 로컬 스토리지 삭제-->
+<!--    localStorage.clear();-->
 
-// UI 업데이트 함수
-function updateUI() {
-    const authSection = document.querySelector('.auth-section');
-    if (authToken) {
-        authSection.innerHTML = `
-            <button class="icon-button panmaetotal">판매등록</button>
-            <div class="notification-container">
-                <button class="icon-button notification">
-                    <img src="path/to/default-notification.svg" alt="알림" class="notification-icon">
-                    <img src="path/to/active-notification.svg" alt="새 알림" class="notification-icon-active" style="display: none;">
-                </button>
-                <div class="notification-dropdown" style="display: none;"></div>
-            </div>
-            <div class="profile-container">
-                <button class="icon-button profile">
-                    <img src="path/to/default-profile.svg" alt="프로필" class="profile-image">
-                </button>
-                <div class="profile-dropdown" style="display: none;">
-                    <button class="dropdown-item mypage">마이페이지</button>
-                    <button class="dropdown-item logout">로그아웃</button>
-                </div>
-            </div>
-        `;
-        setupLoggedInListeners();
-    } else {
-        authSection.innerHTML = '<button class="login-button">로그인</button>';
-        setupLoginListener();
-    }
-}
+<!--    // 세션 스토리지 삭제 (필요한 경우)-->
+<!--    sessionStorage.clear();-->
 
-// 로그인 리스너 설정
-function setupLoginListener() {
-    const loginButton = document.querySelector('.login-button');
-    loginButton.addEventListener('click', showLoginModal);
-}
+<!--    // 모든 쿠키 삭제-->
+<!--    const cookies = document.cookie.split(";");-->
 
-// 로그인 상태 리스너 설정
-function setupLoggedInListeners() {
-    setupNotificationListener();
-    setupProfileListener();
-}
+<!--    for (let i = 0; i < cookies.length; i++) {-->
+<!--        const cookie = cookies[i];-->
+<!--        const eqPos = cookie.indexOf("=");-->
+<!--        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;-->
+<!--        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";-->
+<!--    }-->
 
-// 알림 리스너 설정
-function setupNotificationListener() {
-    const notificationButton = document.querySelector('.notification');
-    const notificationDropdown = document.querySelector('.notification-dropdown');
+<!--    console.log("모든 스토리지와 쿠키가 삭제되었습니다.");-->
+<!--}-->
 
-    notificationButton.addEventListener('click', toggleNotificationDropdown);
+<!--// 함수 실행-->
+<!--clearAllStorageAndCookies();-->
 
-    // 드롭다운 외부 클릭 시 닫기
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.notification-container')) {
-            notificationDropdown.style.display = 'none';
+        if (!jwtToken) {
+            const cookies = document.cookie.split('; ');
+            const authCookie = cookies.find(cookie => cookie.startsWith('Authorization='));
+            if (authCookie) {
+                // Refresh JWT token using refresh token
+                try {
+                    const response = await axios.get('/api/token/reissue', {
+                        withCredentials: true // This ensures cookies are included in the request
+                    });
+                    jwtToken = response.headers['Authorization'];
+                    localStorage.setItem('Authorization', jwtToken);
+                } catch (error) {
+                    console.error('Error refreshing token:', error);
+                }
+            }
+        }
+
+        if (jwtToken) {
+            // Subscribe to SSE for real-time notifications
+            subscribeSSE(jwtToken);
+
+            // Fetch member info
+            try {
+                const response = await axios.get('/api/member/info', {
+                    headers: { 'Authorization': jwtToken }
+                });
+                const userInfo = response.data;
+
+                // Update UI with member info
+                authSection.innerHTML = `
+                    <button class="icon-button panmaetotal">판매등록</button>
+                    <div class="notification-container">
+                        <button class="icon-button notification">
+                            <img src="/image/common/notificationoff.svg" alt="알림" class="notification-icon">
+                        </button>
+                        <div class="notification-dropdown" style="display: none;"></div>
+                    </div>
+                    <div class="profile-container">
+                        <button class="icon-button profile">
+                            <img src="${userInfo.profileImage}" alt="프로필" class="profile-image">
+                        </button>
+                        <div class="profile-dropdown" style="display: none;">
+                            <button class="dropdown-item mypage">마이페이지</button>
+                            <button class="dropdown-item logout">로그아웃</button>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error fetching member info:', error);
+            }
+        } else {
+            authSection.innerHTML = '<button class="login-button">로그인</button>';
         }
     });
-}
 
-// 프로필 리스너 설정
-function setupProfileListener() {
-    const profileButton = document.querySelector('.profile');
-    const profileDropdown = document.querySelector('.profile-dropdown');
-    const mypageButton = document.querySelector('.mypage');
-    const logoutButton = document.querySelector('.logout');
-
-    profileButton.addEventListener('click', toggleProfileDropdown);
-    mypageButton.addEventListener('click', goToMyPage);
-    logoutButton.addEventListener('click', logout);
-
-    // 드롭다운 외부 클릭 시 닫기
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.profile-container')) {
-            profileDropdown.style.display = 'none';
-        }
-    });
-}
-
-// 로그인 모달 표시
-function showLoginModal() {
-    // 로그인 모달 표시 로직
-}
-
-// 알림 드롭다운 토글
-function toggleNotificationDropdown() {
-    const dropdown = document.querySelector('.notification-dropdown');
-    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-    if (dropdown.style.display === 'block') {
-        renderNotifications();
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
     }
-}
 
-// 프로필 드롭다운 토글
-function toggleProfileDropdown() {
-    const dropdown = document.querySelector('.profile-dropdown');
-    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-}
-
-// 알림 데이터 가져오기
-function fetchNotifications() {
-    // API 호출
-    // 성공 시: updateNotifications(data) 호출
-}
-
-// 알림 업데이트
-function updateNotifications(data) {
-    notifications = data;
-    updateNotificationIcon();
-}
-
-// 알림 아이콘 업데이트
-function updateNotificationIcon() {
-    const defaultIcon = document.querySelector('.notification-icon');
-    const activeIcon = document.querySelector('.notification-icon-active');
-    if (notifications.length > 0) {
-        defaultIcon.style.display = 'none';
-        activeIcon.style.display = 'inline';
-    } else {
-        defaultIcon.style.display = 'inline';
-        activeIcon.style.display = 'none';
-    }
-}
-
-// 알림 렌더링
-function renderNotifications() {
-    const dropdown = document.querySelector('.notification-dropdown');
-    if (notifications.length > 0) {
-        dropdown.innerHTML = notifications.map(notif => `
-            <div class="notification-item">
-                <div>${notif.content}</div>
-                <div>${notif.date}</div>
-            </div>
-        `).join('') + '<button class="view-all-notifications">모든 알림 내역 보기</button>';
-        dropdown.style.height = '247px';
-    } else {
-        dropdown.innerHTML = '<div class="no-notifications">표시할 알림이 없습니다.</div>' +
-                             '<button class="view-all-notifications">모든 알림 내역 보기</button>';
-        dropdown.style.height = 'auto';
-    }
-    document.querySelector('.view-all-notifications').addEventListener('click', viewAllNotifications);
-}
-
-// 프로필 이미지 가져오기
-function fetchProfileImage() {
-    // API 호출
-    // 성공 시: updateProfileImage(imageUrl) 호출
-}
-
-// 프로필 이미지 업데이트
-function updateProfileImage(imageUrl) {
-    document.querySelector('.profile-image').src = imageUrl;
-}
-
-// 마이페이지로 이동
-function goToMyPage() {
-    // API 호출 또는 페이지 이동
-}
-
-// 로그아웃
-function logout() {
-    // API 호출
-    // 성공 시:
-    authToken = null;
-    localStorage.removeItem('authToken');
-    updateUI();
-}
-
-// 모든 알림 보기
-function viewAllNotifications() {
-    // API 호출 또는 페이지 이동
-}
-
-// 앱 초기화
-document.addEventListener('DOMContentLoaded', initializeApp);
-</script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const timeDisplay = document.querySelector('.time-display');
-      const timeDropdown = document.querySelector('.time-dropdown');
-      const timeList = document.querySelector('.time-list');
-
-      // 시간 옵션 생성
-      for (let i = 0; i < 24; i++) {
-        const timeOption = document.createElement('div');
-        timeOption.classList.add('time-option');
-        timeOption.textContent = `${i.toString().padStart(2, '0')}:00`;
-        timeOption.addEventListener('click', function() {
-          timeDisplay.textContent = this.textContent;
-          timeDropdown.style.display = 'none';
+    function subscribeSSE(token) {
+    fetch('/api/notification/subscribe', {
+        headers: {
+            'Authorization': token,
+            'Accept': 'text/event-stream'
+        },
+        credentials: 'include'
+    }).then(response => {
+        const reader = response.body.getReader();
+        const stream = new ReadableStream({
+            start(controller) {
+                function push() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            controller.close();
+                            return;
+                        }
+                        controller.enqueue(value);
+                        push();
+                    });
+                }
+                push();
+            }
         });
-        timeList.appendChild(timeOption);
-      }
-
-      // 시간 표시를 클릭하면 드롭다운 표시/숨김
-      timeDisplay.addEventListener('click', function() {
-        timeDropdown.style.display = timeDropdown.style.display === 'none' ? 'block' : 'none';
-      });
-
-      // 드롭다운 외부를 클릭하면 드롭다운 숨김
-      document.addEventListener('click', function(event) {
-        if (!timeDisplay.contains(event.target) && !timeDropdown.contains(event.target)) {
-          timeDropdown.style.display = 'none';
-        }
-      });
+        return new Response(stream, { headers: { 'Content-Type': 'text/event-stream' } });
+    }).then(response => {
+        const eventSource = new EventSource(response.url);
+        eventSource.onmessage = function (event) {
+            console.log('SSE data:', event.data);
+        };
+        eventSource.onerror = function (event) {
+            console.error('SSE error:', event);
+        };
     });
+}
+
+
+const api = axios.create({
+  baseURL: 'http://your-api-base-url',
+  withCredentials: true // 항상 쿠키를 포함하여 요청을 보냄
+});
+
+// 응답 인터셉터
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // 서버로부터 "만료된 AccessToken입니다. 재발급해주세요." 메시지를 받았는지 확인
+    if (error.response.data === "만료된 AccessToken입니다. 재발급해주세요." && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // 토큰 재발급 요청
+        const response = await axios.get('/api/token/reissue', {
+          withCredentials: true
+        });
+
+        // 응답 헤더에서 새로운 Authorization 토큰 추출
+        const newToken = response.headers['authorization'];
+
+        // 로컬 스토리지 업데이트
+        localStorage.setItem('Authorization', newToken);
+
+        // 원래 요청의 헤더 업데이트
+        originalRequest.headers['Authorization'] = newToken;
+
+        // 원래 요청 재시도
+        return api(originalRequest);
+      } catch (error) {
+        // 토큰 재발급 실패 시 처리 (예: 로그아웃)
+        console.error('토큰 재발급 실패:', error);
+        // 여기에 로그아웃 로직을 추가할 수 있습니다.
+        return Promise.reject(error);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 </script>
 <script>
+    //시간 검색 JS
+    document.addEventListener('DOMContentLoaded', function() {
+        const timeDisplay = document.querySelector('.time-display');
+        const timeDropdown = document.querySelector('.time-dropdown');
+        const timeList = document.querySelector('.time-list');
+
+    // 시간 옵션 생성
+        for (let i = 0; i < 24; i++) {
+            const timeOption = document.createElement('div');
+            timeOption.classList.add('time-option');
+            timeOption.textContent = `${i.toString().padStart(2, '0')}:00`;
+                timeOption.addEventListener('click', function() {
+                    timeDisplay.textContent = this.textContent;
+                    timeDropdown.style.display = 'none';
+                });
+            timeList.appendChild(timeOption);
+        }
+
+    // 시간 표시를 클릭하면 드롭다운 표시/숨김
+        timeDisplay.addEventListener('click', function() {
+            timeDropdown.style.display = timeDropdown.style.display === 'none' ? 'block' : 'none';
+        });
+
+    // 드롭다운 외부를 클릭하면 드롭다운 숨김
+        document.addEventListener('click', function(event) {
+            if (!timeDisplay.contains(event.target) && !timeDropdown.contains(event.target)) {
+                timeDropdown.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+<script>
+    //지도 JS
     var mapContainer = document.getElementById('map'), // 지도를 표시할 div
         mapOption = {
             center: new kakao.maps.LatLng(37.566826, 126.9786567), // 지도의 중심좌표 (서울시청)
@@ -338,90 +325,144 @@ document.addEventListener('DOMContentLoaded', initializeApp);
 
     // 지도를 표시할 div와  지도 옵션으로  지도를 생성합니다
     var map = new kakao.maps.Map(mapContainer, mapOption);
+</script>
 
+<script>
+    // 공지사항 JS
     document.addEventListener('DOMContentLoaded', function() {
-            var noticeText = document.getElementById('noticeText');
-            var modal = document.getElementById('noticeModal');
-            var closeModal = document.getElementById('closeModal');
+        var noticeText = document.getElementById('noticeText');
+        var modal = document.getElementById('noticeModal');
+        var closeModal = document.getElementById('closeModal');
 
-            noticeText.addEventListener('click', function() {
-                modal.style.display = 'flex';  // 'block' 대신 'flex' 사용
-            });
-
-            closeModal.addEventListener('click', function() {
-                modal.style.display = 'none';
-            });
-
-            window.addEventListener('click', function(event) {
-                if (event.target == modal) {
-                    modal.style.display = 'none';
-                }
-            });
-
-    // 로그인 모달 관련 코드 추가
-    var loginButton = document.querySelector('.header-content .login-button');
-    var loginModal = document.getElementById('loginModal');
-    var closeLoginModal = document.getElementById('closeLoginModal');
-
-    loginButton.addEventListener('click', function(e) {
-        e.preventDefault();
-        loginModal.style.display = 'flex';
-    });
-
-    closeLoginModal.addEventListener('click', function() {
-        loginModal.style.display = 'none';
-    });
-
-    window.addEventListener('click', function(event) {
-        if (event.target == loginModal) {
-            loginModal.style.display = 'none';
-        }
-    });
-
-
+        noticeText.addEventListener('click', function() {
+            modal.style.display = 'flex';  // 'block' 대신 'flex' 사용
         });
 
-        //공지사항 아코디언
-        function toggleContent(button) {
-            const row = button.closest('tr');
-            const nextRow = row.nextElementSibling;
-            const isExpanded = nextRow.style.display === 'table-row';
-            if (isExpanded) {
-                nextRow.style.display = 'none';
-                button.innerHTML = '&#x25BC;'; // Down arrow
-            } else {
-                nextRow.style.display = 'table-row';
-                button.innerHTML = '&#x25B2;'; // Up arrow
+        closeModal.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
             }
-        }
-javascriptCopydocument.addEventListener('DOMContentLoaded', function() {
-  const timeDisplay = document.querySelector('.time-display');
-  const timeDropdown = document.querySelector('.time-dropdown');
-  const timeList = document.querySelector('.time-list');
-
-  // 시간 옵션 생성
-  for (let i = 0; i < 24; i++) {
-    const timeOption = document.createElement('div');
-    timeOption.classList.add('time-option');
-    timeOption.textContent = `${i.toString().padStart(2, '0')}:00`;
-    timeOption.addEventListener('click', function() {
-      timeDisplay.textContent = this.textContent;
-      timeDropdown.style.display = 'none';
+        });
     });
-    timeList.appendChild(timeOption);
-  }
 
-  // 시간 표시를 클릭하면 드롭다운 표시/숨김
-  timeDisplay.addEventListener('click', function() {
-    timeDropdown.style.display = timeDropdown.style.display === 'none' ? 'block' : 'none';
-  });
-
-  // 드롭다운 외부를 클릭하면 드롭다운 숨김
-  document.addEventListener('click', function(event) {
-    if (!timeDisplay.contains(event.target) && !timeDropdown.contains(event.target)) {
-      timeDropdown.style.display = 'none';
+    //공지사항 아코디언
+    function toggleContent(button) {
+        const row = button.closest('tr');
+        const nextRow = row.nextElementSibling;
+        const isExpanded = nextRow.style.display === 'table-row';
+        if (isExpanded) {
+            nextRow.style.display = 'none';
+            button.innerHTML = '&#x25BC;'; // Down arrow
+        } else {
+            nextRow.style.display = 'table-row';
+            button.innerHTML = '&#x25B2;'; // Up arrow
+        }
     }
-  });
+</script>
+
+<script>
+    //로그인 모달 및 로그인 요청 JS
+    document.addEventListener('DOMContentLoaded', function() {
+        // 로그인 버튼과 모달 요소 선택
+        var loginButton = document.querySelector('.header-content .login-button');
+        var loginModal = document.getElementById('loginModal');
+        var closeLoginModal = document.getElementById('closeLoginModal');
+
+        // 로그인 버튼이 존재하는지 확인
+        if (loginButton) {
+            loginButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (loginModal) {
+                    loginModal.style.display = 'flex';
+                } else {
+                    console.error('Login modal not found');
+                }
+            });
+        } else {
+            console.error('Login button not found');
+        }
+
+        // 모달 닫기 버튼이 존재하는지 확인
+        if (closeLoginModal) {
+            closeLoginModal.addEventListener('click', function() {
+                loginModal.style.display = 'none';
+            });
+        }
+
+        // 모달 외부 클릭 시 닫기
+        window.addEventListener('click', function(event) {
+            if (event.target == loginModal) {
+                loginModal.style.display = 'none';
+            }
+        });
+
+        // 로그인 폼 제출 이벤트 리스너
+        var loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var email = document.getElementById('userid').value;
+                var password = document.getElementById('password').value;
+                loginUser(email, password);
+            });
+        } else {
+            console.error('Login form not found');
+        }
+    });
+
+    // 로그인 요청 함수
+    function loginUser(email, password) {
+    axios.post('/api/member/login', {
+        email: email,
+        password: password
+    }, {
+        withCredentials: true
+    })
+    .then(function (response) {
+        const authToken = response.headers['authorization'];
+
+        if (authToken) {
+            localStorage.setItem('Authorization', authToken);
+            console.log('로그인 성공');
+
+            // 메인 페이지로 리다이렉트
+            window.location.href = '/main';
+        } else {
+            console.warn('Authorization 헤더가 없습니다.');
+            alert('로그인은 성공했지만, 인증 토큰을 받지 못했습니다.');
+        }
+    })
+    .catch(function (error) {
+        console.error('로그인 실패:', error);
+        alert('로그인 실패: ' + error.message);
+    });
+}
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const kakaoLoginBtn = document.querySelector('.kakao-login');
+
+    kakaoLoginBtn.addEventListener('click', function() {
+        // 카카오 로그인 요청 URL
+        const kakaoAuthUrl = 'https://kauth.kakao.com/oauth/authorize';
+        const clientId = '1d6eef0265afc1ca34cd46ba137202d4'; // 여기에 실제 클라이언트 ID를 입력하세요
+        const redirectUri = encodeURIComponent('http://localhost:81/login/oauth2/code/kakao');
+
+        // 필요한 스코프를 추가하세요
+        const scope = encodeURIComponent('profile_nickname profile_image account_email');
+
+        // 전체 인증 URL 생성
+        const authUrl = `${kakaoAuthUrl}?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+
+        // 카카오 인증 페이지로 리다이렉트
+        window.location.href = authUrl;
+
+    });
 });
 </script>
 </body>

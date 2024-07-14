@@ -9,6 +9,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -30,6 +33,11 @@ public class Notification {
     @NotNull
     private Boolean read;
 
+    @Column(name = "createDate")
+    @NotNull
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "type")
@@ -43,11 +51,18 @@ public class Notification {
     public Notification(
             @NotNull @Size(max = 100) String message,
             @NotNull NotificationType type,
-            @NotNull Member member
+            @NotNull Member member,
+            @NotNull Boolean read,
+            @NotNull LocalDateTime createdAt
     ) {
         this.message = message;
-        this.read = false;
         this.type = type;
         this.member = member;
+        this.read = read;
+        this.createdAt = createdAt;
+    }
+
+    public void updateRead() {
+        this.read = true;
     }
 }
