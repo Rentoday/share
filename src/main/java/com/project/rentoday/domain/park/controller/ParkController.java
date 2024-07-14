@@ -7,7 +7,10 @@ import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.service.ParkService;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,11 +30,15 @@ public class ParkController {
         return registeredPark;
     }
 
-    @GetMapping("/{memberId}")
+    //멤버가 등록한 주차
+    @GetMapping("/member")
     @ResponseStatus(HttpStatus.OK)
-    public List<ParkResponse> getParkByMember(@PathVariable Long memberId) {
-        List<ParkResponse> parkResponses = parkService.getParkByMember(memberId);
-        return parkResponses;
+    public Page<ParkResponse> getParkByMember(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        String email = principal.getUsername();
+        return parkService.getParkByMember(email, page, size);
     }
 
     @PatchMapping("/{parkId}")
@@ -47,9 +54,26 @@ public class ParkController {
         parkService.delete(parkId);
     }
 
+    //멤버가 소유한 승인된 주차
+    @GetMapping("/confirmed/member")
+    @ResponseStatus(HttpStatus.OK)
+    public Page<ParkResponse> getConfirmedParksByMember(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        String email = principal.getUsername();
+        return parkService.getConfirmedParksByMember(email, page, size);
+    }
+
     @GetMapping("/confirmed")
     @ResponseStatus(HttpStatus.OK)
-    public List<ParkResponse> getConfirmedParks() {
-        return parkService.getConfirmedParks();
+    public List<ParkResponse> getConfirmedAll() {
+        return parkService.getConfirmedAll();
+    }
+
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public List<ParkResponse> getAll() {
+        return parkService.getAll();
     }
 }

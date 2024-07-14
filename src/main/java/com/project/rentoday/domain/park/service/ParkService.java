@@ -15,6 +15,10 @@ import com.project.rentoday.domain.park.exception.*;
 import com.project.rentoday.domain.park.repository.ParkRepository;
 import com.project.rentoday.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,28 +81,26 @@ public class ParkService {
     }
 
     @Transactional(readOnly = true)
-    public List<ParkResponse> getParkByMember(Long memberId) {
-        Member member = memberRepository.findById(memberId)
+    public Page<ParkResponse> getParkByMember(String email, int page, int size) {
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-        List<Park> parks = parkRepository.findByMember(member);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
+        Page<Park> parks = parkRepository.findByMember(member, pageable);
 
-        return IntStream.range(0, parks.size())
-                .mapToObj(i -> {
-                    Park park = parks.get(i);
-                    if (park.getParkStatus() == ParkStatus.CONFIRMED) {
-                        return ParkResponse.readPark()
-                                .id((long) (i+1))
-                                .park(park)
-                                .confirmDate(park.getLastModifiedDate())
-                                .build();
-                    } else {
-                        return ParkResponse.checkPark()
-                                .id((long) (i+1))
-                                .park(park)
-                                .build();
-                    }
-                })
-                .collect(Collectors.toList());
+        return parks.map(park -> {
+            if (park.getParkStatus() == ParkStatus.CONFIRMED) {
+                return ParkResponse.readPark()
+                        .id(park.getId())
+                        .park(park)
+                        .confirmDate(park.getLastModifiedDate())
+                        .build();
+            } else {
+                return ParkResponse.checkPark()
+                        .id(park.getId())
+                        .park(park)
+                        .build();
+            }
+        });
     }
 
     @Transactional
@@ -133,15 +135,34 @@ public class ParkService {
     }
 
     @Transactional(readOnly = true)
-    public List<ParkResponse> getConfirmedParks() {
+    public Page<ParkResponse> getConfirmedParksByMember(String email, int page, int size) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("lastModifiedDate").descending());
+        Page<Park> confirmedParks = parkRepository.findByMemberAndParkStatus(member, ParkStatus.CONFIRMED, pageable);
+
+        return confirmedParks.map(park -> ParkResponse.checkPark()
+                .id(park.getId())
+                .park(park)
+                .build());
+    }
+
+    @Transactional
+    public List<ParkResponse> getConfirmedAll() {
         List<Park> confirmedParks = parkRepository.findByParkStatus(ParkStatus.CONFIRMED);
 
         return confirmedParks.stream()
                 .map(park -> ParkResponse.readPark()
                         .id(park.getId())
                         .park(park)
-                        .confirmDate(park.getLastModifiedDate())
                         .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<ParkResponse> getAll() {
+        return parkRepository.findAll().stream()
+                .map(ParkResponse::new)
                 .collect(Collectors.toList());
     }
 
