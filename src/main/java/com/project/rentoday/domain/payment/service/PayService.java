@@ -18,6 +18,10 @@ import com.siot.IamportRestClient.response.IamportResponse;
 import com.siot.IamportRestClient.response.Payment;
 import com.siot.IamportRestClient.exception.IamportResponseException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,8 +38,8 @@ public class PayService {
 
     private final ReservationRepository reservationRepository;
     private final PayRepository payRepository;
-    private final IamportClient iamportClient;
     private final MemberRepository memberRepository;
+    private final IamportClient iamportClient;
 
     public PayRequestDto requestPay(String reservationUid) {
 
@@ -51,19 +55,15 @@ public class PayService {
                 .build();
     }
 
-//    public List<PayInfoResponse> getPayInfo(Long memberId) {
-//        Member member = memberRepository.findById(memberId)
-//                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-//        List<Pay> pays = payRepository.findByMember(member);
-//
-//        List<PayInfoResponse> payInfoResponses = pays.stream()
-//                .map(pay -> new PayInfoResponse(pay.getId(), pay.getReservation().getPark().getParkingNum(),
-//                        pay.getReservation().getPark().getAddress(), pay.getReservation().getCheckIn(),
-//                        pay.getReservation().getCheckOut(), pay.getAmount(), pay.getCreatedDate(), pay.getPaymentStatus()))
-//                .collect(Collectors.toList());
-//
-//        return payInfoResponses;
-//    }
+    @Transactional(readOnly = true)
+    public Page<PayInfoResponse> getPaymentsByMember(String email, int page, int size) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
+        Page<Reservation> reservations = reservationRepository.findByMemberAndPayIsNotNull(member, pageable);
+
+        return reservations.map(reservation -> new PayInfoResponse(reservation.getPay().getId(), reservation.getPay()));
+    }
 
     public void payByCallback(PayCallbackRequestDto requestDto) {
 

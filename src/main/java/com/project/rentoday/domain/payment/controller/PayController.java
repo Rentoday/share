@@ -6,7 +6,10 @@ import com.project.rentoday.domain.payment.dto.response.PayInfoResponse;
 import com.project.rentoday.domain.payment.service.PayService;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,11 +35,16 @@ public class PayController {
         payService.payByCallback(callback);
         return ResponseEntity.ok("결제가 성공적으로 진행되었습니다.");
     }
+
+    //멤버별 결제 내역
+    @GetMapping("/member")
+    public Page<PayInfoResponse> getPaymentsByMember(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        String email = principal.getUsername();
+        return payService.getPaymentsByMember(email, page, size);
+    }
 }
 
-//    @GetMapping("/{id}")
-//    public ResponseEntity<List<PayInfoResponse>> getPayInfoByMember(@PathVariable Long memberId) {
-//        List<PayInfoResponse> pays = payService.getPayInfo(memberId);
-//        return ResponseEntity.ok().body(pays);
-//    }
-//}
+

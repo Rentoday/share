@@ -103,18 +103,8 @@
                     <th>예약일</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr>
-                    <td><input type="checkbox" class="checkbox"></td>
-                    <td>1</td>
-                    <td>52루-5278</td>
-                    <td>강남구 센터필드빌딩 5층 구글코리아</td>
-                    <td>09:00~18:00</td>
-                    <td>24/07/11</td>
-                </tr>
-                <tr>
-                    <td colspan="6">조회된 예약 정보가 없습니다.</td>
-                </tr>
+                <tbody id="reservations-body">
+                <!-- 데이터가 여기에 동적으로 추가됩니다 -->
                 </tbody>
             </table>
             <div class="pagination">
@@ -127,7 +117,7 @@
         </div>
         <div id="sales-info-content" class="content">
             <div class="button-container">
-                <button class="delete-btn">삭제하기</button>
+                <button class="delete-btn" id="delete-selected-sales">삭제하기</button>
             </div>
             <table>
                 <thead>
@@ -141,19 +131,8 @@
                     <th>판매일</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr>
-                    <td><input type="checkbox" class="checkbox"></td>
-                    <td>1</td>
-                    <td>28루-5278</td>
-                    <td>강남구 센터필드빌딩 5층 구글코리아</td>
-                    <td>09:00~18:00</td>
-                    <td>3000</td>
-                    <td>24/07/12</td>
-                </tr>
-                <tr>
-                    <td colspan="7">조회된 판매 정보가 없습니다.</td>
-                </tr>
+                <tbody id="sales-info-body">
+                <!-- 데이터가 여기에 동적으로 추가됩니다 -->
                 </tbody>
             </table>
             <div class="pagination">
@@ -166,7 +145,7 @@
         </div>
         <div id="approval-requests-content" class="content">
             <div class="button-container">
-                <button class="delete-btn">삭제하기</button>
+                <button class="delete-btn" id="delete-selected">삭제하기</button>
             </div>
             <table>
                 <thead>
@@ -181,20 +160,8 @@
                     <th>상태</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr>
-                    <td><input type="checkbox" class="checkbox"></td>
-                    <td>1</td>
-                    <td>장성욱</td>
-                    <td>28루-5278</td>
-                    <td>강남구 센터필드빌딩 5층 구글코리아</td>
-                    <td>3000</td>
-                    <td>24/07/12</td>
-                    <td>대기</td>
-                </tr>
-                <tr>
-                    <td colspan="8">조회된 승인 요청이 없습니다.</td>
-                </tr>
+                <tbody id="approval-requests-body">
+                <!-- 데이터가 여기에 동적으로 추가됩니다 -->
                 </tbody>
             </table>
             <div class="pagination">
@@ -218,19 +185,8 @@
                     <th>상태</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>52루-5278</td>
-                    <td>강남구 센터필드빌딩 5층 구글코리아</td>
-                    <td>09:00~18:00</td>
-                    <td>2000</td>
-                    <td>24/07/11</td>
-                    <td>결제</td>
-                </tr>
-                <tr>
-                    <td colspan="7">조회된 결제 내역이 없습니다.</td>
-                </tr>
+                <tbody id="payment-history-body">
+                <!-- 데이터가 여기에 동적으로 추가됩니다 -->
                 </tbody>
             </table>
             <div class="pagination">
@@ -266,64 +222,267 @@
             });
         }
 
-        // 예약 데이터를 가져오는 함수
-    const fetchReservationData = async (memberId) => {
-        try {
-            const response = await fetch(`/members/${memberId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
+        const fetchReservations = async () => {
+            try {
+                const response = await fetch('/api/reservations/member', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('예약 정보를 가져오지 못했습니다.');
                 }
-            });
-            if (!response.ok) {
-                throw new Error('예약 정보를 가져오지 못했습니다.');
+                const data = await response.json();
+                updateReservationsTable(data.reservations);
+            } catch (error) {
+                console.error('예약 정보를 가져오는 중 오류 발생:', error);
             }
-            const data = await response.json();
-            // 가져온 데이터 처리 (필요한 경우 UI 업데이트)
-            console.log('예약 데이터:', data);
-        } catch (error) {
-            console.error('예약 데이터를 가져오는 중 오류 발생:', error);
-        }
-    };
+        };
 
-    // 사이드바 메뉴에 이벤트 리스너 추가
-    sidebarMenu.addEventListener('click', (e) => {
-        if (e.target.tagName === 'LI') {
-            // 모든 사이드바 항목에서 active 클래스 제거
-            Array.from(sidebarMenu.getElementsByTagName('li')).forEach(li => {
-                li.classList.remove('active');
-            });
+        const updateReservationsTable = (reservations) => {
+            const tableBody = document.getElementById('reservations-body');
+            tableBody.innerHTML = '';
 
-            // 클릭된 항목에 active 클래스 추가
-            e.target.classList.add('active');
-
-            // 모든 컨텐츠 숨기기
-            contents.forEach(content => {
-                content.classList.remove('active');
-            });
-
-            // 클릭된 컨텐츠 표시
-            const contentId = e.target.dataset.content + '-content';
-            document.getElementById(contentId).classList.add('active');
-
-            // 페이지 제목 업데이트
-            pageTitle.textContent = e.target.textContent;
-
-            // 클릭된 컨텐츠가 예약 정보인지 확인
-            if (e.target.dataset.content === 'reservations') {
-                // 예시 멤버 ID (실제 멤버 ID 검색 로직으로 교체 필요)
-                const memberId = 123;  // 실제 멤버 ID로 교체
-                fetchReservationData(memberId);
+            if (reservations.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6">조회된 예약 정보가 없습니다.</td></tr>';
+                return;
             }
-        }
+
+            reservations.forEach(reservation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${reservation.id}</td>
+                    <td>${reservation.parkingLotNumber}</td>
+                    <td>${reservation.address}</td>
+                    <td>${reservation.startTime} ~ ${reservation.endTime}</td>
+                    <td>${reservation.price}</td>
+                    <td>${new Date(reservation.reservationDate).toLocaleDateString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const fetchPaymentHistory = async () => {
+            try {
+                const response = await fetch('/api/pays/member', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('결제 내역을 가져오지 못했습니다.');
+                }
+                const data = await response.json();
+                updatePaymentHistoryTable(data);
+            } catch (error) {
+                console.error('결제 내역을 가져오는 중 오류 발생:', error);
+            }
+        };
+
+        const updatePaymentHistoryTable = (data) => {
+            const tableBody = document.getElementById('payment-history-body');
+            tableBody.innerHTML = '';
+
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7">조회된 결제 내역이 없습니다.</td></tr>';
+                return;
+            }
+
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.id}</td>
+                    <td>${item.pay.park.parkingLot.number}</td>
+                    <td>${item.pay.park.parkingLot.address}</td>
+                    <td>${item.pay.park.startTime} ~ ${item.pay.park.endTime}</td>
+                    <td>${item.pay.amount}</td>
+                    <td>${new Date(item.pay.paymentDate).toLocaleDateString()}</td>
+                    <td>${item.pay.paymentStatus}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const fetchSalesInfo = async () => {
+            try {
+                const response = await fetch('/api/parks/confirmed/member', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('판매 정보를 가져오지 못했습니다.');
+                }
+                const data = await response.json();
+                updateSalesInfoTable(data);
+            } catch (error) {
+                console.error('판매 정보를 가져오는 중 오류 발생:', error);
+            }
+        };
+
+        const updateSalesInfoTable = (sales) => {
+            const tableBody = document.getElementById('sales-info-body');
+            tableBody.innerHTML = '';
+
+            if (sales.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7">조회된 판매 정보가 없습니다.</td></tr>';
+                return;
+            }
+
+            sales.forEach(sale => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="checkbox" class="checkbox" data-park-id="${sale.id}"></td>
+                    <td>${sale.id}</td>
+                    <td>${sale.park.parkingLot.number}</td>
+                    <td>${sale.park.parkingLot.address}</td>
+                    <td>${sale.park.startTime} ~ ${sale.park.endTime}</td>
+                    <td>${sale.park.price}</td>
+                    <td>${new Date(sale.confirmDate).toLocaleDateString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const deleteSelectedSales = async () => {
+            const selectedCheckboxes = document.querySelectorAll('#sales-info-body input[type="checkbox"]:checked');
+            const parkIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.parkId);
+
+            for (const parkId of parkIds) {
+                try {
+                    const response = await fetch(`/api/parks/${parkId}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) {
+                        throw new Error(`주차장 ID ${parkId} 삭제 실패`);
+                    }
+                } catch (error) {
+                    console.error('주차장 삭제 중 오류 발생:', error);
+                }
+            }
+
+            // 삭제 후 테이블 새로고침
+            fetchSalesInfo();
+        };
+
+        const fetchApprovalRequests = async () => {
+            try {
+                const response = await fetch('/api/parks/member', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('승인 요청 정보를 가져오지 못했습니다.');
+                }
+                const data = await response.json();
+                updateApprovalRequestsTable(data);
+            } catch (error) {
+                console.error('승인 요청 데이터를 가져오는 중 오류 발생:', error);
+            }
+        };
+
+        const updateApprovalRequestsTable = (data) => {
+            const tableBody = document.getElementById('approval-requests-body');
+            tableBody.innerHTML = '';
+
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="8">조회된 승인 요청이 없습니다.</td></tr>';
+                return;
+            }
+
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="checkbox" class="checkbox" data-park-id="${item.id}"></td>
+                    <td>${item.id}</td>
+                    <td>${item.park.member.name}</td>
+                    <td>${item.park.parkingLot.number}</td>
+                    <td>${item.park.parkingLot.address}</td>
+                    <td>${item.park.price}</td>
+                    <td>${new Date(item.park.createdDate).toLocaleDateString()}</td>
+                    <td>${item.park.parkStatus}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const deleteSelectedParks = async () => {
+            const selectedCheckboxes = document.querySelectorAll('#approval-requests-body input[type="checkbox"]:checked');
+            const parkIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.parkId);
+
+            for (const parkId of parkIds) {
+                try {
+                    const response = await fetch(`/api/parks/${parkId}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) {
+                        throw new Error(`주차장 ID ${parkId} 삭제 실패`);
+                    }
+                } catch (error) {
+                    console.error('주차장 삭제 중 오류 발생:', error);
+                }
+            }
+
+            // 삭제 후 테이블 새로고침
+            fetchApprovalRequests();
+        };
+
+        // 사이드바 메뉴에 이벤트 리스너 추가
+        sidebarMenu.addEventListener('click', (e) => {
+            if (e.target.tagName === 'LI') {
+                // 모든 사이드바 항목에서 active 클래스 제거
+                Array.from(sidebarMenu.getElementsByTagName('li')).forEach(li => {
+                    li.classList.remove('active');
+                });
+
+                // 클릭된 항목에 active 클래스 추가
+                e.target.classList.add('active');
+
+                // 모든 컨텐츠 숨기기
+                contents.forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                // 클릭된 컨텐츠 표시
+                const contentId = e.target.dataset.content + '-content';
+                document.getElementById(contentId).classList.add('active');
+
+                // 페이지 제목 업데이트
+                pageTitle.textContent = e.target.textContent;
+
+                // 각 섹션에 맞는 데이터 로드
+                switch (e.target.dataset.content) {
+                    case 'reservations':
+                        fetchReservations();
+                        break;
+                    case 'sales-info':
+                        fetchSalesInfo();
+                        break;
+                    case 'approval-requests':
+                        fetchApprovalRequests();
+                        break;
+                    case 'payment-history':
+                        fetchPaymentHistory();
+                        break;
+                }
+            }
+        });
+
+        // 삭제 버튼에 이벤트 리스너 추가
+        document.getElementById('delete-selected').addEventListener('click', deleteSelectedParks);
+        document.getElementById('delete-selected-sales').addEventListener('click', deleteSelectedSales);
+
+        // 페이지 로드 시 "내 정보" 섹션을 기본으로 표시
+        const defaultSection = document.querySelector('[data-content="info"]');
+        defaultSection.classList.add('active');
+        document.getElementById('info-content').classList.add('active');
+        pageTitle.textContent = '내 정보';
     });
-
-    // 페이지 로드 시 "내 정보" 섹션을 기본으로 표시
-    const defaultSection = document.querySelector('[data-content="info"]');
-    defaultSection.classList.add('active');
-    document.getElementById('info-content').classList.add('active');
-    pageTitle.textContent = '내 정보';
-});
 </script>
 </body>
 </html>

@@ -16,6 +16,7 @@ import com.project.rentoday.domain.reservation.exception.ReservationAlreadyExist
 import com.project.rentoday.domain.reservation.exception.ReservationNotAvailableException;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,25 +60,31 @@ public class ReservationService {
         return new CreateReservationResponseDto(savedReservation);
     }
 
-    public ReadReservationAllResponseDto findMemberCheckIn(Long memberId) {
-        Member member = memberRepository.findById(memberId).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        List<Reservation> reservations = reservationRepository.findByMember(member);
-        return new ReadReservationAllResponseDto(reservations);
+    @Transactional(readOnly = true)
+    public Page<ReadReservationAllResponseDto> findReservationByMember(String email, int page, int size) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
+        Page<Reservation> reservationsPage = reservationRepository.findByMember(member, pageable);
+
+        List<ReadReservationAllResponseDto> dtoList = List.of(new ReadReservationAllResponseDto(reservationsPage.getContent()));
+
+        return new PageImpl<>(dtoList, pageable, reservationsPage.getTotalElements());
     }
 
     //체크인,아웃 시간이 판매 가능 시작,끝 시간 안에 있는지
-    public boolean isAvailableCheckInOut(Park park, LocalDateTime checkIn) {
+    private boolean isAvailableCheckInOut(Park park, LocalDateTime checkIn) {
         return !checkIn.isBefore(park.getStartTime()) && !checkIn.isAfter(park.getEndTime());
     }
 
     //사용자들끼리의 체크인 시간이 겹치지 않는지
-    public boolean isDuplicatedCheckIn(Park park, LocalDateTime checkIn) {
+    private boolean isDuplicatedCheckIn(Park park, LocalDateTime checkIn) {
         LocalDateTime checkOut = checkIn.plusMinutes(59);
         List<Reservation> overlappingReservations = reservationRepository.findByParkAndCheckInBetween(park, checkIn, checkOut);
         return !overlappingReservations.isEmpty();
     }
 
-    public Reservation getReservationById(Long id) {
+    private Reservation getReservationById(Long id) {
         return reservationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("해당 번호로 예약을 찾을 수 없습니다."));
     }
 

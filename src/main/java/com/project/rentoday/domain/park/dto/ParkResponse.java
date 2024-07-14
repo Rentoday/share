@@ -2,6 +2,7 @@ package com.project.rentoday.domain.park.dto;
 
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.entity.ParkStatus;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,18 @@ public class ParkResponse {
     private LocalDateTime regDate;
     private LocalDateTime confirmDate;
     private ParkStatus parkStatus;
+
+    public ParkResponse(Park park) {
+        this.id = park.getId();
+        this.name = park.getMember().getName();
+        this.parkNum = park.getParkingNum();
+        this.address = park.getAddress();
+        this.startTime = park.getStartTime();
+        this.endTime = park.getEndTime();
+        this.price = park.getPrice();
+        this.regDate = park.getCreatedDate();
+        this.parkStatus = park.getParkStatus();
+    }
 
     @Builder(builderMethodName = "checkPark")
     public ParkResponse(Long id, Park park) {
@@ -42,6 +55,6 @@ public class ParkResponse {
         this.startTime = park.getStartTime();
         this.endTime = park.getEndTime();
         this.price = park.getPrice();
-        this.confirmDate = confirmDate;
+        this.confirmDate = park.getLastModifiedDate();
     }
 }
