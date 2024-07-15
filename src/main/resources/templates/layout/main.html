@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <title>오늘만세워</title>
     <link rel="stylesheet" href="/css/common/main.css">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/js/common/apiClient.js"></script>
 </head>
 <body>
 <header>
@@ -113,250 +115,106 @@
 </footer>
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=21a9c58904c9907bb95e9ebbf5a8e5e0"></script>
 <script>
-    // 응답 어댑터 함수
-    function responseAdapter(response) {
-        return {
-            data: response.data,
-            status: response.status,
-            headers: response.headers,
-        };
-    }
+    document.addEventListener('DOMContentLoaded', async function() {
+    const authSection = document.querySelector('.auth-section');
+    let hasUnreadNotifications = false;
+    let notifications = []; // 알림 목록을 저장할 배열
 
-    // axios 인스턴스 생성
-    const api = axios.create({
-        baseURL: 'http://localhost:81',
-        withCredentials: true
-    });
+    async function updateUI() {
+        const token = localStorage.getItem('Authorization');
+        const authCookie = Cookies.get('Authorization');
 
-    // 응답 인터셉터
-    api.interceptors.response.use(
-        (response) => responseAdapter(response),
-        async (error) => {
-            const originalRequest = error.config;
-            if (
-                error.response.status === 400 &&
-                error.response.data.message === "만료된 AccessToken입니다. 재발급해주세요.") {
-                try {
-                    const newToken = await refreshToken();
-                    if (newToken) {
-                        originalRequest.headers['Authorization'] = newToken;
-                        return api(originalRequest);
-                    }
-                } catch (refreshError) {
-                    console.error('토큰 재발급 실패:', refreshError);
-                    logout();
-                    return Promise.reject(refreshError);
-                }
-            }
-            return Promise.reject(error);
-        }
-    );
-
-    // 토큰 재발급 함수
-    async function refreshToken() {
-        try {
-            const response = await api.get('/api/token/reissue');
-            const newToken = response.headers['authorization'];
-            if (newToken) {
-                localStorage.setItem('Authorization', newToken);
-                return newToken;
-            }
-            throw new Error('New token not received');
-        } catch (error) {
-            console.error('토큰 재발급 실패:', error);
-            throw error;
-        }
-    }
-
-    // 로그아웃 함수
-    function logout() {
-        localStorage.removeItem('Authorization');
-        deleteAuthorizationCookie();
-        updateAuthUI();
-    }
-
-    // Authorization 쿠키 삭제 함수
-    function deleteAuthorizationCookie() {
-        document.cookie = 'Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    }
-
-    // 메인 이벤트 리스너
-    document.addEventListener('DOMContentLoaded', async function () {
-        const authSection = document.querySelector('.auth-section');
-        await updateAuthUI();
-
-        // 전역 클릭 이벤트 리스너 (드롭다운 닫기)
-        document.addEventListener('click', function() {
-            const profileDropdown = authSection.querySelector('.profile-dropdown');
-            if (profileDropdown) {
-                profileDropdown.style.display = 'none';
-            }
-        });
-
-        // 로그아웃 및 마이페이지 이벤트 리스너
-        authSection.addEventListener('click', async function(e) {
-            if (e.target.classList.contains('logout')) {
-                logout();
-            } else if (e.target.classList.contains('mypage')) {
-                console.log('마이페이지로 이동');
-            }
-        });
-    });
-
-    // UI 업데이트 함수
-    async function updateAuthUI() {
-        const authSection = document.querySelector('.auth-section');
-        let jwtToken = localStorage.getItem('Authorization');
-
-        if (!jwtToken) {
-            const authCookie = getCookie('Authorization');
-            if (authCookie) {
-                try {
-                    deleteAuthorizationCookie()
-                    jwtToken = await refreshToken();
-                } catch (error) {
-                    console.error('토큰 재발급 실패:', error);
-                    showLoginButton(authSection);
-                    return;
-                }
-            } else {
-                showLoginButton(authSection);
-                return;
-            }
-        }
-
-        if (jwtToken) {
-            try {
-                const response = await api.get('/api/member/info', {
-                    headers: { 'Authorization': jwtToken }
-                });
-                const userInfo = response.data;
-                showAuthenticatedUI(authSection, userInfo);
-                subscribeSSE(jwtToken);
-            } catch (error) {
-                console.error('사용자 정보 조회 실패:', error);
-                showLoginButton(authSection);
-            }
+        if (!token && !authCookie) {
+            authSection.innerHTML = '<button class="login-button">로그인</button>';
         } else {
-            showLoginButton(authSection);
-        }
-    }
+            try {
+                const response = await api.get('/api/member/info');
+                const userInfo = response.data;
 
-    // 로그인 버튼 표시 함수
-    function showLoginButton(authSection) {
-        authSection.innerHTML = '<button class="login-button">로그인</button>';
-    }
+                authSection.innerHTML = `
+                    <button class="icon-button panmaetotal">판매등록</button>
+                    <div class="notification-container">
+                        <button class="icon-button notification">
+                            <img src="/image/common/notificationoff.svg" alt="알림" class="notification-icon" id="notificationIcon">
+                        </button>
+                        <div class="notification-dropdown" style="display: none;">
+                            <div class="notification-list"></div>
+                            <div class="view-all-notifications">
+                                <button>모든 알림 보기</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-container">
+                        <button class="icon-button profile">
+                            <img src="${userInfo.profileImage}" alt="프로필" class="profile-image">
+                        </button>
+                        <div class="profile-dropdown" style="display: none;">
+                            <button class="dropdown-item mypage">마이페이지</button>
+                            <button class="dropdown-item logout">로그아웃</button>
+                        </div>
+                    </div>
+                `;
 
-    // 인증된 UI 표시 함수
-    function showAuthenticatedUI(authSection, userInfo) {
-        authSection.innerHTML = `
-            <button class="icon-button panmaetotal">판매등록</button>
-            <div class="notification-container">
-                <button class="icon-button notification">
-                    <img src="/image/common/notificationoff.svg" alt="알림" class="notification-icon">
-                </button>
-                <div class="notification-dropdown" style="display: none;"></div>
-            </div>
-            <div class="profile-container">
-                <button class="icon-button profile">
-                    <img src="${userInfo.profileImage}" alt="프로필" class="profile-image">
-                </button>
-                <div class="profile-dropdown" style="display: none;">
-                    <button class="dropdown-item mypage">마이페이지</button>
-                    <button class="dropdown-item logout">로그아웃</button>
-                </div>
-            </div>
-        `;
-
-        setupProfileDropdown(authSection);
-    }
-
-    // 프로필 드롭다운 설정 함수
-    function setupProfileDropdown(authSection) {
-        const profileButton = authSection.querySelector('.icon-button.profile');
-        const profileDropdown = authSection.querySelector('.profile-dropdown');
-
-        if (profileButton && profileDropdown) {
-            profileButton.addEventListener('click', function(e) {
-                e.stopPropagation();
-                profileDropdown.style.display = profileDropdown.style.display === 'none' ? 'flex' : 'none';
-            });
-
-            profileDropdown.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-        }
-    }
-
-    // SSE 구독 함수 (재연결 로직 포함)
-    function subscribeSSE(token) {
-        const subscribe = () => {
-            fetch('/api/notification/subscribe', {
-                headers: {
-                    'Authorization': token,
-                    'Accept': 'text/event-stream'
-                }
-            }).then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const reader = response.body.getReader();
-                const stream = new ReadableStream({
-                    start(controller) {
-                        function push() {
-                            reader.read().then(({ done, value }) => {
-                                if (done) {
-                                    controller.close();
-                                    return;
-                                }
-                                controller.enqueue(value);
-                                const chunk = new TextDecoder().decode(value);
-                                handleSSEData(chunk);
-                                push();
-                            });
-                        }
-                        push();
-                    }
-                });
-
-                return new Response(stream);
-            }).catch(error => {
-                console.error('SSE error:', error);
-                setTimeout(subscribe, 5000); // 5초 후 재연결 시도
-            });
-        };
-
-        subscribe();
-    }
-
-    function handleSSEData(chunk) {
-        // SSE 데이터 처리
-        const lines = chunk.split('\n');
-        let eventData = '';
-
-        for (let line of lines) {
-            if (line.startsWith('data:')) {
-                eventData += line.substring(5).trim();
-            } else if (line === '' && eventData) {
-                try {
-                    const parsedData = JSON.parse(eventData);
-                    console.log('SSE data:', parsedData);
-                    // 여기서 알림 처리 로직 구현
-                } catch (e) {
-                    console.error('Error parsing SSE data:', e);
-                }
-                eventData = '';
+                setupSSE();
+                updateNotificationIcon();
+                setupNotificationButton();
+            } catch (error) {
+                console.error('Failed to get user info:', error);
+                authSection.innerHTML = '<button class="login-button">로그인</button>';
             }
         }
     }
 
-    // 쿠키 가져오기 함수
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
+    function setupSSE() {
+        const sseClient = new SSEClient(api.defaults.baseURL);
+        sseClient.connect();
+
+        sseClient.handleMessage = (data) => {
+            console.log('Received notification:', data);
+            hasUnreadNotifications = true;
+            notifications.push(data); // 새 알림을 배열에 추가
+            updateNotificationIcon();
+            updateNotificationDropdown();
+        };
     }
+
+    function updateNotificationIcon() {
+        const notificationIcon = document.getElementById('notificationIcon');
+        if (notificationIcon) {
+            notificationIcon.src = hasUnreadNotifications
+                ? "/image/common/notificationon.svg"
+                : "/image/common/notificationoff.svg";
+        }
+    }
+
+    function setupNotificationButton() {
+        const notificationButton = document.querySelector('.icon-button.notification');
+        const notificationDropdown = document.querySelector('.notification-dropdown');
+
+        notificationButton.addEventListener('click', () => {
+            notificationDropdown.style.display = notificationDropdown.style.display === 'none' ? 'flex' : 'none';
+            if (notificationDropdown.style.display === 'flex') {
+                updateNotificationDropdown();
+            }
+        });
+    }
+
+    function updateNotificationDropdown() {
+        const notificationList = document.querySelector('.notification-list');
+        if (notifications.length === 0) {
+            notificationList.innerHTML = '<div class="no-notifications">표시할 알림이 없습니다.</div>';
+        } else {
+            notificationList.innerHTML = notifications.map(notification => `
+                <div class="notification-item">
+                    ${notification.message}
+                </div>
+            `).join('');
+        }
+    }
+
+    // 초기 UI 업데이트
+    await updateUI();
+});
 
 </script>
 <script>

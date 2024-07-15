@@ -1,0 +1,39 @@
+package com.project.rentoday.domain.notice.entity;
+
+import com.project.rentoday.domain.member.entity.Member;
+import com.project.rentoday.global.entity.BaseEntity;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+@Entity
+@Getter
+@AllArgsConstructor
+public class Notice extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "notice_id")
+    private Long id;
+
+    @NotNull
+    @Size(max = 500)
+    private String title;
+
+    @NotNull
+    @Size(max = 10000)
+    private String content;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
+
+    public void updateNotice(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
+
+}

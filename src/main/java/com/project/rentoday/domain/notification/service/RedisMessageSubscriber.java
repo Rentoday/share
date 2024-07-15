@@ -30,34 +30,41 @@ public class RedisMessageSubscriber implements MessageListener {
     public void onMessage(Message message, final byte[] pattern) {
         try {
             //메시지 문자열로 역직렬화
+            System.out.println("redis 온메시지 진입");
             String publishMessage = template.getStringSerializer().deserialize(message.getBody());
+            System.out.println("publishMessage: " + publishMessage);
+            System.out.println(message.getBody());
             //메시지를 DTO로 역직렬화
             MessageDto messageDto = objectMapper.readValue(publishMessage, MessageDto.class);
+            System.out.println(messageDto.getMessage());
             SseEmitter sseEmitter = NotificationService.userEmitters.get(messageDto.getReceiver());
 
             Member member = memberRepository.findByEmail(messageDto.getReceiver())
                     .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
             if (sseEmitter != null) {
-                sseEmitter.send(SseEmitter.event().name("notification").data(messageDto));
+                System.out.println("sse 구독자");
+                String messageDtoJson = objectMapper.writeValueAsString(messageDto);
+                // JSON 문자열을 SSE 이벤트로 전송
+                sseEmitter.send(SseEmitter.event().name("notification").data(messageDtoJson));
                 Notification notification = Notification.createMessage()
                         .message(messageDto.getMessage())
                         .member(member)
-                        .type(messageDto.getType())
                         .createdAt(messageDto.getDate())
                         .read(true)
                         .build();
                 notificationRepository.save(notification);
             } else {
+                System.out.println("sse 미구독자");
                 Notification notification = Notification.createMessage()
                         .message(messageDto.getMessage())
                         .member(member)
-                        .type(messageDto.getType())
                         .createdAt(messageDto.getDate())
                         .read(false)
                         .build();
                 notificationRepository.save(notification);
             }
         } catch (IOException e) {
+            System.out.println("에러발생: " + e.getMessage());
             e.getStackTrace();
         }
 

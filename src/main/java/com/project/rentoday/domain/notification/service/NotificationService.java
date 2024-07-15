@@ -7,12 +7,14 @@ import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.notification.dto.MessageDto;
 import com.project.rentoday.domain.notification.entity.Notification;
 import com.project.rentoday.domain.notification.repository.NotificationRepository;
+import com.project.rentoday.global.type.NotificationType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -66,8 +68,22 @@ public class NotificationService {
             redisMessagePublisher.unSubcribeTopic(email);
         });
 
+        // 연결 직후, 데이터 전송이 없을 시 503 에러 발생. 에러 방지 위한 더미데이터 전송
+        MessageDto messageDto = new MessageDto("메시지 입니다", email, LocalDateTime.now().toString());
+        MessageDto messageDto1 = new MessageDto("메시지 입니다1", email, LocalDateTime.now().toString());
+        MessageDto messageDto2 = new MessageDto("메시지 입니다2", email, LocalDateTime.now().toString());
+        MessageDto messageDto3 = new MessageDto("메시지 입니다3", email, LocalDateTime.now().toString());
+        MessageDto messageDto4 = new MessageDto("메시지 입니다4", email, LocalDateTime.now().toString());
+        redisMessagePublisher.publishTopic(email, messageDto);
+        redisMessagePublisher.publishTopic(email, messageDto1);
+        redisMessagePublisher.publishTopic(email, messageDto2);
+        redisMessagePublisher.publishTopic(email, messageDto3);
+        redisMessagePublisher.publishTopic(email, messageDto4);
+
         //클라이언트가 미수신한 메시지 발생시 메시지 전송
         sendUnreadNotifications(member, sseEmitter);
+        System.out.println("메시지 발송");
+
 
         return sseEmitter;
     }
@@ -85,6 +101,18 @@ public class NotificationService {
                 }
             });
             notificationRepository.saveAll(unreadNotifications);
+        }
+    }
+
+    //미수신 메시지 전송
+    private void sendToClient(SseEmitter emitter, String id, Object data) {
+        try {
+            emitter.send(SseEmitter.event()
+                    .id(id)
+                    .name("sse")
+                    .data(data));
+        } catch (IOException e) {
+            log.error("SSE 연결 오류 발생", e);
         }
     }
 

@@ -36,7 +36,7 @@ public class Notification {
     @Column(name = "createDate")
     @NotNull
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    private String createdAt;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -53,7 +53,7 @@ public class Notification {
             @NotNull NotificationType type,
             @NotNull Member member,
             @NotNull Boolean read,
-            @NotNull LocalDateTime createdAt
+            @NotNull String createdAt
     ) {
         this.message = message;
         this.type = type;

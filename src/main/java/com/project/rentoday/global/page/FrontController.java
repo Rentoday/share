@@ -1,5 +1,7 @@
 package com.project.rentoday.global.page;
 
+import com.project.rentoday.domain.notification.service.RedisMessagePublisher;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,11 +32,6 @@ public class FrontController {
     @GetMapping("/login")
     public String login() {
         return "login.html";
-    }
-
-    @GetMapping("/modal/login")
-    public String modalLogin() {
-        return "member/loginModal.html";
     }
 
     @GetMapping("/test")

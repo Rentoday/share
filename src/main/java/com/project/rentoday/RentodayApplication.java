@@ -12,5 +12,6 @@ public class RentodayApplication {
 		SpringApplication.run(RentodayApplication.class, args);
 	}
 
+
 }
 
