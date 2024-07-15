@@ -170,22 +170,19 @@ public class ParkService {
     }
 
     @Transactional
-    public List<ParkResponse> getConfirmedAll() {
-        List<Park> confirmedParks = parkRepository.findByParkStatus(ParkStatus.CONFIRMED);
+    public Page<ParkResponse> getConfirmedAll(Pageable pageable) {
+        Page<Park> confirmedParks = parkRepository.findByParkStatus(ParkStatus.CONFIRMED, pageable);
 
-        return confirmedParks.stream()
-                .map(park -> ParkResponse.readPark()
-                        .id(park.getId())
-                        .park(park)
-                        .build())
-                .collect(Collectors.toList());
+        return confirmedParks.map(park -> ParkResponse.readPark()
+                .id(park.getId())
+                .park(park)
+                .build());
     }
 
     @Transactional
-    public List<ParkResponse> getAll() {
-        return parkRepository.findAll().stream()
-                .map(ParkResponse::new)
-                .collect(Collectors.toList());
+    public Page<ParkResponse> getAll(Pageable pageable) {
+        Page<Park> allParks = parkRepository.findAll(pageable);
+        return allParks.map(ParkResponse::new);
     }
 
     @Transactional

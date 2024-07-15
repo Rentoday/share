@@ -9,6 +9,8 @@ import com.project.rentoday.domain.park.service.ParkService;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -70,15 +72,22 @@ public class ParkController {
 
     @GetMapping("/confirmed")
     @ResponseStatus(HttpStatus.OK)
-    public List<ParkResponse> getConfirmedAll() {
-        return parkService.getConfirmedAll();
+    public Page<ParkResponse> getConfirmedAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return parkService.getConfirmedAll(pageable);
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<ParkResponse> getAll() {
-        return parkService.getAll();
+    public Page<ParkResponse> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return parkService.getAll(pageable);
     }
+
 
     @GetMapping("/{parkId}")
     public ResponseEntity<ParkDetailRequest> getParkDetail(@PathVariable Long parkId) {
