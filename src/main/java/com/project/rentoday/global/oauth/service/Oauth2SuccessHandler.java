@@ -53,6 +53,7 @@ public class Oauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         saveRefreshToken(username, refreshToken);
 
         //쿠키에 JWT 담아서 리다이렉트(리다이렉트이기때문에 header로 응답 불가능)
+        System.out.println("Authentication successful. Redirecting to: http://localhost:81/main");
         response.addCookie(createCookie("Authorization", accessToken));
         response.addCookie(createCookie("Refresh", refreshToken));
         response.sendRedirect("http://localhost:81/main");
@@ -65,7 +66,7 @@ public class Oauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         cookie.setMaxAge(60*60*60);
         //cookie.setSecure(true);
         cookie.setPath("/");
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(false);
 
         return cookie;
     }

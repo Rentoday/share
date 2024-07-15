@@ -113,174 +113,251 @@
 </footer>
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=21a9c58904c9907bb95e9ebbf5a8e5e0"></script>
 <script>
+    // 응답 어댑터 함수
+    function responseAdapter(response) {
+        return {
+            data: response.data,
+            status: response.status,
+            headers: response.headers,
+        };
+    }
+
+    // axios 인스턴스 생성
+    const api = axios.create({
+        baseURL: 'http://localhost:81',
+        withCredentials: true
+    });
+
+    // 응답 인터셉터
+    api.interceptors.response.use(
+        (response) => responseAdapter(response),
+        async (error) => {
+            const originalRequest = error.config;
+            if (
+                error.response.status === 400 &&
+                error.response.data.message === "만료된 AccessToken입니다. 재발급해주세요.") {
+                try {
+                    const newToken = await refreshToken();
+                    if (newToken) {
+                        originalRequest.headers['Authorization'] = newToken;
+                        return api(originalRequest);
+                    }
+                } catch (refreshError) {
+                    console.error('토큰 재발급 실패:', refreshError);
+                    logout();
+                    return Promise.reject(refreshError);
+                }
+            }
+            return Promise.reject(error);
+        }
+    );
+
+    // 토큰 재발급 함수
+    async function refreshToken() {
+        try {
+            const response = await api.get('/api/token/reissue');
+            const newToken = response.headers['authorization'];
+            if (newToken) {
+                localStorage.setItem('Authorization', newToken);
+                return newToken;
+            }
+            throw new Error('New token not received');
+        } catch (error) {
+            console.error('토큰 재발급 실패:', error);
+            throw error;
+        }
+    }
+
+    // 로그아웃 함수
+    function logout() {
+        localStorage.removeItem('Authorization');
+        deleteAuthorizationCookie();
+        updateAuthUI();
+    }
+
+    // Authorization 쿠키 삭제 함수
+    function deleteAuthorizationCookie() {
+        document.cookie = 'Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    }
+
+    // 메인 이벤트 리스너
     document.addEventListener('DOMContentLoaded', async function () {
+        const authSection = document.querySelector('.auth-section');
+        await updateAuthUI();
+
+        // 전역 클릭 이벤트 리스너 (드롭다운 닫기)
+        document.addEventListener('click', function() {
+            const profileDropdown = authSection.querySelector('.profile-dropdown');
+            if (profileDropdown) {
+                profileDropdown.style.display = 'none';
+            }
+        });
+
+        // 로그아웃 및 마이페이지 이벤트 리스너
+        authSection.addEventListener('click', async function(e) {
+            if (e.target.classList.contains('logout')) {
+                logout();
+            } else if (e.target.classList.contains('mypage')) {
+                console.log('마이페이지로 이동');
+            }
+        });
+    });
+
+    // UI 업데이트 함수
+    async function updateAuthUI() {
         const authSection = document.querySelector('.auth-section');
         let jwtToken = localStorage.getItem('Authorization');
 
-<!--        function clearAllStorageAndCookies() {-->
-<!--    // 로컬 스토리지 삭제-->
-<!--    localStorage.clear();-->
-
-<!--    // 세션 스토리지 삭제 (필요한 경우)-->
-<!--    sessionStorage.clear();-->
-
-<!--    // 모든 쿠키 삭제-->
-<!--    const cookies = document.cookie.split(";");-->
-
-<!--    for (let i = 0; i < cookies.length; i++) {-->
-<!--        const cookie = cookies[i];-->
-<!--        const eqPos = cookie.indexOf("=");-->
-<!--        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;-->
-<!--        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";-->
-<!--    }-->
-
-<!--    console.log("모든 스토리지와 쿠키가 삭제되었습니다.");-->
-<!--}-->
-
-<!--// 함수 실행-->
-<!--clearAllStorageAndCookies();-->
-
         if (!jwtToken) {
-            const cookies = document.cookie.split('; ');
-            const authCookie = cookies.find(cookie => cookie.startsWith('Authorization='));
+            const authCookie = getCookie('Authorization');
             if (authCookie) {
-                // Refresh JWT token using refresh token
                 try {
-                    const response = await axios.get('/api/token/reissue', {
-                        withCredentials: true // This ensures cookies are included in the request
-                    });
-                    jwtToken = response.headers['Authorization'];
-                    localStorage.setItem('Authorization', jwtToken);
+                    deleteAuthorizationCookie()
+                    jwtToken = await refreshToken();
                 } catch (error) {
-                    console.error('Error refreshing token:', error);
+                    console.error('토큰 재발급 실패:', error);
+                    showLoginButton(authSection);
+                    return;
                 }
+            } else {
+                showLoginButton(authSection);
+                return;
             }
         }
 
         if (jwtToken) {
-            // Subscribe to SSE for real-time notifications
-            subscribeSSE(jwtToken);
-
-            // Fetch member info
             try {
-                const response = await axios.get('/api/member/info', {
+                const response = await api.get('/api/member/info', {
                     headers: { 'Authorization': jwtToken }
                 });
                 const userInfo = response.data;
-
-                // Update UI with member info
-                authSection.innerHTML = `
-                    <button class="icon-button panmaetotal">판매등록</button>
-                    <div class="notification-container">
-                        <button class="icon-button notification">
-                            <img src="/image/common/notificationoff.svg" alt="알림" class="notification-icon">
-                        </button>
-                        <div class="notification-dropdown" style="display: none;"></div>
-                    </div>
-                    <div class="profile-container">
-                        <button class="icon-button profile">
-                            <img src="${userInfo.profileImage}" alt="프로필" class="profile-image">
-                        </button>
-                        <div class="profile-dropdown" style="display: none;">
-                            <button class="dropdown-item mypage">마이페이지</button>
-                            <button class="dropdown-item logout">로그아웃</button>
-                        </div>
-                    </div>
-                `;
+                showAuthenticatedUI(authSection, userInfo);
+                subscribeSSE(jwtToken);
             } catch (error) {
-                console.error('Error fetching member info:', error);
+                console.error('사용자 정보 조회 실패:', error);
+                showLoginButton(authSection);
             }
         } else {
-            authSection.innerHTML = '<button class="login-button">로그인</button>';
+            showLoginButton(authSection);
         }
-    });
+    }
 
+    // 로그인 버튼 표시 함수
+    function showLoginButton(authSection) {
+        authSection.innerHTML = '<button class="login-button">로그인</button>';
+    }
+
+    // 인증된 UI 표시 함수
+    function showAuthenticatedUI(authSection, userInfo) {
+        authSection.innerHTML = `
+            <button class="icon-button panmaetotal">판매등록</button>
+            <div class="notification-container">
+                <button class="icon-button notification">
+                    <img src="/image/common/notificationoff.svg" alt="알림" class="notification-icon">
+                </button>
+                <div class="notification-dropdown" style="display: none;"></div>
+            </div>
+            <div class="profile-container">
+                <button class="icon-button profile">
+                    <img src="${userInfo.profileImage}" alt="프로필" class="profile-image">
+                </button>
+                <div class="profile-dropdown" style="display: none;">
+                    <button class="dropdown-item mypage">마이페이지</button>
+                    <button class="dropdown-item logout">로그아웃</button>
+                </div>
+            </div>
+        `;
+
+        setupProfileDropdown(authSection);
+    }
+
+    // 프로필 드롭다운 설정 함수
+    function setupProfileDropdown(authSection) {
+        const profileButton = authSection.querySelector('.icon-button.profile');
+        const profileDropdown = authSection.querySelector('.profile-dropdown');
+
+        if (profileButton && profileDropdown) {
+            profileButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                profileDropdown.style.display = profileDropdown.style.display === 'none' ? 'flex' : 'none';
+            });
+
+            profileDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+    }
+
+    // SSE 구독 함수 (재연결 로직 포함)
+    function subscribeSSE(token) {
+        const subscribe = () => {
+            fetch('/api/notification/subscribe', {
+                headers: {
+                    'Authorization': token,
+                    'Accept': 'text/event-stream'
+                }
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const stream = new ReadableStream({
+                    start(controller) {
+                        function push() {
+                            reader.read().then(({ done, value }) => {
+                                if (done) {
+                                    controller.close();
+                                    return;
+                                }
+                                controller.enqueue(value);
+                                const chunk = new TextDecoder().decode(value);
+                                handleSSEData(chunk);
+                                push();
+                            });
+                        }
+                        push();
+                    }
+                });
+
+                return new Response(stream);
+            }).catch(error => {
+                console.error('SSE error:', error);
+                setTimeout(subscribe, 5000); // 5초 후 재연결 시도
+            });
+        };
+
+        subscribe();
+    }
+
+    function handleSSEData(chunk) {
+        // SSE 데이터 처리
+        const lines = chunk.split('\n');
+        let eventData = '';
+
+        for (let line of lines) {
+            if (line.startsWith('data:')) {
+                eventData += line.substring(5).trim();
+            } else if (line === '' && eventData) {
+                try {
+                    const parsedData = JSON.parse(eventData);
+                    console.log('SSE data:', parsedData);
+                    // 여기서 알림 처리 로직 구현
+                } catch (e) {
+                    console.error('Error parsing SSE data:', e);
+                }
+                eventData = '';
+            }
+        }
+    }
+
+    // 쿠키 가져오기 함수
     function getCookie(name) {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
         if (parts.length === 2) return parts.pop().split(';').shift();
     }
 
-    function subscribeSSE(token) {
-    fetch('/api/notification/subscribe', {
-        headers: {
-            'Authorization': token,
-            'Accept': 'text/event-stream'
-        },
-        credentials: 'include'
-    }).then(response => {
-        const reader = response.body.getReader();
-        const stream = new ReadableStream({
-            start(controller) {
-                function push() {
-                    reader.read().then(({ done, value }) => {
-                        if (done) {
-                            controller.close();
-                            return;
-                        }
-                        controller.enqueue(value);
-                        push();
-                    });
-                }
-                push();
-            }
-        });
-        return new Response(stream, { headers: { 'Content-Type': 'text/event-stream' } });
-    }).then(response => {
-        const eventSource = new EventSource(response.url);
-        eventSource.onmessage = function (event) {
-            console.log('SSE data:', event.data);
-        };
-        eventSource.onerror = function (event) {
-            console.error('SSE error:', event);
-        };
-    });
-}
-
-
-const api = axios.create({
-  baseURL: 'http://your-api-base-url',
-  withCredentials: true // 항상 쿠키를 포함하여 요청을 보냄
-});
-
-// 응답 인터셉터
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // 서버로부터 "만료된 AccessToken입니다. 재발급해주세요." 메시지를 받았는지 확인
-    if (error.response.data === "만료된 AccessToken입니다. 재발급해주세요." && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        // 토큰 재발급 요청
-        const response = await axios.get('/api/token/reissue', {
-          withCredentials: true
-        });
-
-        // 응답 헤더에서 새로운 Authorization 토큰 추출
-        const newToken = response.headers['authorization'];
-
-        // 로컬 스토리지 업데이트
-        localStorage.setItem('Authorization', newToken);
-
-        // 원래 요청의 헤더 업데이트
-        originalRequest.headers['Authorization'] = newToken;
-
-        // 원래 요청 재시도
-        return api(originalRequest);
-      } catch (error) {
-        // 토큰 재발급 실패 시 처리 (예: 로그아웃)
-        console.error('토큰 재발급 실패:', error);
-        // 여기에 로그아웃 로직을 추가할 수 있습니다.
-        return Promise.reject(error);
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
 </script>
 <script>
     //시간 검색 JS
@@ -365,10 +442,10 @@ api.interceptors.response.use(
 </script>
 
 <script>
-    //로그인 모달 및 로그인 요청 JS
     document.addEventListener('DOMContentLoaded', function() {
+    function initializeLoginModal() {
         // 로그인 버튼과 모달 요소 선택
-        var loginButton = document.querySelector('.header-content .login-button');
+        var loginButton = document.querySelector('.auth-section .login-button');
         var loginModal = document.getElementById('loginModal');
         var closeLoginModal = document.getElementById('closeLoginModal');
 
@@ -384,6 +461,8 @@ api.interceptors.response.use(
             });
         } else {
             console.error('Login button not found');
+            // 버튼이 없으면 1초 후에 다시 시도
+            return;
         }
 
         // 모달 닫기 버튼이 존재하는지 확인
@@ -399,6 +478,10 @@ api.interceptors.response.use(
                 loginModal.style.display = 'none';
             }
         });
+    }
+
+    // 초기화 함수 호출
+    initializeLoginModal();
 
         // 로그인 폼 제출 이벤트 리스너
         var loginForm = document.getElementById('loginForm');
@@ -442,22 +525,13 @@ api.interceptors.response.use(
     });
 }
 </script>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
     const kakaoLoginBtn = document.querySelector('.kakao-login');
 
     kakaoLoginBtn.addEventListener('click', function() {
-        // 카카오 로그인 요청 URL
-        const kakaoAuthUrl = 'https://kauth.kakao.com/oauth/authorize';
-        const clientId = '1d6eef0265afc1ca34cd46ba137202d4'; // 여기에 실제 클라이언트 ID를 입력하세요
-        const redirectUri = encodeURIComponent('http://localhost:81/login/oauth2/code/kakao');
-
-        // 필요한 스코프를 추가하세요
-        const scope = encodeURIComponent('profile_nickname profile_image account_email');
-
         // 전체 인증 URL 생성
-        const authUrl = `${kakaoAuthUrl}?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+        const authUrl = `http://localhost:81/oauth2/authorization/kakao`;
 
         // 카카오 인증 페이지로 리다이렉트
         window.location.href = authUrl;

@@ -30,45 +30,55 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        try {
+            //HttpHeader속 Access Token 추출
+            String authorization = request.getHeader("Authorization");
 
-        //HttpHeader속 Access Token 추출
-        String authorization = request.getHeader("Authorization");
+            //Authorization 헤더 검증
+            if (authorization == null || !authorization.startsWith("Bearer ")) {
+                //OAuth2 로그인 검증
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-        //Authorization 헤더 검증
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
-            //OAuth2 로그인 검증
+            //Bearer 부분 제거 후 순수 AccessToken만 획득
+            String accessToken = authorization.split(" ")[1];
+
+            //토큰 소멸시간 검증
+            if (jwtService.isExpired(accessToken)) {
+                System.out.println("토큰 만료");
+                throw new JwtException(JwtErrorCode.JWT_ACCESS_EXPIRATION_ERROR);
+            }
+
+            //jwt에서 username, role 추출
+            String username = jwtService.getUsername(accessToken);
+            String role = jwtService.getRole(accessToken);
+            Member member = memberRepository.findByEmail(username)
+                    .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+            String password = member.getPassword();
+            System.out.println(member.getEmail());
+            System.out.println(member.getName());
+            System.out.println(member.getPassword());
+
+            MemberDto.createDetails memberDto = new MemberDto.createDetails(username, role, password);
+            CustomMemberDetails customMemberDetails = new CustomMemberDetails(memberDto);
+            System.out.println(customMemberDetails.getUsername());
+
+            Authentication authToken = new UsernamePasswordAuthenticationToken(customMemberDetails, null, customMemberDetails.getAuthorities());
+            //일시적인 세션을 생성
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+
+
             filterChain.doFilter(request, response);
-            return;
+        } catch (JwtException e) {
+            JwtException(response, e);
         }
+    }
 
-        //Bearer 부분 제거 후 순수 AccessToken만 획득
-        String accessToken = authorization.split(" ")[1];
-
-        //토큰 소멸시간 검증
-        if (jwtService.isExpired(accessToken)) {
-
-            throw new JwtException(JwtErrorCode.JWT_ACCESS_EXPIRATION_ERROR);
-        }
-
-        //jwt에서 username, role 추출
-        String username = jwtService.getUsername(accessToken);
-        String role = jwtService.getRole(accessToken);
-        Member member = memberRepository.findByEmail(username)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-        String password = member.getPassword();
-        System.out.println(member.getEmail());
-        System.out.println(member.getName());
-        System.out.println(member.getPassword());
-
-        MemberDto.createDetails memberDto = new MemberDto.createDetails(username, role, password);
-        CustomMemberDetails customMemberDetails = new CustomMemberDetails(memberDto);
-        System.out.println(customMemberDetails.getUsername());
-
-        Authentication authToken = new UsernamePasswordAuthenticationToken(customMemberDetails, null, customMemberDetails.getAuthorities());
-        //일시적인 세션을 생성
-        SecurityContextHolder.getContext().setAuthentication(authToken);
-
-
-        filterChain.doFilter(request, response);
+    private void JwtException(HttpServletResponse response, JwtException e) throws IOException {
+        JwtErrorCode errorCode = e.getJwtErrorCode();
+        response.setStatus(errorCode.getHttpStatus().value());
+        response.setContentType("application/json");
+        response.getWriter().write("{\"errorCode\": \"" + errorCode.getCode() + "\", \"message\": \"" + errorCode.getMessage() + "\"}");
     }
 }
