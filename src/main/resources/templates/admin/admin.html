@@ -38,19 +38,8 @@
                     <th>등록일</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>장성욱</td>
-                    <td>52루-5278</td>
-                    <td>강남구 센터필드빌딩 5층 구글코리아</td>
-                    <td>09:00~18:00</td>
-                    <td>2000</td>
-                    <td>24/07/11</td>
-                </tr>
-                <tr>
-                    <td colspan="7">조회된 판매 상품이 없습니다.</td>
-                </tr>
+                <tbody id="sales-table-body">
+                <!-- 데이터는 여기에 동적으로 추가됩니다 -->
                 </tbody>
             </table>
             <div class="pagination">
@@ -74,19 +63,8 @@
                     <th>상태</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>장성욱</td>
-                    <td>28루-5278</td>
-                    <td>강남구 센터필드빌딩 5층 구글코리아</td>
-                    <td>3000</td>
-                    <td>24/07/12</td>
-                    <td>승인</td>
-                </tr>
-                <tr>
-                    <td colspan="7">조회된 판매 상품 검토가 없습니다.</td>
-                </tr>
+                <tbody id="confirm-table-body">
+                <!-- 데이터는 여기에 동적으로 추가됩니다 -->
                 </tbody>
             </table>
             <div class="pagination">
@@ -139,6 +117,128 @@
         const contents = document.querySelectorAll('.content');
         const pageTitle = document.getElementById('page-title');
 
+        let currentSalesPage = 0;
+        let currentConfirmPage = 0;
+        const pageSize = 10;
+
+
+        const fetchConfirmedParks = async (page = 0) => {
+            try {
+                const response = await fetch(`/api/parks/confirmed?page=${page}&size=${pageSize}`);
+                if (!response.ok) {
+                    throw new Error('판매 상품 조회에 실패했습니다.');
+                }
+                const data = await response.json();
+                updateSalesTable(data.content);
+                updatePagination(data, 'sales');
+            } catch (error) {
+                console.error('판매 상품 조회 중 오류 발생:', error);
+            }
+        };
+
+         const updateSalesTable = (parks) => {
+            const tableBody = document.getElementById('sales-table-body');
+            tableBody.innerHTML = '';
+
+            if (parks.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7">조회된 판매 상품이 없습니다.</td></tr>';
+                return;
+            }
+
+            parks.forEach(park => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${park.id}</td>
+                    <td>${park.park.member.name}</td>
+                    <td>${park.park.parkingLot.number}</td>
+                    <td>${park.park.parkingLot.address}</td>
+                    <td>${park.park.startTime} ~ ${park.park.endTime}</td>
+                    <td>${park.park.price}</td>
+                    <td>${new Date(park.park.createdDate).toLocaleDateString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const fetchAllParks = async (page = 0) => {
+            try {
+                const response = await fetch(`/api/parks?page=${page}&size=${pageSize}`);
+                if (!response.ok) {
+                    throw new Error('판매 상품 검토 조회에 실패했습니다.');
+                }
+                const data = await response.json();
+                updateConfirmTable(data.content);
+                updatePagination(data, 'confirm');
+            } catch (error) {
+                console.error('판매 상품 검토 조회 중 오류 발생:', error);
+            }
+        };
+
+        const updateConfirmTable = (parks) => {
+            const tableBody = document.getElementById('confirm-table-body');
+            tableBody.innerHTML = '';
+
+            if (parks.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7">조회된 판매 상품 검토가 없습니다.</td></tr>';
+                return;
+            }
+
+            parks.forEach(park => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${park.id}</td>
+                    <td>${park.park.member.name}</td>
+                    <td>${park.park.parkingLot.number}</td>
+                    <td>${park.park.parkingLot.address}</td>
+                    <td>${park.park.price}</td>
+                    <td>${new Date(park.park.createdDate).toLocaleDateString()}</td>
+                    <td>${park.park.parkStatus}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const updatePagination = (data, section) => {
+            const paginationDiv = document.getElementById(`${section}-pagination`);
+            paginationDiv.innerHTML = '';
+
+            const totalPages = data.totalPages;
+            const currentPage = data.number;
+
+            // 이전 페이지 버튼
+            const prevButton = document.createElement('button');
+            prevButton.textContent = '<';
+            prevButton.disabled = currentPage === 0;
+            prevButton.addEventListener('click', () => loadPage(section, currentPage - 1));
+            paginationDiv.appendChild(prevButton);
+
+            // 페이지 번호 버튼
+            for (let i = 0; i < totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i + 1;
+                pageButton.classList.toggle('active', i === currentPage);
+                pageButton.addEventListener('click', () => loadPage(section, i));
+                paginationDiv.appendChild(pageButton);
+            }
+
+            // 다음 페이지 버튼
+            const nextButton = document.createElement('button');
+            nextButton.textContent = '>';
+            nextButton.disabled = currentPage === totalPages - 1;
+            nextButton.addEventListener('click', () => loadPage(section, currentPage + 1));
+            paginationDiv.appendChild(nextButton);
+        };
+
+        const loadPage = (section, page) => {
+            if (section === 'sales') {
+                currentSalesPage = page;
+                fetchConfirmedParks(page);
+            } else if (section === 'confirm') {
+                currentConfirmPage = page;
+                fetchAllParks(page);
+            }
+        };
+
         sidebarMenu.addEventListener('click', (e) => {
             if (e.target.tagName === 'LI') {
                 // Remove active class from all sidebar items
@@ -160,21 +260,24 @@
 
                 // Update the page title
                 pageTitle.textContent = e.target.textContent;
+
+                // Fetch data for the selected section
+                 if (e.target.dataset.content === 'sales') {
+                    fetchConfirmedParks(currentSalesPage);
+                } else if (e.target.dataset.content === 'confirm') {
+                    fetchAllParks(currentConfirmPage);
+                }
             }
         });
-                const sellersItem = document.querySelector('li[data-content="sellers"]');
-                sellersItem.click();
 
-                const salesItem = document.querySelector('li[data-content="sales"]');
-                salesItem.click();
-
-                const confirmItem = document.querySelector('li[data-content="confirm"]');
-                confirmItem.click();
-
-                const noticeItem = document.querySelector('li[data-content="notice"]');
-                noticeItem.click();
-
-            });
+        // Initial data fetch for the default active section
+        const activeSection = document.querySelector('.sidebar li.active').dataset.content;
+        if (activeSection === 'sales') {
+            fetchConfirmedParks(currentSalesPage);
+        } else if (activeSection === 'confirm') {
+            fetchAllParks(currentConfirmPage);
+        }
+    });
 </script>
 </body>
 </html>

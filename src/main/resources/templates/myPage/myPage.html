@@ -35,26 +35,26 @@
                     <div class="profile-name" id="profile-name"></div>
                 </div>
             </div>
-            <form class="info-form">
+            <form id="info-form" class="info-form">
                 <div class="form-group">
                     <label for="email">이메일</label>
                     <input type="email" id="email" readonly>
                 </div>
                 <div class="form-group">
                     <label for="phone">핸드폰 번호</label>
-                    <input type="text" id="phone">
+                    <input type="text" id="phone" readonly>
                 </div>
                 <div class="form-group">
-                    <label for="password">비밀번호</label>
+                    <label for="password">새 비밀번호</label>
                     <input type="password" id="password">
                 </div>
                 <div class="form-group">
-                    <label for="confirm-password">비밀번호 확인</label>
+                    <label for="confirm-password">새 비밀번호 확인</label>
                     <input type="password" id="confirm-password">
                 </div>
                 <div class="buttons">
                     <button type="submit" class="save-btn">수정하기</button>
-                    <button type="button" class="cancel-btn">탈퇴하기</button>
+                    <button type="button" class="cancel-btn" id="delete-account">탈퇴하기</button>
                 </div>
             </form>
         </div>
@@ -204,36 +204,38 @@
         const sidebarMenu = document.getElementById('sidebar-menu');
         const contents = document.querySelectorAll('.content');
         const pageTitle = document.getElementById('page-title');
+        const infoForm = document.getElementById('info-form');
+        const deleteAccountBtn = document.getElementById('delete-account');
 
         let currentPage = 0;
         const pageSize = 10;
 
         const fetchMemberInfo = async () => {
-        try {
-            const response = await fetch('/api/members/info', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
+            try {
+                const response = await fetch('/api/members/info', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('회원 정보를 가져오지 못했습니다.');
                 }
-            });
-            if (!response.ok) {
-                throw new Error('회원 정보를 가져오지 못했습니다.');
+                const data = await response.json();
+                updateMemberInfo(data);
+            } catch (error) {
+                console.error('회원 정보를 가져오는 중 오류 발생:', error);
             }
-            const data = await response.json();
-            updateMemberInfo(data);
-        } catch (error) {
-            console.error('회원 정보를 가져오는 중 오류 발생:', error);
-        }
-    };
+        };
 
-    const updateMemberInfo = (data) => {
-        document.getElementById('profile-name').textContent = data.name;
-        document.getElementById('email').value = data.email;
-        document.getElementById('phone').value = data.phone;
-        if (data.profileImage) {
-            document.getElementById('profile-pic').src = data.profileImage;
-        }
-    };
+        const updateMemberInfo = (data) => {
+            document.getElementById('profile-name').textContent = data.name;
+            document.getElementById('email').value = data.email;
+            document.getElementById('phone').value = data.phone;
+            if (data.profileImage) {
+                document.getElementById('profile-pic').src = data.profileImage;
+            }
+        };
 
         // 프로필 이미지 수정 기능
         const profilePic = document.getElementById('profile-pic');
@@ -251,6 +253,71 @@
                 }
             });
         }
+
+        // 회원 정보 수정
+        infoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (password !== confirmPassword) {
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('key', JSON.stringify({
+                password: password
+            }));
+
+            const profileImage = document.getElementById('profile-pic-input').files[0];
+            if (profileImage) {
+                formData.append('profileImage', profileImage);
+            }
+
+            try {
+                const response = await fetch('/api/members/update', {
+                    method: 'PUT',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('회원 정보 수정에 실패했습니다.');
+                }
+
+                alert('회원 정보가 성공적으로 수정되었습니다.');
+                fetchMemberInfo();  // 수정된 정보 다시 불러오기
+            } catch (error) {
+                console.error('회원 정보 수정 중 오류 발생:', error);
+                alert('회원 정보 수정에 실패했습니다.');
+            }
+        });
+
+        // 회원 탈퇴
+        deleteAccountBtn.addEventListener('click', async () => {
+            if (confirm('정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                try {
+                    const response = await fetch('/api/members/delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({}) // 필요한 경우 여기에 추가 데이터를 넣을 수 있습니다.
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('회원 탈퇴에 실패했습니다.');
+                    }
+
+                    alert('회원 탈퇴가 완료되었습니다.');
+                    // 로그아웃 처리 및 메인 페이지로 리다이렉트
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error('회원 탈퇴 중 오류 발생:', error);
+                    alert('회원 탈퇴에 실패했습니다.');
+                }
+            }
+        });
 
         const fetchReservations = async (page = 0) => {
             try {
@@ -569,6 +636,7 @@
         defaultSection.classList.add('active');
         document.getElementById('info-content').classList.add('active');
         pageTitle.textContent = '내 정보';
+        fetchMemberInfo();
     });
 </script>
 </body>
