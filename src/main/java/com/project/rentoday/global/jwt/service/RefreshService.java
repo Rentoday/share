@@ -53,23 +53,17 @@ public class RefreshService {
 
         //Access Token 재발급
         String newAccess = jwtService.createAccessJwt(email, role);
-        String newRefresh = jwtService.createRefreshJwt();
-
-        //기존의 Refresh Token을 DB에서 삭제하고 새로운 Refresh Token을 DB에 저장
-        refreshRepository.deleteByRefreshToken(refreshToken);
-        saveRefreshToken(email, newRefresh);
 
         JwtDto jwtDto = new JwtDto();
         jwtDto.setAccessToken(newAccess);
-        jwtDto.setRefreshToken(newRefresh);
         return jwtDto;
     }
 
-    private void saveRefreshToken(String email, String refreshToken) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-        Date date = new Date(System.currentTimeMillis() + 86400000L);
-        RefreshToken refresh = new RefreshToken(refreshToken, member, date.toString());
-        refreshRepository.save(refresh);
-    }
+//    private void saveRefreshToken(String email, String refreshToken) {
+//        Member member = memberRepository.findByEmail(email)
+//                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+//        Date date = new Date(System.currentTimeMillis() + 86400000L);
+//        RefreshToken refresh = new RefreshToken(refreshToken, member, date.toString());
+//        refreshRepository.save(refresh);
+//    }
 }

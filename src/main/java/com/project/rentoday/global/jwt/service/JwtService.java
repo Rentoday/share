@@ -1,5 +1,6 @@
 package com.project.rentoday.global.jwt.service;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -52,15 +53,18 @@ public class JwtService {
 
     //jwt 만료시간 체크
     public Boolean isExpired(String token) {
-
-        return Jwts
-                .parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getExpiration()
-                .before(new Date());
+        try {
+            return Jwts
+                    .parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getExpiration()
+                    .before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true; // 토큰이 이미 만료되어 예외가 발생한 경우
+        }
     }
 
     //jwt 만료시간 체크
@@ -82,7 +86,7 @@ public class JwtService {
                 .claim("username", username)
                 .claim("role", role)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 600000L))
+                .expiration(new Date(System.currentTimeMillis() + 10000L))
                 .signWith(secretKey)
                 .compact();
     }

@@ -26,21 +26,22 @@ public class ReissueController {
         String refreshToken = null;
         //request로 부터 Cookie를 받아온다,
         Cookie[] cookies = request.getCookies();
+        System.out.println(cookies.toString());
         for (Cookie cookie : cookies) {
 
             //받아온 cookie에서 refresh를 찾아 refresh 변수에 해당 값을 저장한다.
-            if (cookie.getName().equals("refresh")) {
+            if (cookie.getName().equals("Refresh")) {
+                System.out.println(cookie.getName() + "쿠춬쿹쿷쿠ㅜㅋ");
                 refreshToken = cookie.getValue();
+                System.out.println(refreshToken);
             }
         }
 
         JwtDto jwtDto = refreshService.reissue(refreshToken);
         String newAccess = jwtDto.getAccessToken();
-        String newRefresh = jwtDto.getRefreshToken();
 
         //response
         response.addHeader("Authorization", "Bearer " + newAccess);
-        response.addCookie(createCookie("Refresh", newRefresh));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

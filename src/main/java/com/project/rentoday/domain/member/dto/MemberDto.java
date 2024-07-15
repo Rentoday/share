@@ -48,8 +48,6 @@ public class MemberDto {
     @Getter
     @Setter
     public static class UpdateRequest {
-        @NotNull(message = "전화번호를 입력해주세요.")
-        private String phone;
         @NotBlank(message = "비밀번호를 입력해주세요.")
         private String password;
         private MultipartFile profileImage;

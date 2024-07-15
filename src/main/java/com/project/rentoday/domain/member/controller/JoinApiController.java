@@ -43,11 +43,6 @@ public class JoinApiController {
     @PostMapping(value = "/join")
     public ResponseEntity<String> join(@Valid @RequestPart(value = "key") MemberDto.CreateRequest createRequest,
                                        @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) throws IOException {
-        log.info("Received join request: {}", createRequest);
-        if (profileImage != null) {
-            log.info("Received profile image: {}", profileImage.getOriginalFilename());
-        }
-
         createRequest.setProfileImage(profileImage);
         joinService.joinProcess(createRequest);
         return ResponseEntity.status(HttpStatus.OK).body("회원가입이 완료되었습니다.");

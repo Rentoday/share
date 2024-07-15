@@ -93,11 +93,12 @@ public class LogoutFilter extends GenericFilterBean {
         notificationService.unSubscribe(email);
 
         //Refresh token cookie 값 0
-        Cookie cookie = new Cookie("refresh", null);
+        Cookie cookie = new Cookie("Refresh", null);
         cookie.setMaxAge(0);
         cookie.setPath("/");
 
         response.addCookie(cookie);
         response.setStatus(HttpServletResponse.SC_OK);
+        response.sendRedirect("/main");
     }
 }
