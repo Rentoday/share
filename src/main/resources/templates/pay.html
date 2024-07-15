@@ -11,19 +11,19 @@
     <div class="reservation-info">
         <div class="parking-info">
             <h2>예약 정보</h2>
-            <div class="info-item"><span>구획 번호:</span> 서울특별시 강남구 602-12 강남부재빌딩</div>
-            <div class="info-item"><span>운영 시간:</span> 09:00 ~ 21:00</div>
-            <div class="info-item"><span>시간당 요금:</span> 시간당 1,000원</div>
-            <div class="info-item"><span>해당 관할 공단:</span> 강남구시설관리공단</div>
-            <div class="info-item"><span>공단 전화번호:</span> 02)402-0000</div>
-            <div class="info-item"><span>주차구역 상세설명:</span> 주차장 좋습니다.</div>
+            <div class="info-item"><span>구획 번호:</span> <span id="parkingNum"></span></div>
+            <div class="info-item"><span>운영 시간:</span> <span id="operatingHours"></span></div>
+            <div class="info-item"><span>시간당 요금:</span> <span id="hourlyRate"></span></div>
+            <div class="info-item"><span>해당 관할 공단:</span> <span id="agency"></span></div>
+            <div class="info-item"><span>공단 전화번호:</span> <span id="agencyPhone"></span></div>
+            <div class="info-item"><span>주차구역 상세설명:</span> <span id="parkingDescription"></span></div>
         </div>
         <div class="payment-summary">
-            <div class="image-placeholder"></div>
+            <div class="image-placeholder" id="parkImage"></div>
             <h3>요금 세부정보</h3>
-            <div>1시간 x 7,000원</div>
-            <div class="price-summary">총 7,000 원</div>
-            <button class="button">결제하기</button>
+            <div id="priceSummary"></div>
+            <div class="price-summary" id="totalPrice"></div>
+            <button class="button" onclick="requestPayment()">결제하기</button>
         </div>
     </div>
     <div class="notice">
@@ -37,28 +37,57 @@
 </div>
 <script>
     const IMP = window.IMP;
-IMP.init("your_imp_key");
+    IMP.init("your_imp_key");
 
-function requestPayment() {
-    // 백엔드에서 결제 정보 받아오기
-    fetch('/api/payments/request', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ reservationUid: 'your_reservation_uid' }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        // 결제 요청
+    let reservationDetails;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const reservationUid = urlParams.get('reservationUid');
+
+        if (!reservationUid) {
+            alert('유효하지 않은 예약입니다.');
+            window.location.href = '/';
+            return;
+        }
+
+        fetchReservationDetails(reservationUid)
+            .then(displayReservationDetails)
+            .catch(error => {
+                alert('예약 정보를 불러오는 중 오류가 발생했습니다: ' + error.message);
+            });
+    });
+
+    async function fetchReservationDetails(reservationUid) {
+        const response = await fetch(`/api/reservation/details?uid=${reservationUid}`);
+        if (!response.ok) {
+            throw new Error('예약 정보를 가져오는데 실패했습니다.');
+        }
+        return await response.json();
+    }
+
+    function displayReservationDetails(details) {
+        reservationDetails = details;
+        document.getElementById('parkingNum').textContent = details.parkingNum;
+        document.getElementById('operatingHours').textContent = `${details.startTime} ~ ${details.endTime}`;
+        document.getElementById('hourlyRate').textContent = `시간당 ${details.price}원`;
+        document.getElementById('agency').textContent = details.agency;
+        document.getElementById('agencyPhone').textContent = details.agencyPhone;
+        document.getElementById('parkingDescription').textContent = details.description;
+        document.getElementById('parkImage').style.backgroundImage = `url(${details.imageUrl})`;
+        document.getElementById('priceSummary').textContent = `${details.duration}시간 x ${details.price}원`;
+        document.getElementById('totalPrice').textContent = `총 ${details.totalPrice} 원`;
+    }
+
+    function requestPayment() {
         IMP.request_pay({
-            pg: "your_pg_provider",
+            pg: "html5_inicis",
             pay_method: "card",
-            merchant_uid: data.reservationUid,
-            name: data.reservationName,
-            amount: data.price,
-            buyer_email: data.buyerEmail,
-            buyer_name: data.buyerName,
+            merchant_uid: reservationDetails.reservationUid,
+            name: reservationDetails.reservationName,
+            amount: reservationDetails.totalPrice,
+            buyer_email: reservationDetails.buyerEmail,
+            buyer_name: reservationDetails.buyerName,
         }, function (rsp) {
             if (rsp.success) {
                 // 결제 성공 시 백엔드에 결과 전송
@@ -75,6 +104,8 @@ function requestPayment() {
                 .then(response => response.text())
                 .then(result => {
                     alert("결제가 완료되었습니다!");
+                    // 결제 완료 후 예약 확인 페이지로 이동
+                    window.location.href = `/reservation-confirmation?reservationUid=${reservationDetails.reservationUid}`;
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -84,12 +115,7 @@ function requestPayment() {
                 alert("결제에 실패하였습니다. 에러 내용: " + rsp.error_msg);
             }
         });
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert("결제 요청 중 오류가 발생했습니다.");
-    });
-}
+    }
 </script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 package com.project.rentoday.domain.park.controller;
 
 import com.project.rentoday.domain.park.dto.CreateParkRequest;
+import com.project.rentoday.domain.park.dto.ParkDetailRequest;
 import com.project.rentoday.domain.park.dto.ParkResponse;
 import com.project.rentoday.domain.park.dto.UpdateParkRequest;
 import com.project.rentoday.domain.park.entity.Park;
@@ -9,10 +10,12 @@ import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -75,5 +78,17 @@ public class ParkController {
     @ResponseStatus(HttpStatus.OK)
     public List<ParkResponse> getAll() {
         return parkService.getAll();
+    }
+
+    @GetMapping("/{parkId}")
+    public ResponseEntity<ParkDetailRequest> getParkDetail(@PathVariable Long parkId) {
+        ParkDetailRequest parkDetail = parkService.getParkDetail(parkId);
+        return ResponseEntity.ok(parkDetail);
+    }
+
+    @GetMapping("/{parkId}/reserved-times")
+    public ResponseEntity<List<LocalDateTime>> getReservedTimes(@PathVariable Long parkId) {
+        List<LocalDateTime> reservedTimes = parkService.getReservedTimes(parkId);
+        return ResponseEntity.ok(reservedTimes);
     }
 }

@@ -4,6 +4,7 @@ import com.project.rentoday.domain.member.entity.Member;
 import com.project.rentoday.domain.reservation.dto.CreateReservationRequestDto;
 import com.project.rentoday.domain.reservation.dto.CreateReservationResponseDto;
 import com.project.rentoday.domain.reservation.dto.ReadReservationAllResponseDto;
+import com.project.rentoday.domain.reservation.dto.ReservationDetailsDto;
 import com.project.rentoday.domain.reservation.service.ReservationService;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
@@ -30,16 +31,21 @@ public class ReservationController {
     //예약 생성
     @PostMapping(produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<CreateReservationResponseDto> insertReservation(@RequestBody CreateReservationRequestDto requestDto) {
-            CreateReservationResponseDto reservation = reservationService.createReservation(
-                    requestDto.getParkId(),
-                    requestDto.getMemberId(),
-                    requestDto.getPaymentId(),
-                    requestDto.getCheckIn(),
-                    requestDto.getReservationUid(),
-                    requestDto.getReservationName());
-            return ResponseEntity.created(URI.create("/api/reservation/" + reservation.getId())).body(reservation);
+        CreateReservationResponseDto reservation = reservationService.createReservation(
+                requestDto.getParkId(),
+                requestDto.getMemberId(),
+                requestDto.getCheckIn(),
+                requestDto.getReservationUid(),
+                requestDto.getReservationName());
+        return ResponseEntity.created(URI.create("/api/reservation/" + reservation.getId()))
+                .body(reservation);
     }
 
+    @GetMapping("/details")
+    public ResponseEntity<ReservationDetailsDto> getReservationDetails(@RequestParam String uid) {
+        ReservationDetailsDto details = reservationService.getReservationDetailsByUid(uid);
+        return ResponseEntity.ok(details);
+    }
     //예약 삭제
     @DeleteMapping(value = "/{reservationId}", produces = TEXT_PLAIN_VALUE)
     public ResponseEntity<Void> cancelReservation(@PathVariable Long reservationId) {

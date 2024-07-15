@@ -15,7 +15,12 @@ import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
+    @Query("SELECT r FROM Reservation r WHERE r.reservationUid = :uid")
+    Optional<Reservation> findByReservationUid(@Param("uid") String uid);
+
     List<Reservation> findByParkAndCheckInBetween(Park park, LocalDateTime checkIn, LocalDateTime checkOut);
+
+    List<Reservation> findByParkIdAndCheckInBetween(Long parkId, LocalDateTime checkIn, LocalDateTime checkOut);
 
     Page<Reservation> findByMember(Member member, Pageable pageable);
 

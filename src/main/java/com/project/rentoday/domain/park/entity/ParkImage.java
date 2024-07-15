@@ -24,21 +24,16 @@ public class ParkImage {
     @Column
     private String parkingImageUrl;
 
-    @JsonIgnore
-    @NotNull
-    @Column
-    private String parkingImageFileKey;
 
     @Builder
-    public ParkImage(Park park, String parkingImageUrl, String parkingImageFileKey) {
+    public ParkImage(Park park, String parkingImageUrl) {
         this.park = park;
         this.parkingImageUrl = parkingImageUrl;
-        this.parkingImageFileKey = parkingImageFileKey;
     }
 
     public void updateImage(String parkingImageUrl, String parkingImageFileKey) {
         if (parkingImageUrl != null) this.parkingImageUrl = parkingImageUrl;
-        if (parkingImageFileKey != null) this.parkingImageFileKey = parkingImageFileKey;
+
     }
 
     public void setPark(Park park) {
