@@ -1,125 +1,164 @@
+/* detail.css */
+
 body {
-             font-family: 'Noto Sans KR', sans-serif;
-             margin: 0;
-             padding: 20px;
-             background-color: #f7f9fc;
-             color: #333;
-         }
-         .container {
-             max-width: 1000px;
-             margin: 0 auto;
-             background-color: white;
-             padding: 30px;
-             border-radius: 12px;
-             box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-         }
-         h1 {
-            margin-top: 0;
-            color: #2c3e50;
-            font-weight: 700;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 15px;
-        }
-         .layout {
-             display: flex;
-             gap: 30px;
-         }
-         .main-content {
-             flex: 2;
-         }
-         .sidebar-container {
-             flex: 1;
-             position: relative;
-         }
-         .sidebar {
-             position: sticky;
-             top: 20px;
-             background-color: #f8f9fa;
-             padding: 20px;
-             border-radius: 12px;
-             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-         }
-         .image-placeholder {
-             background-color: #e9ecef;
-             border-radius: 8px;
-             margin-bottom: 15px;
-             display: flex;
-             align-items: center;
-             justify-content: center;
-             color: #adb5bd;
-             font-size: 24px;
-         }
-         .main-image {
-             height: 300px;
-         }
-         .sub-images {
-             display: flex;
-             gap: 15px;
-         }
-         .sub-image {
-             flex: 1;
-             height: 150px;
-         }
-         .info-section {
-             margin-top: 20px;
-         }
-         .info-item {
-             display: flex;
-             justify-content: space-between;
-             margin-bottom: 10px;
-         }
-         .info-label {
-             font-weight: 500;
-             color: #495057;
-         }
-         .info-value {
-             text-align: right;
-         }
-         .description {
-             background-color: #e8f5e9;
-             padding: 15px;
-             border-radius: 8px;
-             margin-top: 20px;
-         }
-         .review-section {
-             margin-top: 30px;
-         }
-         .time-slots {
-             display: flex;
-             flex-wrap: wrap;
-             gap: 10px;
-             margin-bottom: 15px;
-         }
-         .time-slot {
-             background-color: #e9ecef;
-             border: none;
-             padding: 8px 12px;
-             border-radius: 20px;
-             cursor: pointer;
-             transition: background-color 0.3s;
-         }
-         .time-slot.active {
-             background-color: #4CAF50;
-             color: white;
-         }
-         .price-summary {
-             margin-top: 20px;
-             text-align: right;
-             font-weight: 500;
-         }
-         .reserve-button {
-             background-color: #4CAF50;
-             color: white;
-             border: none;
-             padding: 12px;
-             width: 100%;
-             border-radius: 8px;
-             font-size: 16px;
-             font-weight: 700;
-             cursor: pointer;
-             transition: background-color 0.3s;
-             margin-top: 15px;
-         }
-         .reserve-button:hover {
-             background-color: #45a049;
-         }
+    font-family: 'Noto Sans KR', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.main-content {
+    flex: 2;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-right: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sidebar {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.image-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.image-container img {
+    width: 32%;
+    border-radius: 4px;
+}
+
+h2, h3 {
+    color: #2c3e50;
+    margin-top: 0;
+}
+
+p {
+    margin-bottom: 10px;
+}
+
+#timeSlots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.time-slot {
+    padding: 10px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.time-slot:hover {
+    background-color: #2980b9;
+}
+
+.time-slot.reserved {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+#reserveButton {
+    width: 100%;
+    padding: 10px;
+    background-color: #2ecc71;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+#reserveButton:hover {
+    background-color: #27ae60;
+}
+
+.description, .review-section {
+    flex-basis: 100%;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#commentText {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+#submitComment {
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#submitComment:hover {
+    background-color: #2980b9;
+}
+
+.comment {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.comment button {
+    padding: 5px 10px;
+    margin-right: 5px;
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.comment button:hover {
+    background-color: #c0392b;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .main-content, .sidebar {
+        margin-right: 0;
+        margin-bottom: 20px;
+    }
+}

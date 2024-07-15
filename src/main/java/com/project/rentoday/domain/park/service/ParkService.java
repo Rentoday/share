@@ -13,6 +13,8 @@ import com.project.rentoday.domain.park.entity.ParkImage;
 import com.project.rentoday.domain.park.entity.ParkStatus;
 import com.project.rentoday.domain.park.exception.*;
 import com.project.rentoday.domain.park.repository.ParkRepository;
+import com.project.rentoday.domain.reservation.entity.Reservation;
+import com.project.rentoday.domain.reservation.repository.ReservationRepository;
 import com.project.rentoday.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,6 +24,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -33,6 +36,7 @@ public class ParkService {
 
     private final ParkRepository parkRepository;
     private final MemberRepository memberRepository;
+    private final ReservationRepository reservationRepository;
     private final OpenApiClient openApiClient;
 
     @Transactional
@@ -78,6 +82,24 @@ public class ParkService {
         //주차장 정보 저장
 
 
+    }
+
+    @Transactional(readOnly = true)
+    public ParkDetailRequest getParkDetail(Long parkId) {
+        Park park = parkRepository.findById(parkId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid park id: " + parkId));
+
+        return new ParkDetailRequest(park);
+    }
+    @Transactional(readOnly = true)
+    public List<LocalDateTime> getReservedTimes(Long parkId) {
+        return reservationRepository.findByParkIdAndCheckInBetween(
+                        parkId,
+                        LocalDateTime.now(),
+                        LocalDateTime.now().plusDays(1)
+                ).stream()
+                .map(Reservation::getCheckIn)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)

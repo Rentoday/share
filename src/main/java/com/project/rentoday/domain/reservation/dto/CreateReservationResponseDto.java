@@ -13,6 +13,8 @@ public class CreateReservationResponseDto {
     //예약 아이디
     private Long id;
 
+    private String reservationUid;
+
     private Long parkId;
 
     private Long memberId;
@@ -31,6 +33,7 @@ public class CreateReservationResponseDto {
 
     public CreateReservationResponseDto(Reservation reservation) {
         this.id = reservation.getId();
+        this.reservationUid = reservation.getReservationUid();
         this.parkId = reservation.getPark().getId();
         this.memberId = reservation.getMember().getId();
         this.checkIn = reservation.getCheckIn();

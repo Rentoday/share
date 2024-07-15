@@ -32,29 +32,29 @@
                         <input type="file" id="profile-pic-input" accept="image/*" style="display: none;">
                         <label for="profile-pic-input" class="profile-pic-edit">수정</label>
                     </div>
-                    <div class="profile-name">홍길동</div>
+                    <div class="profile-name" id="profile-name"></div>
                 </div>
             </div>
             <form class="info-form">
                 <div class="form-group">
                     <label for="email">이메일</label>
-                    <input type="email" id="email" value="adsaada@naver.com">
+                    <input type="email" id="email" readonly>
                 </div>
                 <div class="form-group">
                     <label for="phone">핸드폰 번호</label>
-                    <input type="text" id="phone" value="010-xxxx-xxxx">
+                    <input type="text" id="phone">
                 </div>
                 <div class="form-group">
                     <label for="password">비밀번호</label>
-                    <input type="password" id="password" value="adsaada@naver.com">
+                    <input type="password" id="password">
                 </div>
                 <div class="form-group">
                     <label for="confirm-password">비밀번호 확인</label>
-                    <input type="password" id="confirm-password" value="adsaada@naver.com">
+                    <input type="password" id="confirm-password">
                 </div>
                 <div class="buttons">
-                    <button type="submit" class="save-btn">변경하기</button>
-                    <button type="button" class="cancel-btn">수정하기</button>
+                    <button type="submit" class="save-btn">수정하기</button>
+                    <button type="button" class="cancel-btn">탈퇴하기</button>
                 </div>
             </form>
         </div>
@@ -205,6 +205,36 @@
         const contents = document.querySelectorAll('.content');
         const pageTitle = document.getElementById('page-title');
 
+        let currentPage = 0;
+        const pageSize = 10;
+
+        const fetchMemberInfo = async () => {
+        try {
+            const response = await fetch('/api/members/info', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                throw new Error('회원 정보를 가져오지 못했습니다.');
+            }
+            const data = await response.json();
+            updateMemberInfo(data);
+        } catch (error) {
+            console.error('회원 정보를 가져오는 중 오류 발생:', error);
+        }
+    };
+
+    const updateMemberInfo = (data) => {
+        document.getElementById('profile-name').textContent = data.name;
+        document.getElementById('email').value = data.email;
+        document.getElementById('phone').value = data.phone;
+        if (data.profileImage) {
+            document.getElementById('profile-pic').src = data.profileImage;
+        }
+    };
+
         // 프로필 이미지 수정 기능
         const profilePic = document.getElementById('profile-pic');
         const profilePicInput = document.getElementById('profile-pic-input');
@@ -222,9 +252,9 @@
             });
         }
 
-        const fetchReservations = async () => {
+        const fetchReservations = async (page = 0) => {
             try {
-                const response = await fetch('/api/reservations/member', {
+                const response = await fetch(`/api/reservations/member?page=${page}&size=${pageSize}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -234,7 +264,8 @@
                     throw new Error('예약 정보를 가져오지 못했습니다.');
                 }
                 const data = await response.json();
-                updateReservationsTable(data.reservations);
+                updateReservationsTable(data.content);
+                updatePagination(data, 'reservations');
             } catch (error) {
                 console.error('예약 정보를 가져오는 중 오류 발생:', error);
             }
@@ -263,9 +294,9 @@
             });
         };
 
-        const fetchPaymentHistory = async () => {
+        const fetchPaymentHistory = async (page = 0) => {
             try {
-                const response = await fetch('/api/pays/member', {
+                const response = await fetch(`/api/pays/member?page=${page}&size=${pageSize}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -275,7 +306,8 @@
                     throw new Error('결제 내역을 가져오지 못했습니다.');
                 }
                 const data = await response.json();
-                updatePaymentHistoryTable(data);
+                updatePaymentHistoryTable(data.content);
+                updatePagination(data, 'payment-history');
             } catch (error) {
                 console.error('결제 내역을 가져오는 중 오류 발생:', error);
             }
@@ -305,9 +337,9 @@
             });
         };
 
-        const fetchSalesInfo = async () => {
+        const fetchSalesInfo = async (page = 0) => {
             try {
-                const response = await fetch('/api/parks/confirmed/member', {
+                const response = await fetch(`/api/parks/confirmed/member?page=${page}&size=${pageSize}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -317,7 +349,8 @@
                     throw new Error('판매 정보를 가져오지 못했습니다.');
                 }
                 const data = await response.json();
-                updateSalesInfoTable(data);
+                updateSalesInfoTable(data.content);
+                updatePagination(data, 'sales-info');
             } catch (error) {
                 console.error('판매 정보를 가져오는 중 오류 발생:', error);
             }
@@ -368,9 +401,9 @@
             fetchSalesInfo();
         };
 
-        const fetchApprovalRequests = async () => {
+        const fetchApprovalRequests = async (page = 0) => {
             try {
-                const response = await fetch('/api/parks/member', {
+                const response = await fetch(`/api/parks/member?page=${page}&size=${pageSize}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -380,7 +413,8 @@
                     throw new Error('승인 요청 정보를 가져오지 못했습니다.');
                 }
                 const data = await response.json();
-                updateApprovalRequestsTable(data);
+                updateApprovalRequestsTable(data.content);
+                updatePagination(data, 'approval-requests');
             } catch (error) {
                 console.error('승인 요청 데이터를 가져오는 중 오류 발생:', error);
             }
@@ -432,6 +466,55 @@
             fetchApprovalRequests();
         };
 
+        const updatePagination = (data, sectionId) => {
+            const paginationDiv = document.querySelector(`#${sectionId}-content .pagination`);
+            paginationDiv.innerHTML = '';
+
+            const totalPages = data.totalPages;
+            const currentPage = data.number;
+
+            // 이전 페이지 버튼
+            const prevButton = document.createElement('button');
+            prevButton.textContent = '<';
+            prevButton.disabled = currentPage === 0;
+            prevButton.addEventListener('click', () => loadPage(sectionId, currentPage - 1));
+            paginationDiv.appendChild(prevButton);
+
+            // 페이지 번호 버튼
+            for (let i = 0; i < totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i + 1;
+                pageButton.classList.toggle('active', i === currentPage);
+                pageButton.addEventListener('click', () => loadPage(sectionId, i));
+                paginationDiv.appendChild(pageButton);
+            }
+
+            // 다음 페이지 버튼
+            const nextButton = document.createElement('button');
+            nextButton.textContent = '>';
+            nextButton.disabled = currentPage === totalPages - 1;
+            nextButton.addEventListener('click', () => loadPage(sectionId, currentPage + 1));
+            paginationDiv.appendChild(nextButton);
+        };
+
+        const loadPage = (sectionId, page) => {
+            currentPage = page;
+            switch (sectionId) {
+                case 'reservations':
+                    fetchReservations(page);
+                    break;
+                case 'sales-info':
+                    fetchSalesInfo(page);
+                    break;
+                case 'approval-requests':
+                    fetchApprovalRequests(page);
+                    break;
+                case 'payment-history':
+                    fetchPaymentHistory(page);
+                    break;
+            }
+        };
+
         // 사이드바 메뉴에 이벤트 리스너 추가
         sidebarMenu.addEventListener('click', (e) => {
             if (e.target.tagName === 'LI') {
@@ -456,18 +539,22 @@
                 pageTitle.textContent = e.target.textContent;
 
                 // 각 섹션에 맞는 데이터 로드
+                currentPage = 0; // 새 섹션을 로드할 때 페이지를 리셋
                 switch (e.target.dataset.content) {
+                    case 'info':
+                        fetchMemberInfo();
+                        break;
                     case 'reservations':
-                        fetchReservations();
+                        fetchReservations(currentPage);
                         break;
                     case 'sales-info':
-                        fetchSalesInfo();
+                        fetchSalesInfo(currentPage);
                         break;
                     case 'approval-requests':
-                        fetchApprovalRequests();
+                        fetchApprovalRequests(currentPage);
                         break;
                     case 'payment-history':
-                        fetchPaymentHistory();
+                        fetchPaymentHistory(currentPage);
                         break;
                 }
             }

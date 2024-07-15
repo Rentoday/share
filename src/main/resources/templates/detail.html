@@ -9,105 +9,283 @@
 </head>
 <body>
 <div class="container">
-    <h1 class="page-title">주차 예약</h1>
-    <div class="layout">
-        <div class="main-content">
-            <div class="image-placeholder main-image">이미지</div>
-            <div class="sub-images">
-                <div class="image-placeholder sub-image">이미지</div>
-                <div class="image-placeholder sub-image">이미지</div>
-            </div>
-            <div class="info-section">
-                <div class="info-item">
-                    <span class="info-label">구획 번호</span>
-                    <span class="info-value" id="location">서울특별시 강남구 602-12 강남부재빌딩</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">운영 시간</span>
-                    <span class="info-value" id="operating-hours">09:00 - 21:00</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">시간당 요금</span>
-                    <span class="info-value" id="hourly-rate">시간당 1,000원</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">해당 관할 공단</span>
-                    <span class="info-value" id="management-office">강남구시설관리공단</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">공단 전화번호</span>
-                    <span class="info-value" id="phone-number">02)402-0000</span>
-                </div>
-            </div>
-            <div class="description">
-                <h3>주차구역 상세설명</h3>
-                <p>주차장 좋습니다.</p>
-            </div>
-            <div class="review-section">
-                <h3>리뷰</h3>
-                <p>000구매자 주차장 좋습니다.</p>
-            </div>
-        </div>
-        <div class="sidebar-container">
-            <div class="sidebar">
-                <h3>대여시간</h3>
-                <div class="time-slots">
-                    <button class="time-slot active">09:00</button>
-                    <button class="time-slot">10:00</button>
-                    <button class="time-slot">11:00</button>
-                    <button class="time-slot">12:00</button>
-                </div>
-                <div class="price-summary">
-                    1시간 X 7,000원
-                </div>
-                <form id="reservation-form"  onsubmit="reserveParking(event)">
-                    <input type="hidden" name="location" value="서울특별시 강남구 602-12 강남부재빌딩">
-                    <input type="hidden" name="operating_hours" value="09:00 - 21:00">
-                    <input type="hidden" name="hourly_rate" value="시간당 1,000원">
-                    <input type="hidden" name="management_office" value="강남구시설관리공단">
-                    <input type="hidden" name="phone_number" value="02)402-0000">
-                    <button type="submit" class="reserve-button">예약하기</button>
-                </form>
-            </div>
-        </div>
+    <div class="main-content">
+        <div class="image-container" id="imageContainer"></div>
+        <h2 id="parkingNum"></h2>
+        <p>주소: <span id="address"></span></p>
+        <p>운영 시간: <span id="operatingHours"></span></p>
+        <p>시간당 요금: <span id="price"></span>원</p>
+        <p>관리 기관: <span id="agency"></span></p>
+        <p>관리 기관 연락처: <span id="agNum"></span></p>
+        <p>상세 설명: <span id="content"></span></p>
+    </div>
+    <div class="sidebar">
+        <h3>예약 가능 시간</h3>
+        <div id="timeSlots"></div>
+        <p>선택된 시간: <span id="selectedTime"></span></p>
+        <p>예상 요금: <span id="estimatedPrice"></span>원</p>
+        <button id="reserveButton">예약하기</button>
+    </div>
+    <div class="description">
+        <h3>주차구역 상세설명</h3>
+        <p>주차장 좋습니다.</p>
+    </div>
+    <div class="review-section">
+        <h3>리뷰</h3>
+        <div id="comments"></div>
+        <textarea id="commentText" placeholder="댓글을 입력하세요"></textarea>
+        <button id="submitComment">댓글 작성</button>
     </div>
 </div>
+
 <script>
-    function reserveParking(event) {
-        event.preventDefault(); // 기본 이벤트 제거 (페이지 이동 방지)
+    const urlParams = new URLSearchParams(window.location.search);
+    const parkId = urlParams.get('parkId');
 
-        // 예약 정보 가져오기
-        const location = document.getElementById('location').value;
-        const operatingHours = document.getElementById('operating-hours').value;
-        const hourlyRate = document.getElementById('hourly-rate').value;
-        const managementOffice = document.getElementById('management-office').value;
-        const phoneNumber = document.getElementById('phone-number').value;
+    if (!parkId) {
+        alert('주차장 ID가 없습니다.');
+        window.location.href = '/';
+    }
 
-        // AJAX 요청
-        fetch('/api/reservation', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                parkId: 'your_park_id',
-                memberId: 'your_member_id',
-                paymentId: 'your_payment_id',
-                checkIn: 'your_check_in_time',
-                reservationUid: 'your_reservation_uid',
-                reservationName: 'your_reservation_name'
-            }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            // 예약 정보를 성공적으로 받은 경우, 결제 페이지로 이동
-            window.location.href = '/pay';
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('예약 요청 중 오류가 발생했습니다.');
+    let parkDetail;
+    let reservedTimes;
+    let selectedTime;
+    let currentUser;
+
+    async function fetchCurrentUser() {
+        const response = await fetch('/api/user/info');
+        if (!response.ok) {
+            throw new Error('사용자 정보를 가져오는데 실패했습니다.');
+        }
+        currentUser = await response.json();
+    }
+
+    async function fetchParkDetail() {
+        const response = await fetch(`/api/parks/${parkId}`);
+        if (!response.ok) {
+            throw new Error('주차장 정보를 가져오는데 실패했습니다.');
+        }
+        parkDetail = await response.json();
+        displayParkDetail();
+    }
+
+    async function fetchReservedTimes() {
+        const response = await fetch(`/api/parks/${parkId}/reserved-times`);
+        if (!response.ok) {
+            throw new Error('예약된 시간을 가져오는데 실패했습니다.');
+        }
+        reservedTimes = await response.json();
+        displayTimeSlots();
+    }
+
+    function displayParkDetail() {
+        document.getElementById('parkingNum').textContent = parkDetail.parkingNum;
+        document.getElementById('address').textContent = parkDetail.address;
+        document.getElementById('operatingHours').textContent = `${formatTime(parkDetail.startTime)} - ${formatTime(parkDetail.endTime)}`;
+        document.getElementById('price').textContent = parkDetail.price;
+        document.getElementById('agency').textContent = parkDetail.agency;
+        document.getElementById('agNum').textContent = parkDetail.agNum;
+        document.getElementById('content').textContent = parkDetail.content;
+
+        const imageContainer = document.getElementById('imageContainer');
+        parkDetail.parkImages.slice(0, 3).forEach(image => {
+            const img = document.createElement('img');
+            img.src = image.imageUrl;
+            imageContainer.appendChild(img);
         });
     }
+
+    function displayTimeSlots() {
+        const timeSlotsContainer = document.getElementById('timeSlots');
+        const startTime = new Date(parkDetail.startTime);
+        const endTime = new Date(parkDetail.endTime);
+
+        while (startTime < endTime) {
+            const button = document.createElement('button');
+            button.textContent = formatTime(startTime);
+            button.classList.add('time-slot');
+
+            if (isReserved(startTime)) {
+                button.classList.add('reserved');
+                button.disabled = true;
+            } else {
+                button.onclick = () => selectTimeSlot(startTime);
+            }
+
+            timeSlotsContainer.appendChild(button);
+            startTime.setHours(startTime.getHours() + 1);
+        }
+    }
+
+    function isReserved(time) {
+        return reservedTimes.some(reservedTime =>
+            new Date(reservedTime).getTime() === time.getTime()
+        );
+    }
+
+    function selectTimeSlot(time) {
+        selectedTime = time;
+        document.getElementById('selectedTime').textContent = formatTime(time);
+        document.getElementById('estimatedPrice').textContent = parkDetail.price;
+    }
+
+    function formatTime(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    document.getElementById('reserveButton').onclick = async () => {
+        if (!selectedTime) {
+            alert('시간을 선택해주세요.');
+            return;
+        }
+
+        if (!currentUser) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
+        const reservationData = {
+            parkId: parseInt(parkId),
+            memberId: currentUser.id,
+            checkIn: selectedTime.toISOString(),
+            reservationName: `예약 - ${parkDetail.parkingNum}`
+        };
+
+        try {
+            const response = await fetch('/api/reservation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(reservationData)
+            });
+
+            if (!response.ok) {
+                throw new Error('예약 생성에 실패했습니다.');
+            }
+
+            const result = await response.json();
+            window.location.href = `/payment?reservationUid=${result.reservationUid}`;
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
+    // 댓글 관련 함수들
+    async function submitComment() {
+        const commentText = document.getElementById('commentText').value;
+        if (!commentText) {
+            alert('댓글을 입력해주세요.');
+            return;
+        }
+
+        const createRequest = {
+            content: commentText
+        };
+
+        try {
+            const response = await fetch(`/api/comments/${parkId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(createRequest)
+            });
+
+            if (!response.ok) {
+                throw new Error('댓글 작성에 실패했습니다.');
+            }
+
+            alert('댓글이 작성되었습니다.');
+            document.getElementById('commentText').value = '';
+            fetchComments();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function updateComment(commentId, newContent) {
+        const updateRequest = {
+            content: newContent
+        };
+
+        try {
+            const response = await fetch(`/api/comments/${commentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updateRequest)
+            });
+
+            if (!response.ok) {
+                throw new Error('댓글 수정에 실패했습니다.');
+            }
+
+            alert('댓글이 수정되었습니다.');
+            fetchComments();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function deleteComment(commentId) {
+        try {
+            const response = await fetch(`/api/comments/${commentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('댓글 삭제에 실패했습니다.');
+            }
+
+            alert('댓글이 삭제되었습니다.');
+            fetchComments();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function fetchComments() {
+        try {
+            const response = await fetch(`/api/comments/${parkId}`);
+            if (!response.ok) {
+                throw new Error('댓글을 가져오는데 실패했습니다.');
+            }
+            const comments = await response.json();
+            displayComments(comments);
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    function displayComments(comments) {
+        const commentsContainer = document.getElementById('comments');
+        commentsContainer.innerHTML = '';
+
+        comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.classList.add('comment');
+            commentElement.innerHTML = `
+                <p>${comment.content}</p>
+                <button onclick="updateComment(${comment.id}, prompt('수정할 내용을 입력하세요:'))">수정</button>
+                <button onclick="deleteComment(${comment.id})">삭제</button>
+            `;
+            commentsContainer.appendChild(commentElement);
+        });
+    }
+
+    document.getElementById('submitComment').onclick = submitComment;
+
+    // 페이지 로드 시 실행
+    fetchCurrentUser().catch(error => alert(error.message));
+    fetchParkDetail().catch(error => alert(error.message));
+    fetchReservedTimes().catch(error => alert(error.message));
+    fetchComments().catch(error => alert(error.message));
 </script>
 </body>
 </html>
