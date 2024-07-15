@@ -32,6 +32,7 @@ public class RedisMessagePublisher {
     }
 
     public void publish(ChannelTopic topic, MessageDto messageDto) {
+        System.out.println("메시지 전송");
         redisTemplate.convertAndSend(topic.getTopic(), messageDto);
     }
 

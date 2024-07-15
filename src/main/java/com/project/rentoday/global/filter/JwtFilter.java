@@ -31,6 +31,13 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
+            String requestURI = request.getRequestURI();
+
+            // 재발급 API 경로를 제외
+            if ("/api/token/reissue".equals(requestURI)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
             //HttpHeader속 Access Token 추출
             String authorization = request.getHeader("Authorization");
 
