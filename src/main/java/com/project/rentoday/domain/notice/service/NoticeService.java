@@ -1,5 +1,9 @@
 package com.project.rentoday.domain.notice.service;
 
+import com.project.rentoday.domain.member.entity.Member;
+import com.project.rentoday.domain.member.exception.MemberErrorCode;
+import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.notice.dto.NoticeDto;
 import com.project.rentoday.domain.notice.entity.Notice;
 import com.project.rentoday.domain.notice.exception.NoticeErrorCode;
@@ -16,7 +20,8 @@ import java.util.List;
 public class NoticeService {
 
     private final NoticeRepository noticeRepository;
-    
+    private final MemberRepository memberRepository;
+
     //공지 전체 조회
     public List<NoticeDto.ReadResponse> readAllNotice() {
         List<Notice> notices = noticeRepository.findAll();
@@ -42,6 +47,18 @@ public class NoticeService {
         response.setCreatedAt(notice.getCreatedDate().toString());
 
         return response;
+    }
+
+    //공지 작성
+    public void createNotice(String email, NoticeDto.CreateRequest request) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+        Notice notice = Notice.createNotice()
+                .title(request.getTitle())
+                .content(request.getContent())
+                .member(member)
+                .build();
+        noticeRepository.save(notice);
     }
     
     //공지 수정

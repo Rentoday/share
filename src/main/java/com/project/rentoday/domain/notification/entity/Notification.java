@@ -1,6 +1,7 @@
 package com.project.rentoday.domain.notification.entity;
 
 import com.project.rentoday.domain.member.entity.Member;
+import com.project.rentoday.global.entity.BaseEntity;
 import com.project.rentoday.global.type.NotificationType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -9,15 +10,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Notification {
+public class Notification extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,14 +27,9 @@ public class Notification {
     @Size(max = 100)
     private String message;
 
-    @Column(name = "'read'")
     @NotNull
-    private Boolean read;
-
-    @Column(name = "createDate")
-    @NotNull
-    @CreationTimestamp
-    private String createdAt;
+    @Column(name = "is_read")
+    private Boolean isRead;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -52,17 +45,15 @@ public class Notification {
             @NotNull @Size(max = 100) String message,
             @NotNull NotificationType type,
             @NotNull Member member,
-            @NotNull Boolean read,
-            @NotNull String createdAt
+            @NotNull Boolean isRead
     ) {
         this.message = message;
         this.type = type;
         this.member = member;
-        this.read = read;
-        this.createdAt = createdAt;
+        this.isRead = isRead;
     }
 
     public void updateRead() {
-        this.read = true;
+        this.isRead = true;
     }
 }

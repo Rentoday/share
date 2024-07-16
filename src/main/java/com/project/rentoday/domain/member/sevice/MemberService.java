@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +28,28 @@ public class MemberService {
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
 
         return new MemberDto.ReadResponse(member.getEmail(), member.getName(), member.getPhone(), member.getProfileImage());
+    }
+
+    //회원 조회
+    public List<MemberDto.ReadResponse> allMember() {
+
+        List<Member> members = memberRepository.findAll();
+        List<MemberDto.ReadResponse> memberList = null;
+        MemberDto.ReadResponse readDto = new MemberDto.ReadResponse();
+        if (members != null) {
+
+            for(Member member : members) {
+                readDto.setEmail(member.getEmail());
+                readDto.setName(member.getName());
+                readDto.setPhone(member.getPhone());
+                readDto.setProfileImage(member.getProfileImage());
+                memberList.add(readDto);
+            }
+
+            return memberList;
+        }
+
+        throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR);
     }
 
     //회원 수정

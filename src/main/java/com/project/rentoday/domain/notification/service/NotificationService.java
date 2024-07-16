@@ -4,17 +4,19 @@ import com.project.rentoday.domain.member.entity.Member;
 import com.project.rentoday.domain.member.exception.MemberErrorCode;
 import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
-import com.project.rentoday.domain.notification.dto.MessageDto;
+import com.project.rentoday.domain.notification.dto.NotificationDto;
 import com.project.rentoday.domain.notification.entity.Notification;
+import com.project.rentoday.domain.notification.exception.NotificationErrorCode;
+import com.project.rentoday.domain.notification.exception.NotificationException;
 import com.project.rentoday.domain.notification.repository.NotificationRepository;
 import com.project.rentoday.global.type.NotificationType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,28 +71,27 @@ public class NotificationService {
         });
 
         // 연결 직후, 데이터 전송이 없을 시 503 에러 발생. 에러 방지 위한 더미데이터 전송
-        MessageDto messageDto = new MessageDto("메시지 입니다", email, LocalDateTime.now().toString());
-        MessageDto messageDto1 = new MessageDto("메시지 입니다1", email, LocalDateTime.now().toString());
-        MessageDto messageDto2 = new MessageDto("메시지 입니다2", email, LocalDateTime.now().toString());
-        MessageDto messageDto3 = new MessageDto("메시지 입니다3", email, LocalDateTime.now().toString());
-        MessageDto messageDto4 = new MessageDto("메시지 입니다4", email, LocalDateTime.now().toString());
-        redisMessagePublisher.publishTopic(email, messageDto);
-        redisMessagePublisher.publishTopic(email, messageDto1);
-        redisMessagePublisher.publishTopic(email, messageDto2);
-        redisMessagePublisher.publishTopic(email, messageDto3);
-        redisMessagePublisher.publishTopic(email, messageDto4);
+        NotificationDto.CreateRequest notificationDto = new NotificationDto.CreateRequest("메시지 입니다", email, NotificationType.COMMENT);
+        NotificationDto.CreateRequest notificationDto1 = new NotificationDto.CreateRequest("메시지 입니다1", email, NotificationType.COMMENT);
+        NotificationDto.CreateRequest notificationDto2 = new NotificationDto.CreateRequest("메시지 입니다2", email, NotificationType.COMMENT);
+        NotificationDto.CreateRequest notificationDto3 = new NotificationDto.CreateRequest("메시지 입니다3", email, NotificationType.COMMENT);
+        NotificationDto.CreateRequest notificationDto4 = new NotificationDto.CreateRequest("메시지 입니다4", email, NotificationType.COMMENT);
+        redisMessagePublisher.publishTopic(email, notificationDto);
+        redisMessagePublisher.publishTopic(email, notificationDto1);
+        redisMessagePublisher.publishTopic(email, notificationDto2);
+        redisMessagePublisher.publishTopic(email, notificationDto3);
+        redisMessagePublisher.publishTopic(email, notificationDto4);
 
         //클라이언트가 미수신한 메시지 발생시 메시지 전송
-        sendUnreadNotifications(member, sseEmitter);
+//        sendUnreadNotifications(member, sseEmitter);
         System.out.println("메시지 발송");
-
 
         return sseEmitter;
     }
 
     //미수신 메시지 전송
     private void sendUnreadNotifications(Member member, SseEmitter sseEmitter) {
-        List<Notification> unreadNotifications = notificationRepository.findByMemberAndReadFalseOrderByCreatedAtAsc(member);
+        List<Notification> unreadNotifications = notificationRepository.findUnreadMessages(member);
         if (!unreadNotifications.isEmpty()) {
             unreadNotifications.forEach(notification -> {
                 try {
@@ -104,21 +105,39 @@ public class NotificationService {
         }
     }
 
-    //미수신 메시지 전송
-    private void sendToClient(SseEmitter emitter, String id, Object data) {
-        try {
-            emitter.send(SseEmitter.event()
-                    .id(id)
-                    .name("sse")
-                    .data(data));
-        } catch (IOException e) {
-            log.error("SSE 연결 오류 발생", e);
-        }
-    }
-
     //로그아웃 시 구독해제
     public void unSubscribe(String email) {
         redisMessagePublisher.unSubcribeTopic(email);
         userEmitters.remove(email);
+    }
+    
+    //모든 알림 조회
+    @Transactional
+    public List<NotificationDto.ReadResponse> readAll(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+        List<Notification> notificationList = notificationRepository.findByMember(member);
+        NotificationDto.ReadResponse readDto = new NotificationDto.ReadResponse();
+        List<NotificationDto.ReadResponse> readResponse = null;
+
+        if (notificationList != null) {
+            for (Notification notification : notificationList) {
+                readDto.setMessage(notification.getMessage());
+                readDto.setDate(notification.getCreatedDate());
+                readResponse.add(readDto);
+            }
+
+            return readResponse;
+
+        } throw new NotificationException(NotificationErrorCode.NOTIFICATION_NOT_FOUND_ERROR);
+    }
+    
+    //알림 삭제
+    @Transactional
+    public void deleteNotification(List<Long> notificationIds) {
+
+        for (Long notificationId : notificationIds) {
+            notificationRepository.deleteById(notificationId);
+        }
     }
 }
