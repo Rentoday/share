@@ -1,7 +1,6 @@
 package com.project.rentoday.domain.member.sevice;
 
 import com.project.rentoday.domain.member.dto.MemberDto;
-import com.project.rentoday.domain.member.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,7 +11,7 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class CustomMemberDetails implements UserDetails {
 
-    private final MemberDto.createDetails member;
+    private final MemberDto.CreateDetails member;
 
     //사용자 권한에 대한 권한 추출 메서드
     @Override

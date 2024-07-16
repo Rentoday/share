@@ -1,6 +1,6 @@
 package com.project.rentoday.domain.member.dto;
 
-import com.project.rentoday.global.type.RoleType;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
 
 public class MemberDto {
 
@@ -39,11 +41,13 @@ public class MemberDto {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
+    @JsonFormat(pattern = "yy.MM.dd")
     public static class ReadResponse {
         private String email;
         private String name;
         private String phone;
         private String profileImage;
+        private LocalDateTime createdAt;
     }
 
     //회원 정보 수정
@@ -80,7 +84,7 @@ public class MemberDto {
     @Getter
     @Setter
     @AllArgsConstructor
-    public static class createDetails {
+    public static class CreateDetails {
         private String email;
         private String roleType;
         private String password;

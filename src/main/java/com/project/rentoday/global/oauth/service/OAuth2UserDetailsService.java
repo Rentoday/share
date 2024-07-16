@@ -23,7 +23,7 @@ public class OAuth2UserDetailsService implements UserDetailsService {
 
         Member member = memberRepository.findByEmail(username)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-        MemberDto.createDetails memberDto = new MemberDto.createDetails(member.getEmail(), member.getRoleType().getName(), member.getPassword());
+        MemberDto.CreateDetails memberDto = new MemberDto.CreateDetails(member.getEmail(), member.getRoleType().getName(), member.getPassword());
 
         if (member != null) {
 
