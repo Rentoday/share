@@ -1,6 +1,6 @@
 package com.project.rentoday.domain.notification.service;
 
-import com.project.rentoday.domain.notification.dto.MessageDto;
+import com.project.rentoday.domain.notification.dto.NotificationDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
@@ -17,8 +17,8 @@ public class RedisMessagePublisher {
     private final RedisMessageSubscriber redisMessageSubscriber;
 
     //topic에 메시지 전송
-    public void publishTopic(String topic, MessageDto messageDto) {
-        publish(new ChannelTopic(topic), messageDto);
+    public void publishTopic(String topic, NotificationDto.CreateRequest createRequest) {
+        publish(new ChannelTopic(topic), createRequest);
     }
 
     //redis topic 구독
@@ -31,9 +31,9 @@ public class RedisMessagePublisher {
         redisMessageListenerContainer.removeMessageListener(redisMessageSubscriber);
     }
 
-    public void publish(ChannelTopic topic, MessageDto messageDto) {
+    public void publish(ChannelTopic topic, NotificationDto.CreateRequest createRequest) {
         System.out.println("메시지 전송");
-        redisTemplate.convertAndSend(topic.getTopic(), messageDto);
+        redisTemplate.convertAndSend(topic.getTopic(), createRequest);
     }
 
 }

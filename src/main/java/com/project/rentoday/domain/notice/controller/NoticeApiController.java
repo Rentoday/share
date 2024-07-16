@@ -5,6 +5,8 @@ import com.project.rentoday.domain.notice.service.NoticeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,13 +20,26 @@ public class NoticeApiController {
 
     private final NoticeService noticeService;
 
-    @GetMapping(value = "/readall")
+    @PostMapping(value = "/create")
+    public ResponseEntity<String> readAll(@AuthenticationPrincipal UserDetails principal,
+                                          @RequestBody NoticeDto.CreateRequest createRequest) {
+        String email = principal.getUsername();
+        noticeService.createNotice(email, createRequest);
+        List<NoticeDto.ReadResponse> notices = noticeService.readAllNotice();
+
+        return ResponseEntity.ok().body("공지사항이 작성되었습니다.");
+    }
+
+    
+    //공지사항 전체조회
+    @GetMapping(value = "/readAll")
     public ResponseEntity<List<NoticeDto.ReadResponse>> readAll() {
         List<NoticeDto.ReadResponse> notices = noticeService.readAllNotice();
 
         return ResponseEntity.ok().body(notices);
     }
 
+    //공지사항 단일조회
     @GetMapping(value = "/{noticeId}")
     public ResponseEntity<NoticeDto.ReadResponse> readOne(@PathVariable Long noticeId) {
         NoticeDto.ReadResponse notice = noticeService.readOneNotice(noticeId);
@@ -49,7 +64,7 @@ public class NoticeApiController {
     }
 
     //선택 삭제
-    @DeleteMapping(value = "/delete")
+    @DeleteMapping(value = "/notices")
     public ResponseEntity<String> deleteAll(@PathVariable List<Long> noticeIds) {
         noticeService.deleteAllNotice(noticeIds);
 

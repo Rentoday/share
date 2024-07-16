@@ -27,15 +27,22 @@ public class MemberApiController {
     
     //회원조회
     @GetMapping("/info")
-    public ResponseEntity<MemberDto.ReadResponse> getParkByMember(@AuthenticationPrincipal UserDetails principal) {
+    public ResponseEntity<MemberDto.ReadResponse> memberOneRead(@AuthenticationPrincipal UserDetails principal) {
         String email = principal.getUsername();
         MemberDto.ReadResponse response = memberService.info(email);
         return ResponseEntity.ok().body(response);
     }
 
+    //회원전체조회
+    @GetMapping("/infoAll")
+    public ResponseEntity<List<MemberDto.ReadResponse>> memberAllRead() {
+        List<MemberDto.ReadResponse> response = memberService.allMember();
+        return ResponseEntity.ok().body(response);
+    }
+
     //회원수정
     @PutMapping("/update")
-    public ResponseEntity<MemberDto.ReadResponse> getParkByMember(@AuthenticationPrincipal UserDetails principal,
+    public ResponseEntity<MemberDto.ReadResponse> memberUpdate(@AuthenticationPrincipal UserDetails principal,
                                       @Valid @RequestPart(value = "key") MemberDto.UpdateRequest updateRequest,
                                       @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) throws IOException {
         String email = principal.getUsername();
@@ -46,7 +53,7 @@ public class MemberApiController {
 
     //회원수정
     @DeleteMapping("/delete")
-    public void getParkByMember(@AuthenticationPrincipal UserDetails principal,
+    public void memberDelete(@AuthenticationPrincipal UserDetails principal,
                                   @RequestBody MemberDto.DeleteRequest deleteRequest) throws IOException {
         String email = principal.getUsername();
         memberService.delete(deleteRequest, email);

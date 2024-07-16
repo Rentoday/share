@@ -7,13 +7,15 @@ import com.project.rentoday.domain.member.entity.Member;
 import com.project.rentoday.domain.member.exception.MemberErrorCode;
 import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
+import com.project.rentoday.domain.notification.dto.NotificationDto;
+import com.project.rentoday.domain.notification.service.MessageService;
+import com.project.rentoday.domain.notification.service.RedisMessagePublisher;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.repository.ParkRepository;
+import com.project.rentoday.global.type.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +24,8 @@ public class CommentService {
     private final MemberRepository memberRepository;
     private final ParkRepository parkRepository;
     private final CommentRepository commentRepository;
+    private final MessageService messageService;
+    private final RedisMessagePublisher publisher;
 
     //댓글 작성
     @Transactional
@@ -37,6 +41,13 @@ public class CommentService {
                 .content(createRequest.getContent())
                 .build();
         commentRepository.save(comment);
+
+        //메시지 생성
+        NotificationDto.CreateRequest message
+                = new NotificationDto.CreateRequest(
+                        messageService.commentMessage(createRequest.getEmail()), park.getMember().getEmail(), NotificationType.COMMENT);
+        //메시지 발송
+        publisher.publishTopic(park.getMember().getEmail(), message);
     }
 
     //대댓글 작성
@@ -56,6 +67,14 @@ public class CommentService {
                 .parent(comment)
                 .build();
         commentRepository.save(commentEntity);
+
+        //메시지 생성
+        NotificationDto.CreateRequest message
+                = new NotificationDto.CreateRequest(
+                        messageService.replyMessage(createReplyRequest.getEmail()), comment.getParent().getMember().getEmail(), NotificationType.REPLY);
+        //메시지 발송
+        publisher.publishTopic(comment.getParent().getMember().getEmail(), message);
+
     }
 
     //댓글 수정
