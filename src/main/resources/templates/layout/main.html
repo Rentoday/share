@@ -218,6 +218,67 @@
 
 </script>
 <script>
+    // 공지사항을 가져오고 업데이트하는 함수
+   async function fetchAndUpdateNotices() {
+       try {
+           const response = await api.get('/api/notice/readAll');
+           return response.data;
+       } catch (error) {
+           console.error('Failed to fetch notices:', error);
+           return [];
+       }
+   }
+
+   // 전역 변수로 선언
+   window.allNotices = [];
+   window.latestNoticeTitle = "작성된 공지사항이 없습니다.";
+
+   // 페이지 로드 전에 공지사항 가져오기
+   (async function() {
+       window.allNotices = await fetchAndUpdateNotices();
+
+       if (window.allNotices.length > 0) {
+           window.latestNoticeTitle = window.allNotices[window.allNotices.length - 1].title;
+       }
+
+       // DOM이 준비되면 실행
+       document.addEventListener('DOMContentLoaded', updateNoticeUI);
+   })();
+
+   function updateNoticeUI() {
+       const noticeText = document.getElementById('noticeText');
+       if (noticeText) {
+           noticeText.textContent = window.latestNoticeTitle;
+       }
+
+       updateNoticeModal(window.allNotices);
+       setupNoticeListeners();
+   }
+
+   function setupNoticeListeners() {
+       const noticeText = document.getElementById('noticeText');
+       const modal = document.getElementById('noticeModal');
+       const closeModal = document.getElementById('closeModal');
+
+       if (noticeText && modal && closeModal) {
+           noticeText.addEventListener('click', function() {
+               modal.style.display = 'flex';
+           });
+
+           closeModal.addEventListener('click', function() {
+               modal.style.display = 'none';
+           });
+
+           window.addEventListener('click', function(event) {
+               if (event.target == modal) {
+                   modal.style.display = 'none';
+               }
+           });
+       }
+   }
+
+</script>
+<script>
     //시간 검색 JS
     document.addEventListener('DOMContentLoaded', function() {
         const timeDisplay = document.querySelector('.time-display');
@@ -269,8 +330,11 @@
         var modal = document.getElementById('noticeModal');
         var closeModal = document.getElementById('closeModal');
 
+        // 모달 내용 업데이트
+        updateNoticeModal(window.allNotices);
+
         noticeText.addEventListener('click', function() {
-            modal.style.display = 'flex';  // 'block' 대신 'flex' 사용
+            modal.style.display = 'flex';
         });
 
         closeModal.addEventListener('click', function() {
@@ -284,7 +348,61 @@
         });
     });
 
-    //공지사항 아코디언
+    function updateNoticeModal(notices) {
+        const tbody = document.querySelector('#noticeModal .notice-table tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = ''; // 기존 내용 초기화
+
+        if (notices.length === 0) {
+            // 공지사항이 없는 경우
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="4" style="text-align: center;">작성된 공지사항이 없습니다.</td>';
+            tbody.appendChild(tr);
+        } else {
+            // 공지사항이 있는 경우, 기존 로직 실행
+            notices.forEach((notice, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${notices.length - index}</td>
+                    <td>${notice.title}</td>
+                    <td>${formatDate(notice.createdAt)}</td>
+                    <td class="toggle-button" onclick="toggleContent(this)">&#x25BC;</td>
+                `;
+                tbody.appendChild(tr);
+
+                const contentTr = document.createElement('tr');
+                contentTr.className = 'expandable-content';
+                contentTr.style.display = 'none';
+                contentTr.innerHTML = `
+                    <td colspan="4" style="text-align: left;">
+                        ${notice.content.replace(/\n/g, '<br>')}
+                    </td>
+                `;
+                tbody.appendChild(contentTr);
+            });
+        }
+
+        // 모달에 스크롤 추가 (공지사항이 있을 때만)
+        const noticeTable = document.querySelector('#noticeModal .notice-table');
+        if (notices.length > 0) {
+            noticeTable.style.maxHeight = '400px';
+            noticeTable.style.overflowY = 'auto';
+        } else {
+            noticeTable.style.maxHeight = 'none';
+            noticeTable.style.overflowY = 'visible';
+        }
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const year = date.getFullYear().toString().slice(-2);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}/${month}/${day}`;
+    }
+
+    //공지사항 아코디언 (기존 코드 유지)
     function toggleContent(button) {
         const row = button.closest('tr');
         const nextRow = row.nextElementSibling;

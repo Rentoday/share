@@ -105,6 +105,22 @@ public class Member extends BaseEntity {
         this.isDeleted = false;
     }
 
+    @Builder(builderMethodName = "createKakaoMember")
+    public Member(
+            @NotNull @Size(max = 512) String email,
+            @Size(max = 64) String oauthId,
+            @Size(max = 100) String name,
+            @NotNull String profileImage
+
+    ) {
+        this.email = email;
+        this.oauthId = oauthId;
+        this.name = name;
+        this.profileImage = profileImage;
+        this.roleType = RoleType.USER;
+        this.isDeleted = false;
+    }
+
     public void updateKakaoProfile(String name, String profileImage) {
         this.name = name;
         this.profileImage = profileImage;

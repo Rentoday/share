@@ -45,8 +45,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
         Member existData = memberRepository.findByEmail(oAuth2Response.getEmail()).orElse(null);
         if (existData == null) {
-
-            Member memberEntity = Member.createMember()
+            Member memberEntity = Member.createKakaoMember()
                     .oauthId(oAuth2Response.getProviderId())
                     .email(oAuth2Response.getEmail())
                     .name(oAuth2Response.getName())

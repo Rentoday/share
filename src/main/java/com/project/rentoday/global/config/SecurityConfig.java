@@ -7,6 +7,7 @@ import com.project.rentoday.global.filter.LoginFilter;
 import com.project.rentoday.global.filter.LogoutFilter;
 import com.project.rentoday.global.jwt.repository.RefreshRepository;
 import com.project.rentoday.global.jwt.service.JwtService;
+import com.project.rentoday.global.jwt.service.RefreshService;
 import com.project.rentoday.global.oauth.service.OAuth2UserService;
 import com.project.rentoday.global.oauth.service.Oauth2SuccessHandler;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +43,7 @@ public class SecurityConfig {
     private final Oauth2SuccessHandler oauth2SuccessHandler;
     private final MemberRepository memberRepository;
     private final NotificationService notificationService;
+    private final RefreshService refreshService;
 
     //커스텀한 loginFilter의 생성자 인자로 넣기 위해 빈으로 등록
     @Bean
@@ -137,7 +139,8 @@ public class SecurityConfig {
                 .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
 
         http
-                .addFilterBefore(new LogoutFilter(jwtService, refreshRepository, notificationService), org.springframework.security.web.authentication.logout.LogoutFilter.class);
+                .addFilterBefore(new LogoutFilter(jwtService, refreshRepository, notificationService, refreshService), org.springframework.security.web.authentication.logout.LogoutFilter.class);
+
 
         //세션에 대한 설정부분
         http

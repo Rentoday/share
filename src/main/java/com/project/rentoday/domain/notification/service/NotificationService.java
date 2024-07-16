@@ -42,10 +42,7 @@ public class NotificationService {
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
 
         //기존 연결이 있다면 제거
-        SseEmitter oldEmitter = userEmitters.remove(email);
-        if(oldEmitter != null) {
-            oldEmitter.complete();
-        }
+        userEmitters.remove(email);
 
         //Sse 객체 생성
         SseEmitter sseEmitter = new SseEmitter(DEFAULT_TIMEOUT);

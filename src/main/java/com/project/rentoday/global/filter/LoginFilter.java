@@ -52,7 +52,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
 
         //클라이언트의 json 요청에 대한 id, password 추출
-        MemberDto.LoginRequest loginRequestDto = new MemberDto.LoginRequest();
+        MemberDto.LoginRequest loginRequestDto;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             ServletInputStream inputStream = request.getInputStream();
@@ -95,6 +95,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         //추출한 id와 권한을 통해서 Access / Refresh Token 생성
         String accessToken = jwtService.createAccessJwt(email, role);
         String refreshToken = jwtService.createRefreshJwt();
+        System.out.println(refreshToken);
 
         //refresh Token db에 저장
         saveRefreshToken(email, refreshToken);
@@ -103,13 +104,13 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         //jwt를 헤더를 통해 응답
         //HTTP 인증 방식은 RFC7235정의에 따라서 아래 인증 헤더 형태를 가져야한다. Bearer 접두사가 필수다
         response.addHeader("Authorization", "Bearer " + accessToken);
-        response.addCookie(createCookie("refresh", refreshToken));
+        response.addCookie(createCookie("Refresh", refreshToken));
         response.setStatus(HttpStatus.OK.value());
     }
 
     //검증 실패시
     @Override
-    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
 
         throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR);
     }
@@ -132,7 +133,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 //        cookie.setSecure(true);
 //        cookie.setPath("/");
         //js의 접근을 막는다.
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(false);
 
         return cookie;
     }
