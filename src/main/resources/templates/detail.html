@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/detail/detail.css">
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/js/common/apiClient.js"></script>
 </head>
 <body>
 <div class="container">
@@ -53,31 +56,36 @@
     let currentUser;
 
     async function fetchCurrentUser() {
-        const response = await fetch('/api/user/info');
-        if (!response.ok) {
-            throw new Error('사용자 정보를 가져오는데 실패했습니다.');
-        }
-        currentUser = await response.json();
+    try {
+        const response = await api.get('/api/user/info');
+        currentUser = response.data;
+    } catch (error) {
+        console.error('사용자 정보를 가져오는데 실패했습니다:', error);
+        throw error;
     }
+}
 
-    async function fetchParkDetail() {
-        const response = await fetch(`/api/parks/${parkId}`);
-        if (!response.ok) {
-            throw new Error('주차장 정보를 가져오는데 실패했습니다.');
-        }
-        parkDetail = await response.json();
+async function fetchParkDetail() {
+    try {
+        const response = await api.get(`/api/parks/${parkId}`);
+        parkDetail = response.data;
         displayParkDetail();
+    } catch (error) {
+        console.error('주차장 정보를 가져오는데 실패했습니다:', error);
+        throw error;
     }
+}
 
-    async function fetchReservedTimes() {
-        const response = await fetch(`/api/parks/${parkId}/reserved-times`);
-        if (!response.ok) {
-            throw new Error('예약된 시간을 가져오는데 실패했습니다.');
-        }
-        reservedTimes = await response.json();
+async function fetchReservedTimes() {
+    try {
+        const response = await api.get(`/api/parks/${parkId}/reserved-times`);
+        reservedTimes = response.data;
         displayTimeSlots();
+    } catch (error) {
+        console.error('예약된 시간을 가져오는데 실패했습니다:', error);
+        throw error;
     }
-
+}
     function displayParkDetail() {
         document.getElementById('parkingNum').textContent = parkDetail.parkingNum;
         document.getElementById('address').textContent = parkDetail.address;
@@ -135,133 +143,89 @@
     }
 
     document.getElementById('reserveButton').onclick = async () => {
-        if (!selectedTime) {
-            alert('시간을 선택해주세요.');
-            return;
-        }
+    if (!selectedTime) {
+        alert('시간을 선택해주세요.');
+        return;
+    }
 
-        if (!currentUser) {
-            alert('로그인이 필요합니다.');
-            return;
-        }
+    if (!currentUser) {
+        alert('로그인이 필요합니다.');
+        return;
+    }
 
-        const reservationData = {
-            parkId: parseInt(parkId),
-            memberId: currentUser.id,
-            checkIn: selectedTime.toISOString(),
-            reservationName: `예약 - ${parkDetail.parkingNum}`
-        };
-
-        try {
-            const response = await fetch('/api/reservation', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(reservationData)
-            });
-
-            if (!response.ok) {
-                throw new Error('예약 생성에 실패했습니다.');
-            }
-
-            const result = await response.json();
-            window.location.href = `/payment?reservationUid=${result.reservationUid}`;
-        } catch (error) {
-            alert(error.message);
-        }
+    const reservationData = {
+        parkId: parseInt(parkId),
+        memberId: currentUser.id,
+        checkIn: selectedTime.toISOString(),
+        reservationName: `예약 - ${parkDetail.parkingNum}`
     };
 
-    // 댓글 관련 함수들
-    async function submitComment() {
-        const commentText = document.getElementById('commentText').value;
-        if (!commentText) {
-            alert('댓글을 입력해주세요.');
-            return;
-        }
+    try {
+        const response = await api.post('/api/reservation', reservationData);
+        window.location.href = `/payment?reservationUid=${response.data.reservationUid}`;
+    } catch (error) {
+        console.error('예약 생성에 실패했습니다:', error);
+        alert('예약 생성에 실패했습니다.');
+    }
+};
 
-        const createRequest = {
-            content: commentText
-        };
-
-        try {
-            const response = await fetch(`/api/comments/${parkId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(createRequest)
-            });
-
-            if (!response.ok) {
-                throw new Error('댓글 작성에 실패했습니다.');
-            }
-
-            alert('댓글이 작성되었습니다.');
-            document.getElementById('commentText').value = '';
-            fetchComments();
-        } catch (error) {
-            alert(error.message);
-        }
+async function submitComment() {
+    const commentText = document.getElementById('commentText').value;
+    if (!commentText) {
+        alert('댓글을 입력해주세요.');
+        return;
     }
 
-    async function updateComment(commentId, newContent) {
-        const updateRequest = {
-            content: newContent
-        };
+    const createRequest = {
+        content: commentText
+    };
 
-        try {
-            const response = await fetch(`/api/comments/${commentId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updateRequest)
-            });
-
-            if (!response.ok) {
-                throw new Error('댓글 수정에 실패했습니다.');
-            }
-
-            alert('댓글이 수정되었습니다.');
-            fetchComments();
-        } catch (error) {
-            alert(error.message);
-        }
+    try {
+        await api.post(`/api/comments/${parkId}`, createRequest);
+        alert('댓글이 작성되었습니다.');
+        document.getElementById('commentText').value = '';
+        fetchComments();
+    } catch (error) {
+        console.error('댓글 작성에 실패했습니다:', error);
+        alert('댓글 작성에 실패했습니다.');
     }
+}
 
-    async function deleteComment(commentId) {
-        try {
-            const response = await fetch(`/api/comments/${commentId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+async function updateComment(commentId, newContent) {
+    const updateRequest = {
+        content: newContent
+    };
 
-            if (!response.ok) {
-                throw new Error('댓글 삭제에 실패했습니다.');
-            }
-
-            alert('댓글이 삭제되었습니다.');
-            fetchComments();
-        } catch (error) {
-            alert(error.message);
-        }
+    try {
+        await api.put(`/api/comments/${commentId}`, updateRequest);
+        alert('댓글이 수정되었습니다.');
+        fetchComments();
+    } catch (error) {
+        console.error('댓글 수정에 실패했습니다:', error);
+        alert('댓글 수정에 실패했습니다.');
     }
+}
 
-    async function fetchComments() {
-        try {
-            const response = await fetch(`/api/comments/${parkId}`);
-            if (!response.ok) {
-                throw new Error('댓글을 가져오는데 실패했습니다.');
-            }
-            const comments = await response.json();
-            displayComments(comments);
-        } catch (error) {
-            alert(error.message);
-        }
+async function deleteComment(commentId) {
+    try {
+        await api.delete(`/api/comments/${commentId}`);
+        alert('댓글이 삭제되었습니다.');
+        fetchComments();
+    } catch (error) {
+        console.error('댓글 삭제에 실패했습니다:', error);
+        alert('댓글 삭제에 실패했습니다.');
     }
+}
+
+async function fetchComments() {
+    try {
+        const response = await api.get(`/api/comments/${parkId}`);
+        displayComments(response.data);
+    } catch (error) {
+        console.error('댓글을 가져오는데 실패했습니다:', error);
+        alert('댓글을 가져오는데 실패했습니다.');
+    }
+}
 
     function displayComments(comments) {
         const commentsContainer = document.getElementById('comments');

@@ -396,6 +396,98 @@
 
     });
 });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    var mapContainer = document.getElementById('map'),
+        mapOption = {
+            center: new kakao.maps.LatLng(37.566826, 126.9786567),
+            level: 3
+        };
+
+    var map = new kakao.maps.Map(mapContainer, mapOption);
+    var markers = [];
+
+    // 주소 입력 필드와 검색 버튼
+    var addressInput = document.querySelector('.search-bar input');
+    var searchButton = document.querySelector('.search-button');
+    var timeDisplay = document.querySelector('.time-display');
+
+    // 초기 주차장 정보 로드
+    loadParkingInfo();
+
+    // 검색 버튼 클릭 이벤트
+    searchButton.addEventListener('click', function() {
+        filterParkingInfo();
+    });
+
+    // 주차장 정보를 로드하는 함수
+    function loadParkingInfo() {
+        // API로부터 모든 주차장 정보를 가져옵니다.
+        api.get('/api/parks')
+            .then(function(response) {
+                displayParkingMarkers(response.data);
+            })
+            .catch(function(error) {
+                console.error("주차장 정보를 불러오는데 실패했습니다:", error);
+            });
+    }
+
+    // 필터링된 주차장 정보를 로드하는 함수
+    function filterParkingInfo() {
+        var address = addressInput.value;
+        var time = timeDisplay.textContent;
+
+        // API로 필터링된 주차장 정보를 요청합니다.
+        api.get('/api/parks/filter', {
+            params: {
+                address: address,
+                time: time
+            }
+        })
+        .then(function(response) {
+            clearMarkers();
+            displayParkingMarkers(response.data);
+        })
+        .catch(function(error) {
+            console.error("필터링된 주차장 정보를 불러오는데 실패했습니다:", error);
+        });
+    }
+
+    // 주차장 마커를 지도에 표시하는 함수
+    function displayParkingMarkers(parkingInfos) {
+        parkingInfos.forEach(function(info) {
+            var markerPosition = new kakao.maps.LatLng(info.latitude, info.longitude);
+
+            var marker = new kakao.maps.CustomOverlay({
+                position: markerPosition,
+                content: `
+                    <div class="parking-marker">
+                        <div class="marker-content">
+                            <h3>${info.parkingName}</h3>
+                            <p>가격: ${info.price}원/시간</p>
+                        </div>
+                    </div>
+                `,
+                map: map
+            });
+
+            markers.push(marker);
+
+            // 마커 클릭 이벤트
+                kakao.maps.event.addListener(marker, 'click', function() {
+                window.location.href = `/detail?parkId=${info.id}`;
+            });
+        });
+    }
+
+    // 모든 마커를 제거하는 함수
+    function clearMarkers() {
+        markers.forEach(function(marker) {
+            marker.setMap(null);
+        });
+        markers = [];
+    }
+});
 </script>
 </body>
 </html>

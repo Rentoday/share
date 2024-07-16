@@ -18,7 +18,7 @@ public class Pay extends BaseEntity {
     private Long id;
 
     @Column(name = "status", nullable = false)
-    private PaymentStatus paymentStatus;
+    private PaymentStatus status;
 
     @Column(name = "amount", nullable = false)
     private double amount;
@@ -29,13 +29,27 @@ public class Pay extends BaseEntity {
     @OneToOne(targetEntity = Reservation.class, fetch = FetchType.LAZY)
     private Reservation reservation;
 
+    private String impUid;
+
     public Pay(double amount, PaymentStatus status) {
         this.amount = amount;
-        this.paymentStatus = status;
+        this.status = status;
     }
 
     public void changePayBySuccess(PaymentStatus status, String paymentUid) {
-        this.paymentStatus = status;
+        this.status = status;
         this.paymentUid = paymentUid;
+    }
+
+    public PaymentStatus getStatus() {
+        return status;
+    }
+
+    public void changePayByCancel(PaymentStatus status) {
+        this.status = status;
+    }
+
+    public String getImpUid() {
+        return this.impUid;
     }
 }

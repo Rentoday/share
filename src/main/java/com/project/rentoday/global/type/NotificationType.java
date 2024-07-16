@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 public enum NotificationType {
 
-    COMMENT, REPLY, RESERVATION;
+    COMMENT, REPLY, RESERVATION, PAYMENT, PAYMENT_CANCEL;
 
     @JsonCreator
     public static NotificationType fromString(String value) {

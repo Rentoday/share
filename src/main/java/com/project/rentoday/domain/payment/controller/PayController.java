@@ -45,6 +45,14 @@ public class PayController {
         String email = principal.getUsername();
         return payService.getPaymentsByMember(email, page, size);
     }
+
+    @PostMapping("/cancel/{paymentId}")
+    public ResponseEntity<String> cancelPayment(@PathVariable Long paymentId,
+                                                @AuthenticationPrincipal UserDetails principal) {
+        String email = principal.getUsername();
+        payService.cancelPayment(paymentId, email);
+        return ResponseEntity.ok("결제가 성공적으로 취소되었습니다.");
+    }
 }
 
 

@@ -214,7 +214,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         localStorage.removeItem('Authorization');
         // 로그인 페이지로 리다이렉트 또는 로그인 모달 표시
-        window.location.href = '/login';  // 또는 적절한 로그인 페이지 URL
+        window.location.href = '/main';  // 또는 적절한 로그인 페이지 URL
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
