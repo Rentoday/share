@@ -168,7 +168,18 @@ api.interceptors.request.use(
       const authCookie = Cookies.get('Authorization');
       if (authCookie) {
         Cookies.remove('Authorization');
-        token = await reissueToken();
+        try {
+          const response = await api.get('/api/token/reissue');
+          token = response.headers['authorization'];
+          if (token) {
+            localStorage.setItem('Authorization', token);
+          } else {
+            throw new Error('New token not received');
+          }
+        } catch (error) {
+          console.error('Token reissue failed:', error);
+          // 토큰 재발급 실패 시 처리 (예: 로그인 페이지로 리다이렉트)
+        }
       }
     }
 
@@ -214,7 +225,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         localStorage.removeItem('Authorization');
         // 로그인 페이지로 리다이렉트 또는 로그인 모달 표시
-        window.location.href = '/login';  // 또는 적절한 로그인 페이지 URL
+        window.location.href = '/main';  // 또는 적절한 로그인 페이지 URL
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

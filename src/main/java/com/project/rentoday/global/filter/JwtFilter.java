@@ -67,7 +67,7 @@ public class JwtFilter extends OncePerRequestFilter {
             System.out.println(member.getName());
             System.out.println(member.getPassword());
 
-            MemberDto.createDetails memberDto = new MemberDto.createDetails(username, role, password);
+            MemberDto.CreateDetails memberDto = new MemberDto.CreateDetails(username, role, password);
             CustomMemberDetails customMemberDetails = new CustomMemberDetails(memberDto);
             System.out.println(customMemberDetails.getUsername());
 

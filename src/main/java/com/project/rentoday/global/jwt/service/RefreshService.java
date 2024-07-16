@@ -59,6 +59,11 @@ public class RefreshService {
         return jwtDto;
     }
 
+    @Transactional
+    public void deleteRefresh(String refresh) {
+        refreshRepository.deleteByRefreshToken(refresh);
+    }
+
 //    private void saveRefreshToken(String email, String refreshToken) {
 //        Member member = memberRepository.findByEmail(email)
 //                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));

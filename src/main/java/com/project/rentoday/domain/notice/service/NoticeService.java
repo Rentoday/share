@@ -30,9 +30,10 @@ public class NoticeService {
             NoticeDto.ReadResponse noticeDto = new NoticeDto.ReadResponse();
             noticeDto.setTitle(notice.getTitle());
             noticeDto.setContent(notice.getContent());
-            noticeDto.setCreatedAt(notice.getCreatedDate().toString());
+            noticeDto.setCreatedAt(notice.getCreatedDate());
             noticesDto.add(noticeDto);
         }
+        System.out.println(noticesDto.get(0));
 
         return noticesDto;
     }
@@ -44,7 +45,7 @@ public class NoticeService {
         NoticeDto.ReadResponse response = new NoticeDto.ReadResponse();
         response.setTitle(notice.getTitle());
         response.setContent(notice.getContent());
-        response.setCreatedAt(notice.getCreatedDate().toString());
+        response.setCreatedAt(notice.getCreatedDate());
 
         return response;
     }
