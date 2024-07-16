@@ -77,7 +77,7 @@
         </div>
         <div id="notice-content" class="content">
             <div class="button-container">
-                <button class="delete-btn">삭제하기</button>
+                <button class="delete-btn" id="delete-selected">삭제하기</button>
                 <button class="create-btn">공지작성</button>
             </div>
             <table>
@@ -89,24 +89,12 @@
                     <th>작성일</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr>
-                    <td><input type="checkbox" class="checkbox"></td>
-                    <td>1</td>
-                    <td>오늘의 이벤트</td>
-                    <td>24/07/12</td>
-                </tr>
-                <tr>
-                    <td colspan="4">조회된 공지사항이 없습니다.</td>
-                </tr>
+                <tbody id="notice-table-body">
+                <!-- 데이터는 여기에 동적으로 추가됩니다 -->
                 </tbody>
             </table>
-            <div class="pagination">
-                <button>&lt;</button>
-                <button class="active">1</button>
-                <button>2</button>
-                <button>3</button>
-                <button>&gt;</button>
+            <div class="pagination" id="notice-pagination">
+                <!-- 페이지네이션 버튼은 여기에 동적으로 추가됩니다 -->
             </div>
         </div>
     </div>
@@ -119,8 +107,75 @@
 
         let currentSalesPage = 0;
         let currentConfirmPage = 0;
+        let currentNoticePage = 0;
         const pageSize = 10;
 
+const fetchNotices = async (page = 0) => {
+        try {
+            const response = await fetch(`/api/notice/readall?page=${page}&size=${pageSize}`);
+            if (!response.ok) {
+                throw new Error('공지사항 조회에 실패했습니다.');
+            }
+            const data = await response.json();
+            updateNoticeTable(data);
+            updatePagination(data, 'notice');
+        } catch (error) {
+            console.error('공지사항 조회 중 오류 발생:', error);
+        }
+    };
+
+    const updateNoticeTable = (notices) => {
+        const tableBody = document.getElementById('notice-table-body');
+        tableBody.innerHTML = '';
+
+        if (notices.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="4">조회된 공지사항이 없습니다.</td></tr>';
+            return;
+        }
+
+        notices.forEach((notice, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="checkbox" class="notice-checkbox" data-id="${notice.id}"></td>
+                <td>${notice.id}</td>
+                <td>${notice.title}</td>
+                <td>${notice.createdAt}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    };
+
+    // 삭제 기능 구현
+    const deleteButton = document.getElementById('delete-selected');
+    deleteButton.addEventListener('click', async () => {
+        const selectedNotices = document.querySelectorAll('.notice-checkbox:checked');
+        const noticeIds = Array.from(selectedNotices).map(checkbox => checkbox.dataset.id);
+
+        if (noticeIds.length === 0) {
+            alert('삭제할 공지사항을 선택해주세요.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/notice/delete', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(noticeIds),
+            });
+
+            if (!response.ok) {
+                throw new Error('공지사항 삭제에 실패했습니다.');
+            }
+
+            alert('선택한 공지사항이 삭제되었습니다.');
+            fetchNotices(currentNoticePage); // 현재 페이지 새로고침
+        } catch (error) {
+            console.error('공지사항 삭제 중 오류 발생:', error);
+            alert('공지사항 삭제 중 오류가 발생했습니다.');
+        }
+    });
 
         const fetchConfirmedParks = async (page = 0) => {
             try {
@@ -236,6 +291,9 @@
             } else if (section === 'confirm') {
                 currentConfirmPage = page;
                 fetchAllParks(page);
+            } else if (section === 'notice') {
+                currentNoticePage = page;
+                fetchNotice(page);
             }
         };
 
@@ -266,8 +324,9 @@
                     fetchConfirmedParks(currentSalesPage);
                 } else if (e.target.dataset.content === 'confirm') {
                     fetchAllParks(currentConfirmPage);
+                } else if (e.target.dataset.content === 'notice') {
+                    fetchNotices(currentNoticePage);
                 }
-            }
         });
 
         // Initial data fetch for the default active section
@@ -276,6 +335,8 @@
             fetchConfirmedParks(currentSalesPage);
         } else if (activeSection === 'confirm') {
             fetchAllParks(currentConfirmPage);
+        } else if (activeSection === 'notice') {
+            fetchNotices(currentNoticePage);
         }
     });
 </script>
