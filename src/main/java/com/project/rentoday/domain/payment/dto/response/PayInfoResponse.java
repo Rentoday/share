@@ -28,6 +28,6 @@ public class PayInfoResponse {
         this.checkOut = pay.getReservation().getCheckOut();
         this.amount = pay.getAmount();
         this.saleDate = pay.getCreatedDate();
-        this.paymentStatus = pay.getPaymentStatus();
+        this.paymentStatus = pay.getStatus();
     }
 }

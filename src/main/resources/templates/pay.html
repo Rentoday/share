@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
     <link rel="stylesheet" href="css/pay/pay.css">
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/js/common/apiClient.js"></script>
 </head>
 <body>
 <div class="container">
@@ -37,85 +40,81 @@
 </div>
 <script>
     const IMP = window.IMP;
-    IMP.init("your_imp_key");
+IMP.init("your_imp_key");
 
-    let reservationDetails;
+let reservationDetails;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const reservationUid = urlParams.get('reservationUid');
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const reservationUid = urlParams.get('reservationUid');
 
-        if (!reservationUid) {
-            alert('유효하지 않은 예약입니다.');
-            window.location.href = '/';
-            return;
-        }
-
-        fetchReservationDetails(reservationUid)
-            .then(displayReservationDetails)
-            .catch(error => {
-                alert('예약 정보를 불러오는 중 오류가 발생했습니다: ' + error.message);
-            });
-    });
-
-    async function fetchReservationDetails(reservationUid) {
-        const response = await fetch(`/api/reservation/details?uid=${reservationUid}`);
-        if (!response.ok) {
-            throw new Error('예약 정보를 가져오는데 실패했습니다.');
-        }
-        return await response.json();
+    if (!reservationUid) {
+        alert('유효하지 않은 예약입니다.');
+        window.location.href = '/';
+        return;
     }
 
-    function displayReservationDetails(details) {
-        reservationDetails = details;
-        document.getElementById('parkingNum').textContent = details.parkingNum;
-        document.getElementById('operatingHours').textContent = `${details.startTime} ~ ${details.endTime}`;
-        document.getElementById('hourlyRate').textContent = `시간당 ${details.price}원`;
-        document.getElementById('agency').textContent = details.agency;
-        document.getElementById('agencyPhone').textContent = details.agencyPhone;
-        document.getElementById('parkingDescription').textContent = details.description;
-        document.getElementById('parkImage').style.backgroundImage = `url(${details.imageUrl})`;
-        document.getElementById('priceSummary').textContent = `${details.duration}시간 x ${details.price}원`;
-        document.getElementById('totalPrice').textContent = `총 ${details.totalPrice} 원`;
-    }
-
-    function requestPayment() {
-        IMP.request_pay({
-            pg: "html5_inicis",
-            pay_method: "card",
-            merchant_uid: reservationDetails.reservationUid,
-            name: reservationDetails.reservationName,
-            amount: reservationDetails.totalPrice,
-            buyer_email: reservationDetails.buyerEmail,
-            buyer_name: reservationDetails.buyerName,
-        }, function (rsp) {
-            if (rsp.success) {
-                // 결제 성공 시 백엔드에 결과 전송
-                fetch('/api/payments/callback', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        paymentUid: rsp.imp_uid,
-                        reservationUid: rsp.merchant_uid,
-                    }),
-                })
-                .then(response => response.text())
-                .then(result => {
-                    alert("결제가 완료되었습니다!");
-                    // 결제 완료 후 예약 확인 페이지로 이동
-                    window.location.href = `/reservation-confirmation?reservationUid=${reservationDetails.reservationUid}`;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("결제 처리 중 오류가 발생했습니다.");
-                });
-            } else {
-                alert("결제에 실패하였습니다. 에러 내용: " + rsp.error_msg);
-            }
+    fetchReservationDetails(reservationUid)
+        .then(displayReservationDetails)
+        .catch(error => {
+            console.error('예약 정보를 불러오는 중 오류가 발생했습니다:', error);
+            alert('예약 정보를 불러오는 중 오류가 발생했습니다.');
         });
+});
+
+async function fetchReservationDetails(reservationUid) {
+    try {
+        const response = await api.get(`/api/reservation/details?uid=${reservationUid}`);
+        return response.data;
+    } catch (error) {
+        console.error('예약 정보를 가져오는데 실패했습니다:', error);
+        throw error;
     }
+}
+
+function displayReservationDetails(details) {
+    reservationDetails = details;
+    document.getElementById('parkingNum').textContent = details.parkingNum;
+    document.getElementById('operatingHours').textContent = `${details.startTime} ~ ${details.endTime}`;
+    document.getElementById('hourlyRate').textContent = `시간당 ${details.price}원`;
+    document.getElementById('agency').textContent = details.agency;
+    document.getElementById('agencyPhone').textContent = details.agencyPhone;
+    document.getElementById('parkingDescription').textContent = details.description;
+    document.getElementById('parkImage').style.backgroundImage = `url(${details.imageUrl})`;
+    document.getElementById('priceSummary').textContent = `${details.duration}시간 x ${details.price}원`;
+    document.getElementById('totalPrice').textContent = `총 ${details.totalPrice} 원`;
+}
+
+function requestPayment() {
+    IMP.request_pay({
+        pg: "html5_inicis",
+        pay_method: "card",
+        merchant_uid: reservationDetails.reservationUid,
+        name: reservationDetails.reservationName,
+        amount: reservationDetails.totalPrice,
+        buyer_email: reservationDetails.buyerEmail,
+        buyer_name: reservationDetails.buyerName,
+    }, function (rsp) {
+        if (rsp.success) {
+            // 결제 성공 시 백엔드에 결과 전송
+            api.post('/api/payments/callback', {
+                paymentUid: rsp.imp_uid,
+                reservationUid: rsp.merchant_uid,
+            })
+            .then(response => {
+                alert("결제가 완료되었습니다!");
+                // 결제 완료 후 예약 확인 페이지로 이동
+                window.location.href = `/reservation-confirmation?reservationUid=${reservationDetails.reservationUid}`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("결제 처리 중 오류가 발생했습니다.");
+            });
+        } else {
+            alert("결제에 실패하였습니다. 에러 내용: " + rsp.error_msg);
+        }
+    });
+}
 </script>
 </body>
 </html>

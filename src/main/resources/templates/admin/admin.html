@@ -6,6 +6,9 @@
     <title>관리자</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/admin/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/js/common/apiClient.js"></script>
 </head>
 <body>
 <div class="container">
@@ -97,28 +100,65 @@
                 <!-- 페이지네이션 버튼은 여기에 동적으로 추가됩니다 -->
             </div>
         </div>
+        <div id="create-notice-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h2>공지사항 작성</h2>
+                <input type="text" id="notice-title-input" placeholder="제목">
+                <textarea id="notice-content-input" placeholder="내용"></textarea>
+                <button id="submit-notice">작성</button>
+                <button id="close-modal">취소</button>
+            </div>
+        </div>
     </div>
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const sidebarMenu = document.getElementById('sidebar-menu');
-        const contents = document.querySelectorAll('.content');
-        const pageTitle = document.getElementById('page-title');
+    const sidebarMenu = document.getElementById('sidebar-menu');
+    const contents = document.querySelectorAll('.content');
+    const pageTitle = document.getElementById('page-title');
+    const createNoticeBtn = document.querySelector('.create-btn');
+    const createNoticeModal = document.getElementById('create-notice-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+    const submitNoticeBtn = document.getElementById('submit-notice');
 
-        let currentSalesPage = 0;
-        let currentConfirmPage = 0;
-        let currentNoticePage = 0;
-        const pageSize = 10;
+    createNoticeBtn.addEventListener('click', () => {
+        createNoticeModal.style.display = 'block';
+    });
 
-const fetchNotices = async (page = 0) => {
+    closeModalBtn.addEventListener('click', () => {
+        createNoticeModal.style.display = 'none';
+    });
+
+    submitNoticeBtn.addEventListener('click', async () => {
+        const title = document.getElementById('notice-title-input').value;
+        const content = document.getElementById('notice-content-input').value;
+
+        if (!title || !content) {
+            alert('제목과 내용을 모두 입력해주세요.');
+            return;
+        }
+
         try {
-            const response = await fetch(`/api/notice/readall?page=${page}&size=${pageSize}`);
-            if (!response.ok) {
-                throw new Error('공지사항 조회에 실패했습니다.');
-            }
-            const data = await response.json();
-            updateNoticeTable(data);
-            updatePagination(data, 'notice');
+            const response = await api.post('/api/notice/create', { title, content });
+            alert('공지사항이 작성되었습니다.');
+            createNoticeModal.style.display = 'none';
+            fetchNotices(currentNoticePage);
+        } catch (error) {
+            console.error('공지사항 작성 중 오류 발생:', error);
+            alert('공지사항 작성 중 오류가 발생했습니다.');
+        }
+    });
+
+    let currentSalesPage = 0;
+    let currentConfirmPage = 0;
+    let currentNoticePage = 0;
+    const pageSize = 10;
+
+    const fetchNotices = async (page = 0) => {
+        try {
+            const response = await api.get(`/api/notice/readall?page=${page}&size=${pageSize}`);
+            updateNoticeTable(response.data.content);
+            updatePagination(response.data, 'notice');
         } catch (error) {
             console.error('공지사항 조회 중 오류 발생:', error);
         }
@@ -145,7 +185,6 @@ const fetchNotices = async (page = 0) => {
         });
     };
 
-    // 삭제 기능 구현
     const deleteButton = document.getElementById('delete-selected');
     deleteButton.addEventListener('click', async () => {
         const selectedNotices = document.querySelectorAll('.notice-checkbox:checked');
@@ -157,188 +196,161 @@ const fetchNotices = async (page = 0) => {
         }
 
         try {
-            const response = await fetch('/api/notice/delete', {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(noticeIds),
-            });
-
-            if (!response.ok) {
-                throw new Error('공지사항 삭제에 실패했습니다.');
-            }
-
+            await api.delete('/api/notice/delete', { data: noticeIds });
             alert('선택한 공지사항이 삭제되었습니다.');
-            fetchNotices(currentNoticePage); // 현재 페이지 새로고침
+            fetchNotices(currentNoticePage);
         } catch (error) {
             console.error('공지사항 삭제 중 오류 발생:', error);
             alert('공지사항 삭제 중 오류가 발생했습니다.');
         }
     });
 
-        const fetchConfirmedParks = async (page = 0) => {
-            try {
-                const response = await fetch(`/api/parks/confirmed?page=${page}&size=${pageSize}`);
-                if (!response.ok) {
-                    throw new Error('판매 상품 조회에 실패했습니다.');
-                }
-                const data = await response.json();
-                updateSalesTable(data.content);
-                updatePagination(data, 'sales');
-            } catch (error) {
-                console.error('판매 상품 조회 중 오류 발생:', error);
-            }
-        };
+    const fetchConfirmedParks = async (page = 0) => {
+        try {
+            const response = await api.get(`/api/parks/confirmed?page=${page}&size=${pageSize}`);
+            updateSalesTable(response.data.content);
+            updatePagination(response.data, 'sales');
+        } catch (error) {
+            console.error('판매 상품 조회 중 오류 발생:', error);
+        }
+    };
 
-         const updateSalesTable = (parks) => {
-            const tableBody = document.getElementById('sales-table-body');
-            tableBody.innerHTML = '';
+    const updateSalesTable = (parks) => {
+        const tableBody = document.getElementById('sales-table-body');
+        tableBody.innerHTML = '';
 
-            if (parks.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7">조회된 판매 상품이 없습니다.</td></tr>';
-                return;
-            }
+        if (parks.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7">조회된 판매 상품이 없습니다.</td></tr>';
+            return;
+        }
 
-            parks.forEach(park => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${park.id}</td>
-                    <td>${park.park.member.name}</td>
-                    <td>${park.park.parkingLot.number}</td>
-                    <td>${park.park.parkingLot.address}</td>
-                    <td>${park.park.startTime} ~ ${park.park.endTime}</td>
-                    <td>${park.park.price}</td>
-                    <td>${new Date(park.park.createdDate).toLocaleDateString()}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        };
-
-        const fetchAllParks = async (page = 0) => {
-            try {
-                const response = await fetch(`/api/parks?page=${page}&size=${pageSize}`);
-                if (!response.ok) {
-                    throw new Error('판매 상품 검토 조회에 실패했습니다.');
-                }
-                const data = await response.json();
-                updateConfirmTable(data.content);
-                updatePagination(data, 'confirm');
-            } catch (error) {
-                console.error('판매 상품 검토 조회 중 오류 발생:', error);
-            }
-        };
-
-        const updateConfirmTable = (parks) => {
-            const tableBody = document.getElementById('confirm-table-body');
-            tableBody.innerHTML = '';
-
-            if (parks.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7">조회된 판매 상품 검토가 없습니다.</td></tr>';
-                return;
-            }
-
-            parks.forEach(park => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${park.id}</td>
-                    <td>${park.park.member.name}</td>
-                    <td>${park.park.parkingLot.number}</td>
-                    <td>${park.park.parkingLot.address}</td>
-                    <td>${park.park.price}</td>
-                    <td>${new Date(park.park.createdDate).toLocaleDateString()}</td>
-                    <td>${park.park.parkStatus}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        };
-
-        const updatePagination = (data, section) => {
-            const paginationDiv = document.getElementById(`${section}-pagination`);
-            paginationDiv.innerHTML = '';
-
-            const totalPages = data.totalPages;
-            const currentPage = data.number;
-
-            // 이전 페이지 버튼
-            const prevButton = document.createElement('button');
-            prevButton.textContent = '<';
-            prevButton.disabled = currentPage === 0;
-            prevButton.addEventListener('click', () => loadPage(section, currentPage - 1));
-            paginationDiv.appendChild(prevButton);
-
-            // 페이지 번호 버튼
-            for (let i = 0; i < totalPages; i++) {
-                const pageButton = document.createElement('button');
-                pageButton.textContent = i + 1;
-                pageButton.classList.toggle('active', i === currentPage);
-                pageButton.addEventListener('click', () => loadPage(section, i));
-                paginationDiv.appendChild(pageButton);
-            }
-
-            // 다음 페이지 버튼
-            const nextButton = document.createElement('button');
-            nextButton.textContent = '>';
-            nextButton.disabled = currentPage === totalPages - 1;
-            nextButton.addEventListener('click', () => loadPage(section, currentPage + 1));
-            paginationDiv.appendChild(nextButton);
-        };
-
-        const loadPage = (section, page) => {
-            if (section === 'sales') {
-                currentSalesPage = page;
-                fetchConfirmedParks(page);
-            } else if (section === 'confirm') {
-                currentConfirmPage = page;
-                fetchAllParks(page);
-            } else if (section === 'notice') {
-                currentNoticePage = page;
-                fetchNotice(page);
-            }
-        };
-
-        sidebarMenu.addEventListener('click', (e) => {
-            if (e.target.tagName === 'LI') {
-                // Remove active class from all sidebar items
-                Array.from(sidebarMenu.getElementsByTagName('li')).forEach(li => {
-                    li.classList.remove('active');
-                });
-
-                // Add active class to the clicked item
-                e.target.classList.add('active');
-
-                // Hide all contents
-                contents.forEach(content => {
-                    content.classList.remove('active');
-                });
-
-                // Show the clicked content
-                const contentId = e.target.dataset.content + '-content';
-                document.getElementById(contentId).classList.add('active');
-
-                // Update the page title
-                pageTitle.textContent = e.target.textContent;
-
-                // Fetch data for the selected section
-                 if (e.target.dataset.content === 'sales') {
-                    fetchConfirmedParks(currentSalesPage);
-                } else if (e.target.dataset.content === 'confirm') {
-                    fetchAllParks(currentConfirmPage);
-                } else if (e.target.dataset.content === 'notice') {
-                    fetchNotices(currentNoticePage);
-                }
+        parks.forEach(park => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${park.id}</td>
+                <td>${park.park.member.name}</td>
+                <td>${park.park.parkingLot.number}</td>
+                <td>${park.park.parkingLot.address}</td>
+                <td>${park.park.startTime} ~ ${park.park.endTime}</td>
+                <td>${park.park.price}</td>
+                <td>${new Date(park.park.createdDate).toLocaleDateString()}</td>
+            `;
+            tableBody.appendChild(row);
         });
+    };
 
-        // Initial data fetch for the default active section
-        const activeSection = document.querySelector('.sidebar li.active').dataset.content;
-        if (activeSection === 'sales') {
-            fetchConfirmedParks(currentSalesPage);
-        } else if (activeSection === 'confirm') {
-            fetchAllParks(currentConfirmPage);
-        } else if (activeSection === 'notice') {
-            fetchNotices(currentNoticePage);
+    const fetchAllParks = async (page = 0) => {
+        try {
+            const response = await api.get(`/api/parks?page=${page}&size=${pageSize}`);
+            updateConfirmTable(response.data.content);
+            updatePagination(response.data, 'confirm');
+        } catch (error) {
+            console.error('판매 상품 검토 조회 중 오류 발생:', error);
+        }
+    };
+
+    const updateConfirmTable = (parks) => {
+        const tableBody = document.getElementById('confirm-table-body');
+        tableBody.innerHTML = '';
+
+        if (parks.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7">조회된 판매 상품 검토가 없습니다.</td></tr>';
+            return;
+        }
+
+        parks.forEach(park => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${park.id}</td>
+                <td>${park.park.member.name}</td>
+                <td>${park.park.parkingLot.number}</td>
+                <td>${park.park.parkingLot.address}</td>
+                <td>${park.park.price}</td>
+                <td>${new Date(park.park.createdDate).toLocaleDateString()}</td>
+                <td>${park.park.parkStatus}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    };
+
+    const updatePagination = (data, section) => {
+        const paginationDiv = document.getElementById(`${section}-pagination`);
+        paginationDiv.innerHTML = '';
+
+        const totalPages = data.totalPages;
+        const currentPage = data.number;
+
+        const prevButton = document.createElement('button');
+        prevButton.textContent = '<';
+        prevButton.disabled = currentPage === 0;
+        prevButton.addEventListener('click', () => loadPage(section, currentPage - 1));
+        paginationDiv.appendChild(prevButton);
+
+        for (let i = 0; i < totalPages; i++) {
+            const pageButton = document.createElement('button');
+            pageButton.textContent = i + 1;
+            pageButton.classList.toggle('active', i === currentPage);
+            pageButton.addEventListener('click', () => loadPage(section, i));
+            paginationDiv.appendChild(pageButton);
+        }
+
+        const nextButton = document.createElement('button');
+        nextButton.textContent = '>';
+        nextButton.disabled = currentPage === totalPages - 1;
+        nextButton.addEventListener('click', () => loadPage(section, currentPage + 1));
+        paginationDiv.appendChild(nextButton);
+    };
+
+    const loadPage = (section, page) => {
+        if (section === 'sales') {
+            currentSalesPage = page;
+            fetchConfirmedParks(page);
+        } else if (section === 'confirm') {
+            currentConfirmPage = page;
+            fetchAllParks(page);
+        } else if (section === 'notice') {
+            currentNoticePage = page;
+            fetchNotices(page);
+        }
+    };
+
+    sidebarMenu.addEventListener('click', (e) => {
+        if (e.target.tagName === 'LI') {
+            Array.from(sidebarMenu.getElementsByTagName('li')).forEach(li => {
+                li.classList.remove('active');
+            });
+
+            e.target.classList.add('active');
+
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const contentId = e.target.dataset.content + '-content';
+            document.getElementById(contentId).classList.add('active');
+
+            pageTitle.textContent = e.target.textContent;
+
+            if (e.target.dataset.content === 'sales') {
+                fetchConfirmedParks(currentSalesPage);
+            } else if (e.target.dataset.content === 'confirm') {
+                fetchAllParks(currentConfirmPage);
+            } else if (e.target.dataset.content === 'notice') {
+                fetchNotices(currentNoticePage);
+            }
         }
     });
+
+    // 초기 데이터 로드
+    const activeSection = document.querySelector('.sidebar li.active').dataset.content;
+    if (activeSection === 'sales') {
+        fetchConfirmedParks(currentSalesPage);
+    } else if (activeSection === 'confirm') {
+        fetchAllParks(currentConfirmPage);
+    } else if (activeSection === 'notice') {
+        fetchNotices(currentNoticePage);
+    }
+});
 </script>
 </body>
 </html>

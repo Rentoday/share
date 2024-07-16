@@ -21,7 +21,7 @@ public class NoticeApiController {
     private final NoticeService noticeService;
 
     @PostMapping(value = "/create")
-    public ResponseEntity<String> readAll(@AuthenticationPrincipal UserDetails principal,
+    public ResponseEntity<String> create(@AuthenticationPrincipal UserDetails principal,
                                           @RequestBody NoticeDto.CreateRequest createRequest) {
         String email = principal.getUsername();
         noticeService.createNotice(email, createRequest);
