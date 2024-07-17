@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,7 +19,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r WHERE r.reservationUid = :uid")
     Optional<Reservation> findByReservationUid(@Param("uid") String uid);
 
-    List<Reservation> findByParkAndCheckInBetween(Park park, LocalDateTime checkIn, LocalDateTime checkOut);
+    List<Reservation> findByParkAndCheckInBetween(Park park, LocalTime checkIn, LocalTime checkOut);
 
     List<Reservation> findByParkIdAndCheckInBetween(Long parkId, LocalDateTime checkIn, LocalDateTime checkOut);
 

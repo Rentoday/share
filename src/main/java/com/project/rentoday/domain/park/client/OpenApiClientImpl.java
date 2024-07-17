@@ -39,15 +39,13 @@ public class OpenApiClientImpl implements OpenApiClient {
     @Override
     public ParkLocationInfo getParkLocationInfo(String parkNum) {
         try {
-            //요청 파라미터 설정
-            UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endPoint)//권한 키로 요청 파라미터 설정
+            UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endPoint)
                     .queryParam("encodingKey", encodingKey)
                     .queryParam("pageNo", "1")
                     .queryParam("numOfRows", "10")
                     .queryParam("type", "json")
                     .queryParam("parkplaceNo", parkNum);
 
-            //API 호출해서 응답 만들기
             ResponseEntity<String> response = restTemplate.getForEntity(builder.toUriString(), String.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
@@ -74,6 +72,6 @@ public class OpenApiClientImpl implements OpenApiClient {
         } catch (RestClientException | JSONException e) {
             throw new ApiException("API를 불러오는데 실패했습니다.");
         }
-        }
+    }
 
 }

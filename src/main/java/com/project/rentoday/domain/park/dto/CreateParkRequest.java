@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Getter
@@ -17,8 +18,8 @@ public class CreateParkRequest {
     private Member member;
     private String carNum;
     private String parkNum;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private double price;
     private String content;
     private String address;
@@ -31,7 +32,7 @@ public class CreateParkRequest {
 
     @Builder
     public CreateParkRequest(Member member, String carNum, String parkNum, String address,
-                             LocalDateTime startTime, LocalDateTime endTime, String latitude, String longitude,
+                             LocalTime startTime, LocalTime endTime, String latitude, String longitude,
                              double price, String content, String confirmation, List<ParkImageRequest> parkImages) {
         this.member = member;
         this.carNum = carNum;

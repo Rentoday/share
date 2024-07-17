@@ -17,7 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -79,7 +79,7 @@ public class ParkController {
         return parkService.getConfirmedAll(pageable);
     }
 
-    @GetMapping
+    @GetMapping("/page")
     @ResponseStatus(HttpStatus.OK)
     public Page<ParkResponse> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -88,6 +88,11 @@ public class ParkController {
         return parkService.getAll(pageable);
     }
 
+    @GetMapping("/all")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ParkResponse> getAllParks() {
+        return parkService.getAllParks();
+    }
 
     @GetMapping("/{parkId}")
     public ResponseEntity<ParkDetailRequest> getParkDetail(@PathVariable Long parkId) {
@@ -96,8 +101,16 @@ public class ParkController {
     }
 
     @GetMapping("/{parkId}/reserved-times")
-    public ResponseEntity<List<LocalDateTime>> getReservedTimes(@PathVariable Long parkId) {
-        List<LocalDateTime> reservedTimes = parkService.getReservedTimes(parkId);
+    public ResponseEntity<List<LocalTime>> getReservedTimes(@PathVariable Long parkId) {
+        List<LocalTime> reservedTimes = parkService.getReservedTimes(parkId);
         return ResponseEntity.ok(reservedTimes);
+    }
+
+    @GetMapping("/filter")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ParkResponse> getFilteredParks(
+            @RequestParam String address,
+            @RequestParam String time) {
+        return parkService.getFilteredParks(address, time);
     }
 }

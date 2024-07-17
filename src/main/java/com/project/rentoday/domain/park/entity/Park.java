@@ -9,6 +9,7 @@
     import lombok.*;
 
     import java.time.LocalDateTime;
+    import java.time.LocalTime;
     import java.util.ArrayList;
     import java.util.List;
 
@@ -68,11 +69,11 @@
 
         @NotNull
         @Column(name = "start_time")
-        private LocalDateTime startTime;
+        private LocalTime startTime;
 
         @NotNull
         @Column(name = "end_time")
-        private LocalDateTime endTime;
+        private LocalTime endTime;
 
         @Column
         private String content;
@@ -81,7 +82,7 @@
         public Park(Member member, String carNum, String parkingNum,
                     String latitude, String longitude,
                     String address, String agency, String agNum,
-                    LocalDateTime startTime, LocalDateTime endTime, double price, String content,
+                    LocalTime startTime, LocalTime endTime, double price, String content,
                     String confirmation) {
             this.member = member;
             this.carNum = carNum;
@@ -108,7 +109,7 @@
             this.parkStatus = ParkStatus.CONFIRMED;
         }
 
-        public void updateParkInfo(LocalDateTime startTime, LocalDateTime endTime, double price, String content) {
+        public void updateParkInfo(LocalTime startTime, LocalTime endTime, double price, String content) {
             this.startTime = startTime;
             this.endTime = endTime;
             this.price = price;

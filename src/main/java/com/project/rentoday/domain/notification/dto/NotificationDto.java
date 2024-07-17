@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.project.rentoday.global.type.NotificationType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
@@ -14,6 +15,7 @@ public class NotificationDto  {
     @Setter
     @Getter
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class CreateRequest implements Serializable {
         //역직렬화 InvalidClassException 방지
         private static final long serialVersionUID = 1L;

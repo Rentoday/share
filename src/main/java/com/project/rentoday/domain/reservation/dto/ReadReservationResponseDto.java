@@ -5,6 +5,7 @@ import com.project.rentoday.domain.reservation.entity.Reservation;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 public class ReadReservationResponseDto {
@@ -15,9 +16,9 @@ public class ReadReservationResponseDto {
 
     private String address;
 
-    private LocalDateTime checkIn;
+    private LocalTime checkIn;
 
-    private LocalDateTime checkOut;
+    private LocalTime checkOut;
 
     private double amount;
 

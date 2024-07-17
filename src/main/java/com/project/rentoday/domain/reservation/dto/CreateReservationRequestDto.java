@@ -3,6 +3,7 @@ package com.project.rentoday.domain.reservation.dto;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
@@ -16,7 +17,7 @@ public class CreateReservationRequestDto {
     private Long memberId;
 
     //시간
-    private LocalDateTime checkIn;
+    private LocalTime checkIn;
 
     //결제
     private Long paymentId;
