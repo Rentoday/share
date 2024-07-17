@@ -2,6 +2,8 @@ package com.project.rentoday.domain.reservation.dto;
 
 import lombok.*;
 
+import java.time.LocalTime;
+
 @Data
 @AllArgsConstructor
 @Builder

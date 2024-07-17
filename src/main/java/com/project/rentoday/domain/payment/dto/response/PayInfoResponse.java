@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 @AllArgsConstructor
@@ -14,8 +15,8 @@ public class PayInfoResponse {
     private Long id;
     private String parkNum;
     private String address;
-    private LocalDateTime checkIn;
-    private LocalDateTime checkOut;
+    private LocalTime checkIn;
+    private LocalTime checkOut;
     private double amount;
     private LocalDateTime saleDate;
     private PaymentStatus paymentStatus;

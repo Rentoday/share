@@ -8,9 +8,7 @@ import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.entity.ParkImage;
 import com.project.rentoday.domain.park.repository.ParkImageRepository;
 import com.project.rentoday.domain.park.repository.ParkRepository;
-import com.project.rentoday.domain.payment.entity.Pay;
 import com.project.rentoday.domain.payment.exception.ResourceNotFoundException;
-import com.project.rentoday.domain.payment.repository.PayRepository;
 import com.project.rentoday.domain.reservation.dto.CreateReservationResponseDto;
 import com.project.rentoday.domain.reservation.dto.ReadReservationAllResponseDto;
 import com.project.rentoday.domain.reservation.dto.ReservationDetailsDto;
@@ -19,12 +17,14 @@ import com.project.rentoday.domain.reservation.exception.ReservationAlreadyExist
 import com.project.rentoday.domain.reservation.exception.ReservationNotAvailableException;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -48,7 +48,7 @@ public class ReservationService {
     }
 
     @Transactional
-    public CreateReservationResponseDto createReservation(Long parkId, Long memberId, LocalDateTime checkIn, String reservationUid, String reservationName) {
+    public CreateReservationResponseDto createReservation(Long parkId, Long memberId, LocalTime checkIn, String reservationUid, String reservationName) {
         Park park = parkRepository.findById(parkId).orElseThrow(() -> new IllegalArgumentException("해당 주차장을 찾을 수 없습니다."));
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
 
@@ -111,18 +111,18 @@ public class ReservationService {
         return new PageImpl<>(dtoList, pageable, reservationsPage.getTotalElements());
     }
 
-    private String formatDateTime(LocalDateTime dateTime) {
+    private String formatDateTime(@NotNull @FutureOrPresent LocalTime dateTime) {
         return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
     }
 
     //체크인,아웃 시간이 판매 가능 시작,끝 시간 안에 있는지
-    private boolean isAvailableCheckInOut(Park park, LocalDateTime checkIn) {
+    private boolean isAvailableCheckInOut(Park park, LocalTime checkIn) {
         return !checkIn.isBefore(park.getStartTime()) && !checkIn.isAfter(park.getEndTime());
     }
 
     //사용자들끼리의 체크인 시간이 겹치지 않는지
-    private boolean isDuplicatedCheckIn(Park park, LocalDateTime checkIn) {
-        LocalDateTime checkOut = checkIn.plusMinutes(59);
+    private boolean isDuplicatedCheckIn(Park park, LocalTime checkIn) {
+        LocalTime checkOut = checkIn.plusMinutes(59);
         List<Reservation> overlappingReservations = reservationRepository.findByParkAndCheckInBetween(park, checkIn, checkOut);
         return !overlappingReservations.isEmpty();
     }

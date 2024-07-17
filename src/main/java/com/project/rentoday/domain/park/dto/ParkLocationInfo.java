@@ -1,12 +1,8 @@
 package com.project.rentoday.domain.park.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 
 @Data
-@Getter
-@AllArgsConstructor
 public class ParkLocationInfo {
 
     private String address;
@@ -14,5 +10,13 @@ public class ParkLocationInfo {
     private String longitude;
     private String agency;
     private String agNum;
+
+    public ParkLocationInfo(String address, String latitude, String longitude, String agency, String agNum) {
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.agency = agency;
+        this.agNum = agNum;
+    }
 
 }

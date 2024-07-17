@@ -25,9 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 
 @Service
@@ -92,7 +92,7 @@ public class ParkService {
         return new ParkDetailRequest(park);
     }
     @Transactional(readOnly = true)
-    public List<LocalDateTime> getReservedTimes(Long parkId) {
+    public List<LocalTime> getReservedTimes(Long parkId) {
         return reservationRepository.findByParkIdAndCheckInBetween(
                         parkId,
                         LocalDateTime.now(),
@@ -190,6 +190,24 @@ public class ParkService {
         Park park = parkRepository.findById(parkId)
                 .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
         parkRepository.delete(park);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ParkResponse> getFilteredParks(String address, String time) {
+        LocalTime searchTime = LocalTime.parse(time);
+
+        List<Park> parks = parkRepository.findByAddressContaining(address);
+
+        return parks.stream()
+                .filter(park -> isParkAvailableAtTime(park, searchTime))
+                .map(ParkResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    private boolean isParkAvailableAtTime(Park park, LocalTime searchTime) {
+        LocalTime parkStartTime = park.getStartTime();
+        LocalTime parkEndTime = park.getEndTime();
+        return !searchTime.isBefore(parkStartTime) && !searchTime.isAfter(parkEndTime);
     }
 
     private void validateRequest(CreateParkRequest request) {
