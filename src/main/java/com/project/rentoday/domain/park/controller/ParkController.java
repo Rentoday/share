@@ -95,7 +95,7 @@ public class ParkController {
     }
 
     @GetMapping("/{parkId}")
-    public ResponseEntity<ParkDetailRequest> getParkDetail(@PathVariable Long parkId) {
+    public ResponseEntity<ParkDetailRequest> getParkDetail(@PathVariable("parkId") Long parkId) {
         ParkDetailRequest parkDetail = parkService.getParkDetail(parkId);
         return ResponseEntity.ok(parkDetail);
     }

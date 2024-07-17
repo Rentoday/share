@@ -1,5 +1,6 @@
 package com.project.rentoday.domain.comment.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,8 +20,11 @@ public class CommentDto {
     //댓글 조회
     @Setter
     @Getter
+    @JsonFormat(pattern = "yy.MM.dd")
     public static class ReadResponse {
         private String content;
+        private String email;
+        private LocalDateTime createdAt;
     }
 
     //댓글 수정

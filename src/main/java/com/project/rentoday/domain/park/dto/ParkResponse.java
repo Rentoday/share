@@ -23,6 +23,10 @@ public class ParkResponse {
     private LocalDateTime regDate;
     private LocalDateTime confirmDate;
     private ParkStatus parkStatus;
+    private String longitude;
+    private String latitude;
+
+
 
     public ParkResponse(Park park) {
         this.id = park.getId();
@@ -34,6 +38,8 @@ public class ParkResponse {
         this.price = park.getPrice();
         this.regDate = park.getCreatedDate();
         this.parkStatus = park.getParkStatus();
+        this.longitude = park.getLongitude();
+        this.latitude = park.getLatitude();
     }
 
     @Builder(builderMethodName = "checkPark")

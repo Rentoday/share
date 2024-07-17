@@ -56,6 +56,9 @@ public class LogoutFilter extends GenericFilterBean {
             }
 
             String accessToken = request.getHeader("Authorization").split(" ")[1];
+            if (jwtService.isExpired(accessToken)) {
+                throw new JwtException(JwtErrorCode.JWT_ACCESS_EXPIRATION_ERROR);
+            }
             String email = jwtService.getUsername(accessToken);
 
             //cookie에서 refresh token을 체크

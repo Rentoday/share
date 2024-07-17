@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class FrontController {
@@ -20,7 +21,9 @@ public class FrontController {
     }
 
     @GetMapping("/detail")
-    public String detail() {
+    public String detail(@RequestParam("parkId") Long parkId, Model model) {
+        model.addAttribute("parkId", parkId);
+        System.out.println(parkId);
         return "detail.html";
     }
 
