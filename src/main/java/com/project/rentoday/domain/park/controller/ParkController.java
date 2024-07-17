@@ -79,7 +79,7 @@ public class ParkController {
         return parkService.getConfirmedAll(pageable);
     }
 
-    @GetMapping
+    @GetMapping("/page")
     @ResponseStatus(HttpStatus.OK)
     public Page<ParkResponse> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -88,6 +88,11 @@ public class ParkController {
         return parkService.getAll(pageable);
     }
 
+    @GetMapping("/all")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ParkResponse> getAllParks() {
+        return parkService.getAllParks();
+    }
 
     @GetMapping("/{parkId}")
     public ResponseEntity<ParkDetailRequest> getParkDetail(@PathVariable Long parkId) {

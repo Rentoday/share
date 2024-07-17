@@ -126,6 +126,14 @@ public class ParkService {
     }
 
     @Transactional
+    public List<ParkResponse> getAllParks() {
+        List<Park> allParks = parkRepository.findAll();
+        return allParks.stream()
+                .map(park -> new ParkResponse(park))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
     public Park update(UpdateParkRequest request, Long parkId) {
         Park park = parkRepository.findById(parkId)
                 .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));

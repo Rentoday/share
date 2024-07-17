@@ -517,12 +517,11 @@
 });
 
     document.addEventListener('DOMContentLoaded', function() {
-    var mapContainer = document.getElementById('map'),
-        mapOption = {
-            center: new kakao.maps.LatLng(37.566826, 126.9786567),
-            level: 3
-        };
-
+    var mapContainer = document.getElementById('map');
+    var mapOption = {
+        center: new kakao.maps.LatLng(37.566826, 126.9786567),
+        level: 3
+    };
     var map = new kakao.maps.Map(mapContainer, mapOption);
     var markers = [];
 
@@ -539,17 +538,15 @@
         filterParkingInfo();
     });
 
-    // 주차장 정보를 로드하는 함수
     function loadParkingInfo() {
-        // API로부터 모든 주차장 정보를 가져옵니다.
-        api.get('/api/parks')
-            .then(function(response) {
-                displayParkingMarkers(response.data);
-            })
-            .catch(function(error) {
-                console.error("주차장 정보를 불러오는데 실패했습니다:", error);
-            });
-    }
+    api.get('/api/parks/all')
+        .then(function(response) {
+            displayParkingMarkers(response.data);
+        })
+        .catch(function(error) {
+            console.error("주차장 정보를 불러오는데 실패했습니다:", error);
+        });
+}
 
     // 필터링된 주차장 정보를 로드하는 함수
     function filterParkingInfo() {
@@ -566,6 +563,16 @@
         .then(function(response) {
             clearMarkers();
             displayParkingMarkers(response.data);
+            // 검색 결과에 따라 지도 중심 이동
+            if (response.data.length > 0) {
+                var firstResult = response.data[0];
+                var position = new kakao.maps.LatLng(firstResult.latitude, firstResult.longitude);
+                map.setCenter(position);
+            } else {
+                // 검색 결과가 없는 경우 서울시청 좌표로 되돌아감
+                var seoulCityHall = new kakao.maps.LatLng(37.566826, 126.9786567);
+                map.setCenter(seoulCityHall);
+            }
         })
         .catch(function(error) {
             console.error("필터링된 주차장 정보를 불러오는데 실패했습니다:", error);
@@ -593,7 +600,7 @@
             markers.push(marker);
 
             // 마커 클릭 이벤트
-                kakao.maps.event.addListener(marker, 'click', function() {
+            kakao.maps.event.addListener(marker, 'click', function() {
                 window.location.href = `/detail?parkId=${info.id}`;
             });
         });
@@ -607,6 +614,7 @@
         markers = [];
     }
 });
+
 </script>
 </body>
 </html>
