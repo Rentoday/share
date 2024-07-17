@@ -8,12 +8,22 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/comment")
 @RequiredArgsConstructor
 public class CommentApiController {
 
     private final CommentService commentService;
+
+    //댓글 조회
+    @GetMapping(value = "/{id}", produces = "text/plain; charset=UTF-8")
+    public ResponseEntity<List<CommentDto.ReadResponse>> readCommment(@PathVariable("id") Long id) {
+        List<CommentDto.ReadResponse> responses = commentService.readComment(id);
+
+        return ResponseEntity.ok().body(responses);
+    }
 
     //댓글 작성
     @PostMapping(value = "/{id}", produces = "text/plain; charset=UTF-8")

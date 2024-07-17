@@ -2,6 +2,7 @@ package com.project.rentoday.domain.comment.entity;
 
 import com.project.rentoday.domain.member.entity.Member;
 import com.project.rentoday.domain.park.entity.Park;
+import com.project.rentoday.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,7 +17,7 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Comment {
+public class Comment extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -17,6 +17,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class CommentService {
@@ -26,6 +31,25 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final MessageService messageService;
     private final RedisMessagePublisher publisher;
+
+    //댓글 작성
+    @Transactional
+    public List<CommentDto.ReadResponse> readComment(Long id) {
+
+        List<Comment> comments = commentRepository.findAll();
+        System.out.println("댓글조회");
+        System.out.println(comments.get(0).getContent());
+        List<CommentDto.ReadResponse> readList = new ArrayList<>();
+        CommentDto.ReadResponse response = new CommentDto.ReadResponse();
+        for (Comment comment : comments) {
+            response.setEmail(comment.getMember().getEmail());
+            response.setContent(comment.getContent());
+            response.setCreatedAt(comment.getCreatedDate());
+            readList.add(response);
+        }
+
+        return readList;
+    }
 
     //댓글 작성
     @Transactional

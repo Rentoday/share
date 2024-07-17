@@ -513,26 +513,39 @@
 
     // 주차장 마커 표시
     function displayParkingMarkers(parkingInfos) {
-        parkingInfos.forEach((info) => {
-            const markerPosition = new kakao.maps.LatLng(info.latitude, info.longitude);
-            const marker = new kakao.maps.CustomOverlay({
-                position: markerPosition,
-                content: `
-                    <div class="parking-marker">
-                        <div class="marker-content">
-                            <h3>${info.parkingName}</h3>
-                            <p>가격: ${info.price}원/시간</p>
-                        </div>
-                    </div>
-                `,
-                map: map
-            });
-            markers.push(marker);
-            kakao.maps.event.addListener(marker, 'click', () => {
-                window.location.href = `/detail?parkId=${info.id}`;
-            });
+    parkingInfos.forEach((info) => {
+        const markerPosition = new kakao.maps.LatLng(info.latitude, info.longitude);
+
+        // 커스텀 오버레이 컨텐츠 생성
+        const content = document.createElement('div');
+        content.className = 'custom-overlay';
+        content.innerHTML = `
+            <div class="price-box">
+                <span class="price">${info.price}원</span>
+            </div>
+            <span class="tail"></span>
+        `;
+
+        // 클릭 이벤트 리스너 추가
+        content.addEventListener('click', () => {
+            window.location.href = `/detail?parkId=${info.id}`;
         });
-    }
+
+        // 커스텀 오버레이 생성
+        const customOverlay = new kakao.maps.CustomOverlay({
+            position: markerPosition,
+            content: content,
+            xAnchor: 0.5,
+            yAnchor: 1.3
+        });
+
+        // 지도에 커스텀 오버레이 추가
+        customOverlay.setMap(map);
+
+        // 마커 배열에 추가 (나중에 제거할 때 사용)
+        markers.push(customOverlay);
+    });
+}
 
     // 마커 제거
     function clearMarkers() {
@@ -722,7 +735,6 @@
     loadParkingInfo();
     setupProfileDropdown(); // 프로필 드롭다운 설정 추가
     setupRegistrationModal(); // 판매등록 모달 설정 추가
-    setupRegistrationModal();
 
     // 검색 버튼 이벤트 리스너
     document.querySelector('.search-button').addEventListener('click', filterParkingInfo);
