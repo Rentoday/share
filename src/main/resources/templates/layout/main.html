@@ -39,7 +39,7 @@
 </header>
 <div class="notice">
     <span>🚗 공지사항 🚗</span>
-    <span id="noticeText" style="cursor: pointer;">7월 19일부터 오픈이벤트 참여하고 쿠폰받자!</span>
+    <span id="noticeText" style="cursor: pointer;">오늘만세워에 오신 여러분 환영합니다.</span>
 </div>
 <!-- 공지사항 모달 -->
 <div id="noticeModal" class="modal">
@@ -118,8 +118,20 @@
     document.addEventListener('DOMContentLoaded', async function() {
     const authSection = document.querySelector('.auth-section');
     let hasUnreadNotifications = false;
-    let notifications = []; // 알림 목록을 저장할 배열
+    let notifications = [];
+    let allNotices = [];
+    let latestNoticeTitle = "작성된 공지사항이 없습니다.";
 
+    // 지도 초기화
+    var mapContainer = document.getElementById('map');
+    var mapOption = {
+        center: new kakao.maps.LatLng(37.566826, 126.9786567),
+        level: 3
+    };
+    var map = new kakao.maps.Map(mapContainer, mapOption);
+    var markers = [];
+
+    // UI 업데이트 함수
     async function updateUI() {
         const token = localStorage.getItem('Authorization');
         const authCookie = Cookies.get('Authorization');
@@ -130,7 +142,6 @@
             try {
                 const response = await api.get('/api/member/info');
                 const userInfo = response.data;
-
                 authSection.innerHTML = `
                     <button class="icon-button panmaetotal">판매등록</button>
                     <div class="notification-container">
@@ -154,7 +165,6 @@
                         </div>
                     </div>
                 `;
-
                 setupSSE();
                 updateNotificationIcon();
                 setupNotificationButton();
@@ -165,19 +175,20 @@
         }
     }
 
+    // SSE 설정
     function setupSSE() {
         const sseClient = new SSEClient(api.defaults.baseURL);
         sseClient.connect();
-
         sseClient.handleMessage = (data) => {
             console.log('Received notification:', data);
             hasUnreadNotifications = true;
-            notifications.push(data); // 새 알림을 배열에 추가
+            notifications.push(data);
             updateNotificationIcon();
             updateNotificationDropdown();
         };
     }
 
+    // 알림 아이콘 업데이트
     function updateNotificationIcon() {
         const notificationIcon = document.getElementById('notificationIcon');
         if (notificationIcon) {
@@ -187,10 +198,10 @@
         }
     }
 
+    // 알림 버튼 설정
     function setupNotificationButton() {
         const notificationButton = document.querySelector('.icon-button.notification');
         const notificationDropdown = document.querySelector('.notification-dropdown');
-
         notificationButton.addEventListener('click', () => {
             notificationDropdown.style.display = notificationDropdown.style.display === 'none' ? 'flex' : 'none';
             if (notificationDropdown.style.display === 'flex') {
@@ -199,155 +210,33 @@
         });
     }
 
+    // 알림 드롭다운 업데이트
     function updateNotificationDropdown() {
         const notificationList = document.querySelector('.notification-list');
         if (notifications.length === 0) {
             notificationList.innerHTML = '<div class="no-notifications">표시할 알림이 없습니다.</div>';
         } else {
             notificationList.innerHTML = notifications.map(notification => `
-                <div class="notification-item">
-                    ${notification.message}
-                </div>
+                <div class="notification-item">${notification.message}</div>
             `).join('');
         }
     }
 
-    // 초기 UI 업데이트
-    await updateUI();
-});
-
-</script>
-<script>
-    // 공지사항을 가져오고 업데이트하는 함수
-   async function fetchAndUpdateNotices() {
-       try {
-           const response = await api.get('/api/notice/readAll');
-           return response.data;
-       } catch (error) {
-           console.error('Failed to fetch notices:', error);
-           return [];
-       }
-   }
-
-   // 전역 변수로 선언
-   window.allNotices = [];
-   window.latestNoticeTitle = "작성된 공지사항이 없습니다.";
-
-   // 페이지 로드 전에 공지사항 가져오기
-   (async function() {
-       window.allNotices = await fetchAndUpdateNotices();
-
-       if (window.allNotices.length > 0) {
-           window.latestNoticeTitle = window.allNotices[window.allNotices.length - 1].title;
-       }
-
-       // DOM이 준비되면 실행
-       document.addEventListener('DOMContentLoaded', updateNoticeUI);
-   })();
-
-   function updateNoticeUI() {
-       const noticeText = document.getElementById('noticeText');
-       if (noticeText) {
-           noticeText.textContent = window.latestNoticeTitle;
-       }
-
-       updateNoticeModal(window.allNotices);
-       setupNoticeListeners();
-   }
-
-   function setupNoticeListeners() {
-       const noticeText = document.getElementById('noticeText');
-       const modal = document.getElementById('noticeModal');
-       const closeModal = document.getElementById('closeModal');
-
-       if (noticeText && modal && closeModal) {
-           noticeText.addEventListener('click', function() {
-               modal.style.display = 'flex';
-           });
-
-           closeModal.addEventListener('click', function() {
-               modal.style.display = 'none';
-           });
-
-           window.addEventListener('click', function(event) {
-               if (event.target == modal) {
-                   modal.style.display = 'none';
-               }
-           });
-       }
-   }
-
-</script>
-<script>
-    //시간 검색 JS
-    document.addEventListener('DOMContentLoaded', function() {
-        const timeDisplay = document.querySelector('.time-display');
-        const timeDropdown = document.querySelector('.time-dropdown');
-        const timeList = document.querySelector('.time-list');
-
-    // 시간 옵션 생성
-        for (let i = 0; i < 24; i++) {
-            const timeOption = document.createElement('div');
-            timeOption.classList.add('time-option');
-            timeOption.textContent = `${i.toString().padStart(2, '0')}:00`;
-                timeOption.addEventListener('click', function() {
-                    timeDisplay.textContent = this.textContent;
-                    timeDropdown.style.display = 'none';
-                });
-            timeList.appendChild(timeOption);
+    // 공지사항 가져오기 및 업데이트
+    async function fetchAndUpdateNotices() {
+        try {
+            const response = await api.get('/api/notice/readAll');
+            allNotices = response.data;
+            if (allNotices.length > 0) {
+                latestNoticeTitle = allNotices[allNotices.length - 1].title;
+            }
+            updateNoticeUI();
+        } catch (error) {
+            console.error('Failed to fetch notices:', error);
         }
+    }
 
-    // 시간 표시를 클릭하면 드롭다운 표시/숨김
-        timeDisplay.addEventListener('click', function() {
-            timeDropdown.style.display = timeDropdown.style.display === 'none' ? 'block' : 'none';
-        });
-
-    // 드롭다운 외부를 클릭하면 드롭다운 숨김
-        document.addEventListener('click', function(event) {
-            if (!timeDisplay.contains(event.target) && !timeDropdown.contains(event.target)) {
-                timeDropdown.style.display = 'none';
-            }
-        });
-    });
-</script>
-
-<script>
-    //지도 JS
-    var mapContainer = document.getElementById('map'), // 지도를 표시할 div
-        mapOption = {
-            center: new kakao.maps.LatLng(37.566826, 126.9786567), // 지도의 중심좌표 (서울시청)
-            level: 3 // 지도의 확대 레벨
-        };
-
-    // 지도를 표시할 div와  지도 옵션으로  지도를 생성합니다
-    var map = new kakao.maps.Map(mapContainer, mapOption);
-</script>
-
-<script>
-    // 공지사항 JS
-    document.addEventListener('DOMContentLoaded', function() {
-        var noticeText = document.getElementById('noticeText');
-        var modal = document.getElementById('noticeModal');
-        var closeModal = document.getElementById('closeModal');
-
-        // 모달 내용 업데이트
-        updateNoticeModal(window.allNotices);
-
-        noticeText.addEventListener('click', function() {
-            modal.style.display = 'flex';
-        });
-
-        closeModal.addEventListener('click', function() {
-            modal.style.display = 'none';
-        });
-
-        window.addEventListener('click', function(event) {
-            if (event.target == modal) {
-                modal.style.display = 'none';
-            }
-        });
-    });
-
+    // 공지사항 모달 업데이트 함수 추가
     function updateNoticeModal(notices) {
         const tbody = document.querySelector('#noticeModal .notice-table tbody');
         if (!tbody) return;
@@ -394,6 +283,7 @@
         }
     }
 
+    // 날짜 포맷 함수 추가
     function formatDate(dateString) {
         const date = new Date(dateString);
         const year = date.getFullYear().toString().slice(-2);
@@ -402,8 +292,8 @@
         return `${year}/${month}/${day}`;
     }
 
-    //공지사항 아코디언 (기존 코드 유지)
-    function toggleContent(button) {
+     // 공지사항 아코디언 토글 함수 추가
+    window.toggleContent = function(button) {
         const row = button.closest('tr');
         const nextRow = row.nextElementSibling;
         const isExpanded = nextRow.style.display === 'table-row';
@@ -415,168 +305,150 @@
             button.innerHTML = '&#x25B2;'; // Up arrow
         }
     }
-</script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-    function initializeLoginModal() {
-        // 로그인 버튼과 모달 요소 선택
-        var loginButton = document.querySelector('.auth-section .login-button');
-        var loginModal = document.getElementById('loginModal');
-        var closeLoginModal = document.getElementById('closeLoginModal');
+    // 공지사항 UI 업데이트 함수 수정
+    function updateNoticeUI() {
+        const noticeText = document.getElementById('noticeText');
+        if (noticeText) {
+            noticeText.textContent = latestNoticeTitle;
+        }
+        updateNoticeModal(allNotices);
+        setupNoticeListeners();
+    }
 
-        // 로그인 버튼이 존재하는지 확인
-        if (loginButton) {
-            loginButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (loginModal) {
-                    loginModal.style.display = 'flex';
-                } else {
-                    console.error('Login modal not found');
+
+    // 공지사항 리스너 설정 함수 수정
+    function setupNoticeListeners() {
+        const noticeText = document.getElementById('noticeText');
+        const modal = document.getElementById('noticeModal');
+        const closeModal = document.getElementById('closeModal');
+        if (noticeText && modal && closeModal) {
+            noticeText.addEventListener('click', () => {
+                modal.style.display = 'flex';
+            });
+            closeModal.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+            window.addEventListener('click', (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
                 }
             });
-        } else {
-            console.error('Login button not found');
-            // 버튼이 없으면 1초 후에 다시 시도
-            return;
         }
+    }
 
-        // 모달 닫기 버튼이 존재하는지 확인
-        if (closeLoginModal) {
-            closeLoginModal.addEventListener('click', function() {
-                loginModal.style.display = 'none';
+    // 시간 선택 드롭다운 설정
+    function setupTimeDropdown() {
+        const timeDisplay = document.querySelector('.time-display');
+        const timeDropdown = document.querySelector('.time-dropdown');
+        const timeList = document.querySelector('.time-list');
+
+        for (let i = 0; i < 24; i++) {
+            const timeOption = document.createElement('div');
+            timeOption.classList.add('time-option');
+            timeOption.textContent = `${i.toString().padStart(2, '0')}:00`;
+            timeOption.addEventListener('click', function() {
+                timeDisplay.textContent = this.textContent;
+                timeDropdown.style.display = 'none';
             });
+            timeList.appendChild(timeOption);
         }
 
-        // 모달 외부 클릭 시 닫기
-        window.addEventListener('click', function(event) {
-            if (event.target == loginModal) {
-                loginModal.style.display = 'none';
+        timeDisplay.addEventListener('click', () => {
+            timeDropdown.style.display = timeDropdown.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!timeDisplay.contains(event.target) && !timeDropdown.contains(event.target)) {
+                timeDropdown.style.display = 'none';
             }
         });
     }
 
-    // 초기화 함수 호출
-    initializeLoginModal();
+    // 로그인 모달 초기화
+    function initializeLoginModal() {
+        const loginButton = document.querySelector('.auth-section .login-button');
+        const loginModal = document.getElementById('loginModal');
+        const closeLoginModal = document.getElementById('closeLoginModal');
 
-        // 로그인 폼 제출 이벤트 리스너
-        var loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', function(e) {
+        if (loginButton) {
+            loginButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                var email = document.getElementById('userid').value;
-                var password = document.getElementById('password').value;
+                if (loginModal) loginModal.style.display = 'flex';
+            });
+        }
+
+        if (closeLoginModal) {
+            closeLoginModal.addEventListener('click', () => loginModal.style.display = 'none');
+        }
+
+        window.addEventListener('click', (event) => {
+            if (event.target == loginModal) loginModal.style.display = 'none';
+        });
+
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('userid').value;
+                const password = document.getElementById('password').value;
                 loginUser(email, password);
             });
-        } else {
-            console.error('Login form not found');
         }
-    });
+    }
 
     // 로그인 요청 함수
     function loginUser(email, password) {
-    axios.post('/api/member/login', {
-        email: email,
-        password: password
-    }, {
-        withCredentials: true
-    })
-    .then(function (response) {
-        const authToken = response.headers['authorization'];
-
-        if (authToken) {
-            localStorage.setItem('Authorization', authToken);
-            console.log('로그인 성공');
-
-            // 메인 페이지로 리다이렉트
-            window.location.href = '/main';
-        } else {
-            console.warn('Authorization 헤더가 없습니다.');
-            alert('로그인은 성공했지만, 인증 토큰을 받지 못했습니다.');
-        }
-    })
-    .catch(function (error) {
-        console.error('로그인 실패:', error);
-        alert('로그인 실패: ' + error.message);
-    });
-}
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-    const kakaoLoginBtn = document.querySelector('.kakao-login');
-
-    kakaoLoginBtn.addEventListener('click', function() {
-        // 전체 인증 URL 생성
-        const authUrl = `http://localhost:81/oauth2/authorization/kakao`;
-
-        // 카카오 인증 페이지로 리다이렉트
-        window.location.href = authUrl;
-
-    });
-});
-
-    document.addEventListener('DOMContentLoaded', function() {
-    var mapContainer = document.getElementById('map'),
-        mapOption = {
-            center: new kakao.maps.LatLng(37.566826, 126.9786567),
-            level: 3
-        };
-
-    var map = new kakao.maps.Map(mapContainer, mapOption);
-    var markers = [];
-
-    // 주소 입력 필드와 검색 버튼
-    var addressInput = document.querySelector('.search-bar input');
-    var searchButton = document.querySelector('.search-button');
-    var timeDisplay = document.querySelector('.time-display');
-
-    // 초기 주차장 정보 로드
-    loadParkingInfo();
-
-    // 검색 버튼 클릭 이벤트
-    searchButton.addEventListener('click', function() {
-        filterParkingInfo();
-    });
-
-    // 주차장 정보를 로드하는 함수
-    function loadParkingInfo() {
-        // API로부터 모든 주차장 정보를 가져옵니다.
-        api.get('/api/parks')
-            .then(function(response) {
-                displayParkingMarkers(response.data);
+        axios.post('/api/member/login', { email, password }, { withCredentials: true })
+            .then((response) => {
+                const authToken = response.headers['authorization'];
+                if (authToken) {
+                    localStorage.setItem('Authorization', authToken);
+                    console.log('로그인 성공');
+                    window.location.href = '/main';
+                } else {
+                    console.warn('Authorization 헤더가 없습니다.');
+                    alert('로그인은 성공했지만, 인증 토큰을 받지 못했습니다.');
+                }
             })
-            .catch(function(error) {
-                console.error("주차장 정보를 불러오는데 실패했습니다:", error);
+            .catch((error) => {
+                console.error('로그인 실패:', error);
+                alert('로그인 실패: ' + error.message);
             });
     }
 
-    // 필터링된 주차장 정보를 로드하는 함수
-    function filterParkingInfo() {
-        var address = addressInput.value;
-        var time = timeDisplay.textContent;
-
-        // API로 필터링된 주차장 정보를 요청합니다.
-        api.get('/api/parks/filter', {
-            params: {
-                address: address,
-                time: time
-            }
-        })
-        .then(function(response) {
-            clearMarkers();
-            displayParkingMarkers(response.data);
-        })
-        .catch(function(error) {
-            console.error("필터링된 주차장 정보를 불러오는데 실패했습니다:", error);
+    // 카카오 로그인 설정
+    function setupKakaoLogin() {
+        const kakaoLoginBtn = document.querySelector('.kakao-login');
+        kakaoLoginBtn.addEventListener('click', () => {
+            window.location.href = `http://localhost:81/oauth2/authorization/kakao`;
         });
     }
 
-    // 주차장 마커를 지도에 표시하는 함수
-    function displayParkingMarkers(parkingInfos) {
-        parkingInfos.forEach(function(info) {
-            var markerPosition = new kakao.maps.LatLng(info.latitude, info.longitude);
+    // 주차장 정보 로드
+    function loadParkingInfo() {
+        api.get('/api/parks')
+            .then((response) => displayParkingMarkers(response.data))
+            .catch((error) => console.error("주차장 정보를 불러오는데 실패했습니다:", error));
+    }
 
-            var marker = new kakao.maps.CustomOverlay({
+    // 주차장 정보 필터링
+    function filterParkingInfo() {
+        const address = document.querySelector('.search-bar input').value;
+        const time = document.querySelector('.time-display').textContent;
+        api.get('/api/parks/filter', { params: { address, time } })
+            .then((response) => {
+                clearMarkers();
+                displayParkingMarkers(response.data);
+            })
+            .catch((error) => console.error("필터링된 주차장 정보를 불러오는데 실패했습니다:", error));
+    }
+
+    // 주차장 마커 표시
+    function displayParkingMarkers(parkingInfos) {
+        parkingInfos.forEach((info) => {
+            const markerPosition = new kakao.maps.LatLng(info.latitude, info.longitude);
+            const marker = new kakao.maps.CustomOverlay({
                 position: markerPosition,
                 content: `
                     <div class="parking-marker">
@@ -588,23 +460,69 @@
                 `,
                 map: map
             });
-
             markers.push(marker);
-
-            // 마커 클릭 이벤트
-                kakao.maps.event.addListener(marker, 'click', function() {
+            kakao.maps.event.addListener(marker, 'click', () => {
                 window.location.href = `/detail?parkId=${info.id}`;
             });
         });
     }
 
-    // 모든 마커를 제거하는 함수
+    // 마커 제거
     function clearMarkers() {
-        markers.forEach(function(marker) {
-            marker.setMap(null);
-        });
+        markers.forEach(marker => marker.setMap(null));
         markers = [];
     }
+
+
+    function setupProfileDropdown() {
+        const profileButton = document.querySelector('.icon-button.profile');
+        const profileDropdown = document.querySelector('.profile-dropdown');
+
+        if (profileButton && profileDropdown) {
+            profileButton.addEventListener('click', (e) => {
+                e.stopPropagation(); // 이벤트 버블링 방지
+                profileDropdown.style.display = profileDropdown.style.display === 'none' ? 'flex' : 'none';
+            });
+
+            // 드롭다운 외부 클릭 시 닫기
+            document.addEventListener('click', (e) => {
+                if (!profileButton.contains(e.target) && !profileDropdown.contains(e.target)) {
+                    profileDropdown.style.display = 'none';
+                }
+            });
+
+            // 드롭다운 아이템 클릭 이벤트
+            const myPageButton = profileDropdown.querySelector('.dropdown-item.mypage');
+            const logoutButton = profileDropdown.querySelector('.dropdown-item.logout');
+
+            if (myPageButton) {
+                myPageButton.addEventListener('click', () => {
+                    // 마이페이지로 이동
+                    window.location.href = '/mypage';
+                });
+            }
+
+            if (logoutButton) {
+                logoutButton.addEventListener('click', () => {
+                    // 로그아웃 처리
+                    logout();
+                });
+            }
+        }
+    }
+
+
+    // 초기화 및 이벤트 리스너 설정
+    await updateUI();
+    await fetchAndUpdateNotices();
+    setupTimeDropdown();
+    initializeLoginModal();
+    setupKakaoLogin();
+    loadParkingInfo();
+    setupProfileDropdown(); // 프로필 드롭다운 설정 추가
+
+    // 검색 버튼 이벤트 리스너
+    document.querySelector('.search-button').addEventListener('click', filterParkingInfo);
 });
 </script>
 </body>
