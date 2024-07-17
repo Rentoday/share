@@ -5,6 +5,7 @@ import com.project.rentoday.domain.park.entity.ParkImage;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,8 +13,8 @@ import java.util.stream.Collectors;
 public class ParkDetailRequest {
     private Long id;
     private String parkingNum;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private double price;
     private String agency;
     private String agNum;

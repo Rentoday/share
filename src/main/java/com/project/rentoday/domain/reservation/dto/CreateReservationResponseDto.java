@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 public class CreateReservationResponseDto {
@@ -19,9 +20,9 @@ public class CreateReservationResponseDto {
 
     private Long memberId;
 
-    private LocalDateTime checkIn;
+    private LocalTime checkIn;
 
-    private LocalDateTime checkOut;
+    private LocalTime checkOut;
 
     private Duration rentalDuration;
 

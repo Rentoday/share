@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 @NoArgsConstructor
@@ -16,8 +17,8 @@ public class ParkResponse {
     private String name;
     private String parkNum;
     private String address;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private double price;
     private LocalDateTime regDate;
     private LocalDateTime confirmDate;

@@ -7,9 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/myPage/myPage.css">
     <link rel="stylesheet" href="css/myPage/info.css">
-    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script src="/js/common/apiClient.js"></script>
 </head>
 <body>
 <div class="container">
@@ -198,467 +195,464 @@
         </div>
     </div>
 </div>
+
+<!-- SSR로 이동할 script 코드 -->
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-    const sidebarMenu = document.getElementById('sidebar-menu');
-    const contents = document.querySelectorAll('.content');
-    const pageTitle = document.getElementById('page-title');
-    const infoForm = document.getElementById('info-form');
-    const deleteAccountBtn = document.getElementById('delete-account');
-
-    let currentPage = 0;
-    const pageSize = 10;
-
-    const fetchMemberInfo = async () => {
-        try {
-            const response = await api.get('/api/members/info');
-            updateMemberInfo(response.data);
-        } catch (error) {
-            console.error('회원 정보를 가져오는 중 오류 발생:', error);
-        }
-    };
-
-    const updateMemberInfo = (data) => {
+    (async () => {
+        const response = await fetch('/api/members/info');
+        const data = await response.json();
         document.getElementById('profile-name').textContent = data.name;
         document.getElementById('email').value = data.email;
         document.getElementById('phone').value = data.phone;
         if (data.profileImage) {
             document.getElementById('profile-pic').src = data.profileImage;
         }
-    };
+    })();
+</script>
 
-    // 프로필 이미지 수정 기능
-    const profilePic = document.getElementById('profile-pic');
-    const profilePicInput = document.getElementById('profile-pic-input');
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/js/common/apiClient.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebarMenu = document.getElementById('sidebar-menu');
+        const contents = document.querySelectorAll('.content');
+        const pageTitle = document.getElementById('page-title');
+        const infoForm = document.getElementById('info-form');
+        const deleteAccountBtn = document.getElementById('delete-account');
 
-    if (profilePicInput) {
-        profilePicInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    profilePic.src = e.target.result;
+        let currentPage = 0;
+        const pageSize = 10;
+
+        // 프로필 이미지 수정 기능
+        const profilePic = document.getElementById('profile-pic');
+        const profilePicInput = document.getElementById('profile-pic-input');
+        if (profilePicInput) {
+            profilePicInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        profilePic.src = e.target.result;
+                    }
+                    reader.readAsDataURL(file);
                 }
-                reader.readAsDataURL(file);
+            });
+        }
+
+        // 회원 정보 수정
+        infoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (password !== confirmPassword) {
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
             }
-        });
-    }
 
-    // 회원 정보 수정
-    infoForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirm-password').value;
+            const formData = new FormData();
+            formData.append('key', JSON.stringify({ password }));
 
-        if (password !== confirmPassword) {
-            alert('비밀번호가 일치하지 않습니다.');
-            return;
-        }
+            const profileImage = document.getElementById('profile-pic-input').files[0];
+            if (profileImage) {
+                formData.append('profileImage', profileImage);
+            }
 
-        const formData = new FormData();
-        formData.append('key', JSON.stringify({
-            password: password
-        }));
-
-        const profileImage = document.getElementById('profile-pic-input').files[0];
-        if (profileImage) {
-            formData.append('profileImage', profileImage);
-        }
-
-        try {
-            const response = await api.put('/api/members/update', formData);
-            alert('회원 정보가 성공적으로 수정되었습니다.');
-            fetchMemberInfo();
-        } catch (error) {
-            console.error('회원 정보 수정 중 오류 발생:', error);
-            alert('회원 정보 수정에 실패했습니다.');
-        }
-    });
-
-    // 회원 탈퇴
-    deleteAccountBtn.addEventListener('click', async () => {
-        if (confirm('정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
             try {
-                await api.delete('/api/members/delete');
-                alert('회원 탈퇴가 완료되었습니다.');
-                window.location.href = '/';
+                const response = await api.put('/api/members/update', formData);
+                alert('회원 정보가 성공적으로 수정되었습니다.');
+                fetchMemberInfo();
             } catch (error) {
-                console.error('회원 탈퇴 중 오류 발생:', error);
-                alert('회원 탈퇴에 실패했습니다.');
+                console.error('회원 정보 수정 중 오류 발생:', error);
+                alert('회원 정보 수정에 실패했습니다.');
             }
-        }
-    });
-
-    let currentNotificationsPage = 0;
-
-    const fetchNotifications = async (page = 0) => {
-        try {
-            const response = await api.get(`/api/notification/read?page=${page}&size=${pageSize}`);
-            updateNotificationsTable(response.data.content);
-            updatePagination(response.data, 'notifications');
-        } catch (error) {
-            console.error('알림을 가져오는 중 오류 발생:', error);
-        }
-    };
-
-    const updateNotificationsTable = (notifications) => {
-        const tableBody = document.getElementById('notifications-body');
-        tableBody.innerHTML = '';
-
-        if (notifications.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="4">조회된 알림이 없습니다.</td></tr>';
-            return;
-        }
-
-        notifications.forEach((notification, index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><input type="checkbox" class="checkbox" data-notification-id="${notification.id}"></td>
-                <td>${index + 1}</td>
-                <td>${notification.message}</td>
-                <td>${new Date(notification.date).toLocaleDateString()}</td>
-            `;
-            tableBody.appendChild(row);
         });
-    };
 
-    const deleteSelectedNotifications = async () => {
-        const selectedCheckboxes = document.querySelectorAll('#notifications-body input[type="checkbox"]:checked');
-        const notificationIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.notificationId);
-
-        if (notificationIds.length === 0) {
-            alert('삭제할 알림을 선택해주세요.');
-            return;
-        }
-
-        try {
-            await api.delete('/api/notification/notification', { data: notificationIds });
-            alert('선택한 알림이 삭제되었습니다.');
-            fetchNotifications(currentNotificationsPage);
-        } catch (error) {
-            console.error('알림 삭제 중 오류 발생:', error);
-            alert('알림 삭제 중 오류가 발생했습니다.');
-        }
-    };
-
-    const fetchReservations = async (page = 0) => {
-        try {
-            const response = await api.get(`/api/reservations/member?page=${page}&size=${pageSize}`);
-            updateReservationsTable(response.data.content);
-            updatePagination(response.data, 'reservations');
-        } catch (error) {
-            console.error('예약 정보를 가져오는 중 오류 발생:', error);
-        }
-    };
-
-    const updateReservationsTable = (reservations) => {
-        const tableBody = document.getElementById('reservations-body');
-        tableBody.innerHTML = '';
-
-        if (reservations.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="6">조회된 예약 정보가 없습니다.</td></tr>';
-            return;
-        }
-
-        reservations.forEach(reservation => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${reservation.id}</td>
-                <td>${reservation.parkingLotNumber}</td>
-                <td>${reservation.address}</td>
-                <td>${reservation.startTime} ~ ${reservation.endTime}</td>
-                <td>${reservation.price}</td>
-                <td>${new Date(reservation.reservationDate).toLocaleDateString()}</td>
-            `;
-            tableBody.appendChild(row);
+        // 회원 탈퇴
+        deleteAccountBtn.addEventListener('click', async () => {
+            if (confirm('정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                try {
+                    await api.delete('/api/members/delete');
+                    alert('회원 탈퇴가 완료되었습니다.');
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error('회원 탈퇴 중 오류 발생:', error);
+                    alert('회원 탈퇴에 실패했습니다.');
+                }
+            }
         });
-    };
 
-    const fetchPaymentHistory = async (page = 0) => {
-        try {
-            const response = await api.get(`/api/pays/member?page=${page}&size=${pageSize}`);
-            updatePaymentHistoryTable(response.data.content);
-            updatePagination(response.data, 'payment-history');
-        } catch (error) {
-            console.error('결제 내역을 가져오는 중 오류 발생:', error);
-        }
-    };
+        let currentNotificationsPage = 0;
 
-    const updatePaymentHistoryTable = (data) => {
-        const tableBody = document.getElementById('payment-history-body');
-        tableBody.innerHTML = '';
-
-        if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7">조회된 결제 내역이 없습니다.</td></tr>';
-            return;
-        }
-
-        data.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${item.id}</td>
-                <td>${item.pay.park.parkingLot.number}</td>
-                <td>${item.pay.park.parkingLot.address}</td>
-                <td>${item.pay.park.startTime} ~ ${item.pay.park.endTime}</td>
-                <td>${item.pay.amount}</td>
-                <td>${new Date(item.pay.paymentDate).toLocaleDateString()}</td>
-                <td>${item.pay.paymentStatus}</td>
-            `;
-            row.addEventListener('click', () => showPaymentModal(item));
-            tableBody.appendChild(row);
-        });
-    };
-
-    const showPaymentModal = (payment) => {
-        const modal = document.getElementById('payment-modal');
-        const detailsDiv = document.getElementById('payment-details');
-        const cancelBtn = document.getElementById('cancel-payment-btn');
-
-        detailsDiv.innerHTML = `
-            <p><strong>결제 ID:</strong> ${payment.id}</p>
-            <p><strong>주차장 번호:</strong> ${payment.pay.park.parkingLot.number}</p>
-            <p><strong>주소:</strong> ${payment.pay.park.parkingLot.address}</p>
-            <p><strong>이용 시간:</strong> ${payment.pay.park.startTime} ~ ${payment.pay.park.endTime}</p>
-            <p><strong>결제 금액:</strong> ${payment.pay.amount}원</p>
-            <p><strong>결제일:</strong> ${new Date(payment.pay.paymentDate).toLocaleString()}</p>
-            <p><strong>상태:</strong> ${payment.pay.paymentStatus}</p>
-        `;
-
-        cancelBtn.onclick = () => cancelPayment(payment.id);
-
-        modal.style.display = "block";
-
-        const span = document.getElementsByClassName("close")[0];
-        span.onclick = () => {
-            modal.style.display = "none";
+        const fetchNotifications = async (page = 0) => {
+            try {
+                const response = await api.get(`/api/notification/read?page=${page}&size=${pageSize}`);
+                updateNotificationsTable(response.data.content);
+                updatePagination(response.data, 'notifications');
+            } catch (error) {
+                console.error('알림을 가져오는 중 오류 발생:', error);
+            }
         };
 
-        window.onclick = (event) => {
-            if (event.target == modal) {
+        const updateNotificationsTable = (notifications) => {
+            const tableBody = document.getElementById('notifications-body');
+            tableBody.innerHTML = '';
+
+            if (notifications.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4">조회된 알림이 없습니다.</td></tr>';
+                return;
+            }
+
+            notifications.forEach((notification, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="checkbox" class="checkbox" data-notification-id="${notification.id}"></td>
+                    <td>${index + 1}</td>
+                    <td>${notification.message}</td>
+                    <td>${new Date(notification.date).toLocaleDateString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const deleteSelectedNotifications = async () => {
+            const selectedCheckboxes = document.querySelectorAll('#notifications-body input[type="checkbox"]:checked');
+            const notificationIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.notificationId);
+
+            if (notificationIds.length === 0) {
+                alert('삭제할 알림을 선택해주세요.');
+                return;
+            }
+
+            try {
+                await api.delete('/api/notification/notification', { data: notificationIds });
+                alert('선택한 알림이 삭제되었습니다.');
+                fetchNotifications(currentNotificationsPage);
+            } catch (error) {
+                console.error('알림 삭제 중 오류 발생:', error);
+                alert('알림 삭제 중 오류가 발생했습니다.');
+            }
+        };
+
+        const fetchReservations = async (page = 0) => {
+            try {
+                const response = await api.get(`/api/reservations/member?page=${page}&size=${pageSize}`);
+                updateReservationsTable(response.data.content);
+                updatePagination(response.data, 'reservations');
+            } catch (error) {
+                console.error('예약 정보를 가져오는 중 오류 발생:', error);
+            }
+        };
+
+        const updateReservationsTable = (reservations) => {
+            const tableBody = document.getElementById('reservations-body');
+            tableBody.innerHTML = '';
+
+            if (reservations.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6">조회된 예약 정보가 없습니다.</td></tr>';
+                return;
+            }
+
+            reservations.forEach(reservation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${reservation.id}</td>
+                    <td>${reservation.parkingLotNumber}</td>
+                    <td>${reservation.address}</td>
+                    <td>${reservation.startTime} ~ ${reservation.endTime}</td>
+                    <td>${reservation.price}</td>
+                    <td>${new Date(reservation.reservationDate).toLocaleDateString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const fetchPaymentHistory = async (page = 0) => {
+            try {
+                const response = await api.get(`/api/pays/member?page=${page}&size=${pageSize}`);
+                updatePaymentHistoryTable(response.data.content);
+                updatePagination(response.data, 'payment-history');
+            } catch (error) {
+                console.error('결제 내역을 가져오는 중 오류 발생:', error);
+            }
+        };
+
+        const updatePaymentHistoryTable = (data) => {
+            const tableBody = document.getElementById('payment-history-body');
+            tableBody.innerHTML = '';
+
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7">조회된 결제 내역이 없습니다.</td></tr>';
+                return;
+            }
+
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.id}</td>
+                    <td>${item.pay.park.parkingLot.number}</td>
+                    <td>${item.pay.park.parkingLot.address}</td>
+                    <td>${item.pay.park.startTime} ~ ${item.pay.park.endTime}</td>
+                    <td>${item.pay.amount}</td>
+                    <td>${new Date(item.pay.paymentDate).toLocaleDateString()}</td>
+                    <td>${item.pay.paymentStatus}</td>
+                `;
+                row.addEventListener('click', () => showPaymentModal(item));
+                tableBody.appendChild(row);
+            });
+        };
+
+        const showPaymentModal = (payment) => {
+            const modal = document.getElementById('payment-modal');
+            const detailsDiv = document.getElementById('payment-details');
+            const cancelBtn = document.getElementById('cancel-payment-btn');
+
+            detailsDiv.innerHTML = `
+                <p><strong>결제 ID:</strong> ${payment.id}</p>
+                <p><strong>주차장 번호:</strong> ${payment.pay.park.parkingLot.number}</p>
+                <p><strong>주소:</strong> ${payment.pay.park.parkingLot.address}</p>
+                <p><strong>이용 시간:</strong> ${payment.pay.park.startTime} ~ ${payment.pay.park.endTime}</p>
+                <p><strong>결제 금액:</strong> ${payment.pay.amount}원</p>
+                <p><strong>결제일:</strong> ${new Date(payment.pay.paymentDate).toLocaleString()}</p>
+                <p><strong>상태:</strong> ${payment.pay.paymentStatus}</p>
+            `;
+
+            cancelBtn.onclick = () => cancelPayment(payment.id);
+
+            modal.style.display = "block";
+
+            const span = document.getElementsByClassName("close")[0];
+            span.onclick = () => {
                 modal.style.display = "none";
+            };
+
+            window.onclick = (event) => {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            };
+        };
+
+        const cancelPayment = async (paymentId) => {
+            if (!confirm('정말로 이 결제를 취소하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await api.post(`/api/pays/cancel/${paymentId}`);
+                alert(response.data);
+                document.getElementById('payment-modal').style.display = "none";
+                fetchPaymentHistory(currentPage);
+            } catch (error) {
+                console.error('결제 취소 중 오류 발생:', error);
+                alert('결제 취소 중 오류가 발생했습니다: ' + error.message);
             }
         };
-    };
 
-    const cancelPayment = async (paymentId) => {
-        if (!confirm('정말로 이 결제를 취소하시겠습니까?')) {
-            return;
-        }
-
-        try {
-            const response = await api.post(`/api/pays/cancel/${paymentId}`);
-            alert(response.data);
-            document.getElementById('payment-modal').style.display = "none";
-            fetchPaymentHistory(currentPage);
-        } catch (error) {
-            console.error('결제 취소 중 오류 발생:', error);
-            alert('결제 취소 중 오류가 발생했습니다: ' + error.message);
-        }
-    };
-
-    const fetchSalesInfo = async (page = 0) => {
-        try {
-            const response = await api.get(`/api/parks/confirmed/member?page=${page}&size=${pageSize}`);
-            updateSalesInfoTable(response.data.content);
-            updatePagination(response.data, 'sales-info');
-        } catch (error) {
-            console.error('판매 정보를 가져오는 중 오류 발생:', error);
-        }
-    };
-
-    const updateSalesInfoTable = (sales) => {
-        const tableBody = document.getElementById('sales-info-body');
-        tableBody.innerHTML = '';
-
-        if (sales.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7">조회된 판매 정보가 없습니다.</td></tr>';
-            return;
-        }
-
-        sales.forEach(sale => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><input type="checkbox" class="checkbox" data-park-id="${sale.id}"></td>
-                <td>${sale.id}</td>
-                <td>${sale.park.parkingLot.number}</td>
-                <td>${sale.park.parkingLot.address}</td>
-                <td>${sale.park.startTime} ~ ${sale.park.endTime}</td>
-                <td>${sale.park.price}</td>
-                <td>${new Date(sale.confirmDate).toLocaleDateString()}</td>
-            `;
-            tableBody.appendChild(row);
-        });
-    };
-
-    const deleteSelectedSales = async () => {
-        const selectedCheckboxes = document.querySelectorAll('#sales-info-body input[type="checkbox"]:checked');
-        const parkIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.parkId);
-
-        for (const parkId of parkIds) {
+        const fetchSalesInfo = async (page = 0) => {
             try {
-                await api.delete(`/api/parks/${parkId}`);
+                const response = await api.get(`/api/parks/confirmed/member?page=${page}&size=${pageSize}`);
+                updateSalesInfoTable(response.data.content);
+                updatePagination(response.data, 'sales-info');
             } catch (error) {
-                console.error('주차장 삭제 중 오류 발생:', error);
+                console.error('판매 정보를 가져오는 중 오류 발생:', error);
             }
-        }
+        };
 
-        fetchSalesInfo();
-    };
+        const updateSalesInfoTable = (sales) => {
+            const tableBody = document.getElementById('sales-info-body');
+            tableBody.innerHTML = '';
 
-    const fetchApprovalRequests = async (page = 0) => {
-        try {
-            const response = await api.get(`/api/parks/member?page=${page}&size=${pageSize}`);
-            updateApprovalRequestsTable(response.data.content);
-            updatePagination(response.data, 'approval-requests');
-        } catch (error) {
-            console.error('승인 요청 데이터를 가져오는 중 오류 발생:', error);
-        }
-    };
+            if (sales.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7">조회된 판매 정보가 없습니다.</td></tr>';
+                return;
+            }
 
-    const updateApprovalRequestsTable = (data) => {
-        const tableBody = document.getElementById('approval-requests-body');
-        tableBody.innerHTML = '';
+            sales.forEach(sale => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="checkbox" class="checkbox" data-park-id="${sale.id}"></td>
+                    <td>${sale.id}</td>
+                    <td>${sale.park.parkingLot.number}</td>
+                    <td>${sale.park.parkingLot.address}</td>
+                    <td>${sale.park.startTime} ~ ${sale.park.endTime}</td>
+                    <td>${sale.park.price}</td>
+                    <td>${new Date(sale.confirmDate).toLocaleDateString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
 
-        if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="8">조회된 승인 요청이 없습니다.</td></tr>';
-            return;
-        }
+        const deleteSelectedSales = async () => {
+            const selectedCheckboxes = document.querySelectorAll('#sales-info-body input[type="checkbox"]:checked');
+            const parkIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.parkId);
 
-        data.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><input type="checkbox" class="checkbox" data-park-id="${item.id}"></td>
-                <td>${item.id}</td>
-                <td>${item.park.member.name}</td>
-                <td>${item.park.parkingLot.number}</td>
-                <td>${item.park.parkingLot.address}</td>
-                <td>${item.park.price}</td>
-                <td>${new Date(item.park.createdDate).toLocaleDateString()}</td>
-                <td>${item.park.parkStatus}</td>
-            `;
-            tableBody.appendChild(row);
-        });
-    };
+            for (const parkId of parkIds) {
+                try {
+                    await api.delete(`/api/parks/${parkId}`);
+                } catch (error) {
+                    console.error('주차장 삭제 중 오류 발생:', error);
+                }
+            }
 
-    const deleteSelectedParks = async () => {
-        const selectedCheckboxes = document.querySelectorAll('#approval-requests-body input[type="checkbox"]:checked');
-        const parkIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.parkId);
+            fetchSalesInfo();
+        };
 
-        for (const parkId of parkIds) {
+        const fetchApprovalRequests = async (page = 0) => {
             try {
-                await api.delete(`/api/parks/${parkId}`);
+                const response = await api.get(`/api/parks/member?page=${page}&size=${pageSize}`);
+                updateApprovalRequestsTable(response.data.content);
+                updatePagination(response.data, 'approval-requests');
             } catch (error) {
-                console.error('주차장 삭제 중 오류 발생:', error);
+                console.error('승인 요청 데이터를 가져오는 중 오류 발생:', error);
             }
-        }
+        };
 
-        fetchApprovalRequests();
-    };
+        const updateApprovalRequestsTable = (data) => {
+            const tableBody = document.getElementById('approval-requests-body');
+            tableBody.innerHTML = '';
 
-    const updatePagination = (data, sectionId) => {
-        const paginationDiv = document.querySelector(`#${sectionId}-content .pagination`);
-        paginationDiv.innerHTML = '';
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="8">조회된 승인 요청이 없습니다.</td></tr>';
+                return;
+            }
 
-        const totalPages = data.totalPages;
-        const currentPage = data.number;
-
-         const prevButton = document.createElement('button');
-        prevButton.textContent = '<';
-        prevButton.disabled = currentPage === 0;
-        prevButton.addEventListener('click', () => loadPage(sectionId, currentPage - 1));
-        paginationDiv.appendChild(prevButton);
-
-        for (let i = 0; i < totalPages; i++) {
-            const pageButton = document.createElement('button');
-            pageButton.textContent = i + 1;
-            pageButton.classList.toggle('active', i === currentPage);
-            pageButton.addEventListener('click', () => loadPage(sectionId, i));
-            paginationDiv.appendChild(pageButton);
-        }
-
-        const nextButton = document.createElement('button');
-        nextButton.textContent = '>';
-        nextButton.disabled = currentPage === totalPages - 1;
-        nextButton.addEventListener('click', () => loadPage(sectionId, currentPage + 1));
-        paginationDiv.appendChild(nextButton);
-    };
-
-    const loadPage = (sectionId, page) => {
-        currentPage = page;
-        switch (sectionId) {
-            case 'notifications':
-                currentNotificationsPage = page;
-                fetchNotifications(page);
-                break;
-            case 'reservations':
-                fetchReservations(page);
-                break;
-            case 'sales-info':
-                fetchSalesInfo(page);
-                break;
-            case 'approval-requests':
-                fetchApprovalRequests(page);
-                break;
-            case 'payment-history':
-                fetchPaymentHistory(page);
-                break;
-        }
-    };
-
-    // 사이드바 메뉴에 이벤트 리스너 추가
-    sidebarMenu.addEventListener('click', (e) => {
-        if (e.target.tagName === 'LI') {
-            Array.from(sidebarMenu.getElementsByTagName('li')).forEach(li => {
-                li.classList.remove('active');
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="checkbox" class="checkbox" data-park-id="${item.id}"></td>
+                    <td>${item.id}</td>
+                    <td>${item.park.member.name}</td>
+                    <td>${item.park.parkingLot.number}</td>
+                    <td>${item.park.parkingLot.address}</td>
+                    <td>${item.park.price}</td>
+                    <td>${new Date(item.park.createdDate).toLocaleDateString()}</td>
+                    <td>${item.park.parkStatus}</td>
+                `;
+                tableBody.appendChild(row);
             });
+        };
 
-            e.target.classList.add('active');
+        const deleteSelectedParks = async () => {
+            const selectedCheckboxes = document.querySelectorAll('#approval-requests-body input[type="checkbox"]:checked');
+            const parkIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.parkId);
 
-            contents.forEach(content => {
-                content.classList.remove('active');
-            });
+            for (const parkId of parkIds) {
+                try {
+                    await api.delete(`/api/parks/${parkId}`);
+                } catch (error) {
+                    console.error('주차장 삭제 중 오류 발생:', error);
+                }
+            }
 
-            const contentId = e.target.dataset.content + '-content';
-            document.getElementById(contentId).classList.add('active');
+            fetchApprovalRequests();
+        };
 
-            pageTitle.textContent = e.target.textContent;
+        const updatePagination = (data, sectionId) => {
+            const paginationDiv = document.querySelector(`#${sectionId}-content .pagination`);
+            paginationDiv.innerHTML = '';
 
-            currentPage = 0;
-            switch (e.target.dataset.content) {
-                case 'info':
-                    fetchMemberInfo();
-                    break;
+            const totalPages = data.totalPages;
+            const currentPage = data.number;
+
+            const prevButton = document.createElement('button');
+            prevButton.textContent = '<';
+            prevButton.disabled = currentPage === 0;
+            prevButton.addEventListener('click', () => loadPage(sectionId, currentPage - 1));
+            paginationDiv.appendChild(prevButton);
+
+            for (let i = 0; i < totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i + 1;
+                pageButton.classList.toggle('active', i === currentPage);
+                pageButton.addEventListener('click', () => loadPage(sectionId, i));
+                paginationDiv.appendChild(pageButton);
+            }
+
+            const nextButton = document.createElement('button');
+            nextButton.textContent = '>';
+            nextButton.disabled = currentPage === totalPages - 1;
+            nextButton.addEventListener('click', () => loadPage(sectionId, currentPage + 1));
+            paginationDiv.appendChild(nextButton);
+        };
+
+        const loadPage = (sectionId, page) => {
+            currentPage = page;
+            switch (sectionId) {
                 case 'notifications':
-                    fetchNotifications(currentPage);
+                    currentNotificationsPage = page;
+                    fetchNotifications(page);
                     break;
                 case 'reservations':
-                    fetchReservations(currentPage);
+                    fetchReservations(page);
                     break;
                 case 'sales-info':
-                    fetchSalesInfo(currentPage);
+                    fetchSalesInfo(page);
                     break;
                 case 'approval-requests':
-                    fetchApprovalRequests(currentPage);
+                    fetchApprovalRequests(page);
                     break;
                 case 'payment-history':
-                    fetchPaymentHistory(currentPage);
+                    fetchPaymentHistory(page);
                     break;
             }
-        }
+        };
+
+        // 사이드바 메뉴에 이벤트 리스너 추가
+        sidebarMenu.addEventListener('click', (e) => {
+            if (e.target.tagName === 'LI') {
+                Array.from(sidebarMenu.getElementsByTagName('li')).forEach(li => {
+                    li.classList.remove('active');
+                });
+
+                e.target.classList.add('active');
+
+                contents.forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                const contentId = e.target.dataset.content + '-content';
+                document.getElementById(contentId).classList.add('active');
+
+                pageTitle.textContent = e.target.textContent;
+
+                currentPage = 0;
+                switch (e.target.dataset.content) {
+                    case 'info':
+                        fetchMemberInfo();
+                        break;
+                    case 'notifications':
+                        fetchNotifications(currentPage);
+                        break;
+                    case 'reservations':
+                        fetchReservations(currentPage);
+                        break;
+                    case 'sales-info':
+                        fetchSalesInfo(currentPage);
+                        break;
+                    case 'approval-requests':
+                        fetchApprovalRequests(currentPage);
+                        break;
+                    case 'payment-history':
+                        fetchPaymentHistory(currentPage);
+                        break;
+                }
+            }
+        });
+
+        // 삭제 버튼에 이벤트 리스너 추가
+        document.getElementById('delete-selected').addEventListener('click', deleteSelectedParks);
+        document.getElementById('delete-selected-sales').addEventListener('click', deleteSelectedSales);
+        document.getElementById('delete-selected-notifications').addEventListener('click', deleteSelectedNotifications);
+
+        // 페이지 로드 시 "내 정보" 섹션을 기본으로 표시
+        const defaultSection = document.querySelector('[data-content="info"]');
+        defaultSection.classList.add('active');
+        document.getElementById('info-content').classList.add('active');
+        pageTitle.textContent = '내 정보';
+        fetchMemberInfo();
     });
-
-    // 삭제 버튼에 이벤트 리스너 추가
-    document.getElementById('delete-selected').addEventListener('click', deleteSelectedParks);
-    document.getElementById('delete-selected-sales').addEventListener('click', deleteSelectedSales);
-    document.getElementById('delete-selected-notifications').addEventListener('click', deleteSelectedNotifications);
-
-    // 페이지 로드 시 "내 정보" 섹션을 기본으로 표시
-    const defaultSection = document.querySelector('[data-content="info"]');
-    defaultSection.classList.add('active');
-    document.getElementById('info-content').classList.add('active');
-    pageTitle.textContent = '내 정보';
-    fetchMemberInfo();
-});
 </script>
 </body>
 </html>

@@ -15,4 +15,5 @@ public interface ParkRepository extends JpaRepository<Park, Long> {
     Page<Park> findByMemberAndParkStatus(Member member, ParkStatus parkStatus, Pageable pageable);
 
     Page<Park> findByParkStatus(ParkStatus status, Pageable pageable);
-}
+
+    List<Park> findByAddressContaining(String address);}

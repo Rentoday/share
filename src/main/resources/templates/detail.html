@@ -43,21 +43,21 @@
 
 <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const parkId = urlParams.get('parkId');
+const parkId = urlParams.get('parkId');
 
-    if (!parkId) {
-        alert('주차장 ID가 없습니다.');
-        window.location.href = '/';
-    }
+if (!parkId) {
+    alert('주차장 ID가 없습니다.');
+    window.location.href = '/';
+}
 
-    let parkDetail;
-    let reservedTimes;
-    let selectedTime;
-    let currentUser;
+let parkDetail;
+let reservedTimes;
+let selectedTime;
+let currentUser;
 
-    async function fetchCurrentUser() {
+async function fetchCurrentUser() {
     try {
-        const response = await api.get('/api/user/info');
+        const response = await api.get('/api/member/info');
         currentUser = response.data;
     } catch (error) {
         console.error('사용자 정보를 가져오는데 실패했습니다:', error);
@@ -86,22 +86,23 @@ async function fetchReservedTimes() {
         throw error;
     }
 }
-    function displayParkDetail() {
-        document.getElementById('parkingNum').textContent = parkDetail.parkingNum;
-        document.getElementById('address').textContent = parkDetail.address;
-        document.getElementById('operatingHours').textContent = `${formatTime(parkDetail.startTime)} - ${formatTime(parkDetail.endTime)}`;
-        document.getElementById('price').textContent = parkDetail.price;
-        document.getElementById('agency').textContent = parkDetail.agency;
-        document.getElementById('agNum').textContent = parkDetail.agNum;
-        document.getElementById('content').textContent = parkDetail.content;
 
-        const imageContainer = document.getElementById('imageContainer');
-        parkDetail.parkImages.slice(0, 3).forEach(image => {
-            const img = document.createElement('img');
-            img.src = image.imageUrl;
-            imageContainer.appendChild(img);
-        });
-    }
+function displayParkDetail() {
+    document.getElementById('parkingNum').textContent = parkDetail.parkingNum;
+    document.getElementById('address').textContent = parkDetail.address;
+    document.getElementById('operatingHours').textContent = `${formatTime(parkDetail.startTime)} - ${formatTime(parkDetail.endTime)}`;
+    document.getElementById('price').textContent = parkDetail.price;
+    document.getElementById('agency').textContent = parkDetail.agency;
+    document.getElementById('agNum').textContent = parkDetail.agNum;
+    document.getElementById('content').textContent = parkDetail.content;
+
+    const imageContainer = document.getElementById('imageContainer');
+    parkDetail.parkImages.slice(0, 3).forEach(image => {
+        const img = document.createElement('img');
+        img.src = image.imageUrl;
+        imageContainer.appendChild(img);
+    });
+}
 
     function displayTimeSlots() {
         const timeSlotsContainer = document.getElementById('timeSlots');

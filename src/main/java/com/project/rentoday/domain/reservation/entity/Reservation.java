@@ -5,7 +5,6 @@ import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.payment.entity.Pay;
 import com.project.rentoday.domain.reservation.converter.DurationConverter;
 import com.project.rentoday.global.entity.BaseEntity;
-import com.siot.IamportRestClient.response.Payment;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
@@ -13,7 +12,7 @@ import lombok.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.time.LocalTime;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -39,11 +38,11 @@ public class Reservation extends BaseEntity {
     @NotNull
     @FutureOrPresent
     @Column(name = "check_in")
-    private LocalDateTime checkIn;
+    private LocalTime checkIn;
 
     @NotNull
     @Column(name = "check_out")
-    private LocalDateTime checkOut;
+    private LocalTime checkOut;
 
     @Convert(converter = DurationConverter.class)
     @Column(name = "rental_duration")
@@ -65,7 +64,7 @@ public class Reservation extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Pay pay;
 
-    protected Reservation(Long id) {
+    protected Reservation(Member member, Park park, Long id, LocalTime checkIn, String reservationUid, String reservationName) {
 
         this.id = id;
     }
@@ -74,7 +73,7 @@ public class Reservation extends BaseEntity {
             Member member,
             Park park,
             Pay pay,
-            LocalDateTime checkIn,
+            LocalTime checkIn,
             String reservationUid,
             String reservationName
     ) {
@@ -91,6 +90,8 @@ public class Reservation extends BaseEntity {
 
         validate();
     }
+
+
 
 
     //Reservation의 엔티티 불변성 유지
@@ -110,12 +111,12 @@ public class Reservation extends BaseEntity {
         }
     }
     //checkIn 시간부터 checkOut 시간까지 계산하기.
-    public Duration calculateRentalDuration(LocalDateTime checkIn, LocalDateTime checkOut) {
+    public Duration calculateRentalDuration(LocalTime checkIn, LocalTime checkOut) {
         return Duration.between(checkIn, checkOut);
     }
 
     //체크인 시간에 따른 체크아웃 계산하기, 시간당으로 계산하기.
-    public LocalDateTime calculateCheckOut(LocalDateTime checkIn) {
+    public LocalTime calculateCheckOut(LocalTime checkIn) {
         return checkIn.plusMinutes(59);
     }
 
