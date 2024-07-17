@@ -107,6 +107,70 @@
         </div>
     </div>
 </div>
+<!-- 판매등록 모달 -->
+<div id="registrationModal" class="modal" style="display: none;">
+    <div class="frame-modal-registration">
+        <div class="material-symbolscancel-outline" id="closeRegistrationModal">
+            <img class="vector" src="../../image/common/close.svg" alt="Close">
+        </div>
+        <span class="text-modal-title">판매 등록</span>
+        <div class="container-registration">
+            <div class="container-car-number">
+                <span class="text-title-car-number">차량번호</span>
+                <div class="container-2">
+                    <input type="text" class="text-input-car-number" placeholder="차량번호를 입력하세요" name="carNum">
+                </div>
+            </div>
+            <div class="container-parking-number">
+                <span class="text-title-parking-number">주차번호</span>
+                <div class="container-2">
+                    <input type="text" class="text-input-car-number-1" placeholder="주차번호를 입력하세요" name="parkNum">
+                </div>
+            </div>
+            <div class="container-time">
+                <span class="text-title-time">시간</span>
+                <div class="container-3">
+                    <input type="text" class="text-input-start-time" placeholder="시작 시간" name="startTime">
+                </div>
+                <span class="text-wave">~</span>
+                <div class="container-4">
+                    <input type="text" class="text-input-end-time" placeholder="종료 시간" name="endTime">
+                </div>
+            </div>
+            <div class="container-time-price">
+                <span class="text-title-time-price">시간당 가격</span>
+                <div class="container-5">
+                    <input type="text" class="text-input-time-price" placeholder="시간당 가격을 입력하세요" name="price">
+                </div>
+            </div>
+            <div class="container-detail">
+                <span class="text-title-detail">상세설명</span>
+                <div class="container-1">
+                    <textarea class="text-input-detail" placeholder="상세설명을 입력하세요" name="content"></textarea>
+                </div>
+            </div>
+            <div class="container-image">
+                <span class="text-title-image">이미지</span>
+                <div class="box-input-upload-img">
+                    <input type="file" id="imageUpload" accept="image/*" multiple>
+                    <label for="imageUpload" class="upload-label">이미지 선택 (최대 3장)</label>
+                    <div id="imagePreview" class="image-preview"></div>
+                </div>
+            </div>
+            <div class="container-confirmation">
+                <span class="text-title-confirmation">확인증</span>
+                <div class="box-input-confirmation">
+                    <input type="file" id="pdfUpload" accept=".pdf" style="display: none;">
+                    <label for="pdfUpload" class="pdf-upload-label">PDF 업로드</label>
+                </div>
+                <div id="pdfFileName"></div>
+            </div>
+        </div>
+        <div class="button-request">
+            <span class="text-request">등록 요청</span>
+        </div>
+    </div>
+</div>
 <footer>
     <p>2024 오늘만세워 Inc. 개인정보 처리방침 이용약관 사이트맵 한국어 변경된 환율 정책 취소 세부정보</p>
     <p>웹사이트 제공자: RenToday Ireland UC, private unlimited company, 8 Hanover Quay Dublin 2, D02 DP23 Ireland | 이사: Dermot Clarke, Killian Pattwell, Andrea Finnegan | VAT 번호: IE9827384L |</p>
@@ -425,12 +489,15 @@
         });
     }
 
-    // 주차장 정보 로드
     function loadParkingInfo() {
-        api.get('/api/parks')
-            .then((response) => displayParkingMarkers(response.data))
-            .catch((error) => console.error("주차장 정보를 불러오는데 실패했습니다:", error));
-    }
+    api.get('/api/parks/all')
+        .then(function(response) {
+            displayParkingMarkers(response.data);
+        })
+        .catch(function(error) {
+            console.error("주차장 정보를 불러오는데 실패했습니다:", error);
+        });
+}
 
     // 주차장 정보 필터링
     function filterParkingInfo() {
@@ -511,6 +578,140 @@
         }
     }
 
+    function logout() {
+    api.post('/logout')
+        .then(() => {
+            // 로컬 스토리지에서 Authorization 토큰 삭제
+            localStorage.removeItem('Authorization');
+
+            // 쿠키에서 Authorization 및 Refresh 토큰 삭제
+            Cookies.remove('Authorization');
+            Cookies.remove('Refresh');
+
+            // 메인 페이지로 리다이렉트
+            window.location.href = '/main';
+        })
+        .catch(error => {
+            console.error('로그아웃 실패:', error);
+            alert('로그아웃 중 오류가 발생했습니다.');
+        });
+}
+
+
+
+    function setupRegistrationModal() {
+        const registrationButton = document.querySelector('.icon-button.panmaetotal');
+        const registrationModal = document.getElementById('registrationModal');
+        const closeRegistrationModal = document.getElementById('closeRegistrationModal');
+
+        if (registrationButton && registrationModal && closeRegistrationModal) {
+            registrationButton.addEventListener('click', function() {
+                registrationModal.style.display = 'flex';
+            });
+
+            closeRegistrationModal.addEventListener('click', function() {
+                registrationModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', function(event) {
+                if (event.target == registrationModal) {
+                    registrationModal.style.display = 'none';
+                }
+            });
+
+            const requestButton = registrationModal.querySelector('.button-request');
+            if (requestButton) {
+                requestButton.addEventListener('click', function() {
+                    console.log('등록 요청');
+                    // 여기에 등록 요청 처리 로직을 추가하세요
+                });
+            }
+        } else {
+            console.error('판매등록 모달 요소를 찾을 수 없습니다.');
+        }
+    }
+
+    function setupRegistrationModal() {
+    const registrationButton = document.querySelector('.icon-button.panmaetotal');
+    const registrationModal = document.getElementById('registrationModal');
+    const closeRegistrationModal = document.getElementById('closeRegistrationModal');
+    const pdfUpload = registrationModal.querySelector('#pdfUpload');
+    const pdfFileName = registrationModal.querySelector('#pdfFileName');
+    const pdfUploadLabel = registrationModal.querySelector('.pdf-upload-label');
+
+    if (pdfUpload && pdfFileName && pdfUploadLabel) {
+        pdfUpload.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.type === 'application/pdf') {
+                    pdfFileName.textContent = file.name;
+                    pdfUploadLabel.textContent = '파일 변경';
+                } else {
+                    alert('PDF 파일만 업로드 가능합니다.');
+                    pdfUpload.value = ''; // 파일 선택 초기화
+                }
+            } else {
+                pdfFileName.textContent = '';
+                pdfUploadLabel.textContent = 'PDF 업로드';
+            }
+        });
+    }
+
+    if (registrationButton && registrationModal && closeRegistrationModal) {
+        registrationButton.addEventListener('click', function() {
+            registrationModal.style.display = 'flex';
+        });
+
+        closeRegistrationModal.addEventListener('click', function() {
+            registrationModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', function(event) {
+            if (event.target == registrationModal) {
+                registrationModal.style.display = 'none';
+            }
+        });
+
+        const requestButton = registrationModal.querySelector('.button-request');
+        if (requestButton) {
+            requestButton.addEventListener('click', function() {
+                console.log('등록 요청');
+                // 여기에 등록 요청 처리 로직을 추가하세요
+            });
+        }
+
+        // 이미지 업로드 기능 추가
+        const imageUpload = registrationModal.querySelector('#imageUpload');
+        const imagePreview = registrationModal.querySelector('#imagePreview');
+
+        if (imageUpload && imagePreview) {
+            imageUpload.addEventListener('change', function(event) {
+                imagePreview.innerHTML = ''; // 기존 미리보기 초기화
+                const files = event.target.files;
+
+                for (let i = 0; i < Math.min(files.length, 3); i++) {
+                    const file = files[i];
+                    if (file.type.startsWith('image/')) {
+                        const img = document.createElement('img');
+                        img.src = URL.createObjectURL(file);
+                        img.style.width = '100px';
+                        img.style.height = '100px';
+                        img.style.objectFit = 'cover';
+                        img.style.margin = '5px';
+                        imagePreview.appendChild(img);
+                    }
+                }
+
+                if (files.length > 3) {
+                    alert('최대 3장의 이미지만 선택할 수 있습니다.');
+                }
+            });
+        }
+    } else {
+        console.error('판매등록 모달 요소를 찾을 수 없습니다.');
+    }
+}
+
 
     // 초기화 및 이벤트 리스너 설정
     await updateUI();
@@ -520,6 +721,8 @@
     setupKakaoLogin();
     loadParkingInfo();
     setupProfileDropdown(); // 프로필 드롭다운 설정 추가
+    setupRegistrationModal(); // 판매등록 모달 설정 추가
+    setupRegistrationModal();
 
     // 검색 버튼 이벤트 리스너
     document.querySelector('.search-button').addEventListener('click', filterParkingInfo);
