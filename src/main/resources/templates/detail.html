@@ -85,7 +85,7 @@ async function fetchParkDetail() {
 
 async function fetchReservedTimes() {
     try {
-        const response = await api.get(`/api/parks/${parkId}/reserved-times`);
+        const response = await api.get(`/api/parks/${parkId}/available-times`);
         reservedTimes = response.data.map(time => {
             const [hours, minutes] = time.split(':');
             return { hours: parseInt(hours), minutes: parseInt(minutes) };

@@ -18,7 +18,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r WHERE r.reservationUid = :uid")
     Optional<Reservation> findByReservationUid(@Param("uid") String uid);
 
-    List<Reservation> findByParkAndCheckInBetween(Park park, LocalTime checkIn, LocalTime checkOut);
 
     @Query("SELECT r FROM Reservation r WHERE r.park.id = :parkId AND r.checkIn BETWEEN :checkIn AND :checkOut")
     List<Reservation> findByParkIdAndCheckInBetween(

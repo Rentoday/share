@@ -96,10 +96,11 @@ public class ParkController {
         return ResponseEntity.ok(parkDetail);
     }
 
-    @GetMapping("/{parkId}/reserved-times")
-    public ResponseEntity<List<String>> getReservedTimes(@PathVariable Long parkId) {
-        List<String> reservedTimes = parkService.getReservedTimes(parkId);
-        return ResponseEntity.ok(reservedTimes);
+    @GetMapping("/{parkId}/available-times")
+    public ResponseEntity<List<String>> getAvailableTimes(@PathVariable Long parkId) {
+        List<String> availableTimes = parkService.getReservedTimes(parkId);
+        System.out.println("availableTimes = " + availableTimes);
+        return ResponseEntity.ok(availableTimes);
     }
 
     @GetMapping("/filter")
