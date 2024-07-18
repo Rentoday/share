@@ -1,6 +1,8 @@
 package com.project.rentoday.domain.park.service;
 
 
+import com.project.rentoday.domain.district.entity.District;
+import com.project.rentoday.domain.district.repository.DistrictRepository;
 import com.project.rentoday.domain.member.entity.Member;
 import com.project.rentoday.domain.member.exception.MemberErrorCode;
 import com.project.rentoday.domain.member.exception.MemberException;
@@ -26,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,6 +41,7 @@ public class ParkService {
     private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
     private final OpenApiClient openApiClient;
+    private final DistrictRepository districtRepository;
 
     @Transactional
     public Park register(final CreateParkRequest request) {
@@ -201,17 +205,24 @@ public class ParkService {
     }
 
     @Transactional(readOnly = true)
-    public List<ParkResponse> getFilteredParks(String address, String time) {
-        LocalTime searchTime = LocalTime.parse(time);
+    public DistrictResponse getFilteredParks(String address, String time) {
+        LocalTime searchTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"));
 
-        List<Park> parks = parkRepository.findByAddressContaining(address);
+        District district = districtRepository.findByName(address)
+                .orElseThrow(() -> new IllegalArgumentException("해당되는 구가 존재하지 않습니다."));
 
-        return parks.stream()
-                .filter(park -> isParkAvailableAtTime(park, searchTime))
-                .map(ParkResponse::new)
+        List<Park> availableParks = parkRepository.findAvailableParks(address, searchTime);
+
+        System.out.println("Address: " + address);
+        System.out.println("Search Time: " + searchTime);
+        System.out.println("Available Parks: " + availableParks.size());
+
+        List<DistrictDto> filteredParks = availableParks.stream()
+                .map(park -> new DistrictDto(park, district))
                 .collect(Collectors.toList());
-    }
 
+        return new DistrictResponse(district.getLatitude(), district.getLongitude(), filteredParks);
+    }
     private boolean isParkAvailableAtTime(Park park, LocalTime searchTime) {
         LocalTime parkStartTime = park.getStartTime();
         LocalTime parkEndTime = park.getEndTime();
@@ -240,15 +251,5 @@ public class ParkService {
             throw new ParkLocationNotFoundException(ErrorCode.PARK_LOCATION_NOT_FOUND);
         }
         return parkLocationInfo;
-    }
-
-    private void processParkImage(Park park, List<ParkImageRequest> parkImageRequests) {
-        if (parkImageRequests != null) {
-            for (ParkImageRequest parkImageRequest : parkImageRequests) {
-                ParkImage parkImage = parkImageRequest.toEntity();
-                parkImage.setPark(park);
-                park.addParkImages(parkImage);
-            }
-        }
     }
 }

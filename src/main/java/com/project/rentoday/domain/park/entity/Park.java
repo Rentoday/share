@@ -68,11 +68,11 @@
         private String agNum;
 
         @NotNull
-        @Column(name = "start_time")
+        @Column(name = "start_time", columnDefinition = "TIME")
         private LocalTime startTime;
 
         @NotNull
-        @Column(name = "end_time")
+        @Column(name = "end_time", columnDefinition = "TIME")
         private LocalTime endTime;
 
         @Column

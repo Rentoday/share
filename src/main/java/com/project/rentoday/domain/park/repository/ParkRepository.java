@@ -6,7 +6,10 @@ import com.project.rentoday.domain.park.entity.ParkStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalTime;
 import java.util.List;
 
 public interface ParkRepository extends JpaRepository<Park, Long> {
@@ -16,4 +19,8 @@ public interface ParkRepository extends JpaRepository<Park, Long> {
 
     Page<Park> findByParkStatus(ParkStatus status, Pageable pageable);
 
-    List<Park> findByAddressContaining(String address);}
+    @Query("SELECT p FROM Park p WHERE LOWER(p.address) LIKE LOWER(CONCAT('%', :address, '%')) " +
+            "AND ((:searchTime BETWEEN p.startTime AND p.endTime) " +
+            "OR (p.startTime > p.endTime AND (:searchTime >= p.startTime OR :searchTime <= p.endTime)))")
+    List<Park> findAvailableParks(@Param("address") String address, @Param("searchTime") LocalTime searchTime);
+}

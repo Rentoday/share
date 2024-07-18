@@ -1,9 +1,6 @@
 package com.project.rentoday.domain.park.controller;
 
-import com.project.rentoday.domain.park.dto.CreateParkRequest;
-import com.project.rentoday.domain.park.dto.ParkDetailRequest;
-import com.project.rentoday.domain.park.dto.ParkResponse;
-import com.project.rentoday.domain.park.dto.UpdateParkRequest;
+import com.project.rentoday.domain.park.dto.*;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.service.ParkService;
 import io.swagger.annotations.Api;
@@ -107,10 +104,10 @@ public class ParkController {
     }
 
     @GetMapping("/filter")
-    @ResponseStatus(HttpStatus.OK)
-    public List<ParkResponse> getFilteredParks(
-            @RequestParam String address,
-            @RequestParam String time) {
-        return parkService.getFilteredParks(address, time);
+    public ResponseEntity<DistrictResponse> getFilteredParks(
+            @RequestParam("address") String address,
+            @RequestParam("time") String time) {
+        DistrictResponse response = parkService.getFilteredParks(address, time);
+        return ResponseEntity.ok(response);
     }
 }

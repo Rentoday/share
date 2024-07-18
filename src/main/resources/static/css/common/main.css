@@ -428,6 +428,55 @@ cssCopy.time-selector {
 }
 
 
+/* 주소 창 */
+.address-selector {
+  position: relative;
+}
+
+.address-display {
+  cursor: pointer;
+}
+
+.address-dropdown {
+  position: absolute;
+  width: 110px;
+  height: 250px;
+  border: 1px solid #00B202;
+  background-color: white;
+  overflow-y: auto;
+  z-index: 1000;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.address-dropdown::-webkit-scrollbar {
+  display: none;
+}
+
+.address-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.address-option {
+    border-bottom: 1px solid #00B202;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    text-align: center;
+}
+
+.address-option:hover {
+  background-color: #f0f0f0;
+}
+
+.address-option:last-child {
+  border-bottom: none;
+}
+
+
 /*로그인 했을 경우*/
 .auth-section {
     display: flex;
