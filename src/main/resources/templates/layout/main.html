@@ -134,6 +134,12 @@
                     <input type="text" class="text-input-car-number-1" placeholder="주차번호를 입력하세요" name="parkNum">
                 </div>
             </div>
+            <div class="container-parking-number">
+                <span class="text-title-parking-address">주소</span>
+                <div class="container-2">
+                    <input type="text" class="text-input-car-address-1" placeholder="주소를 입력하세요" name="parkAdd">
+                </div>
+            </div>
             <div class="container-time">
                 <span class="text-title-time">시간</span>
                 <div class="container-3">
@@ -223,6 +229,11 @@
             try {
                 const response = await api.get('/api/member/info');
                 const userInfo = response.data;
+
+                const profileImageSrc = userInfo.oauthId
+                    ? `${userInfo.profileImage}`
+                    : `/uploads/${userInfo.profileImage}`;
+
                 authSection.innerHTML = `
                     <button class="icon-button panmaetotal">판매등록</button>
                     <div class="notification-container">
@@ -238,7 +249,7 @@
                     </div>
                     <div class="profile-container">
                         <button class="icon-button profile">
-                            <img src="${userInfo.profileImage}" alt="프로필" class="profile-image">
+                            <img src="${profileImageSrc}" alt="프로필" class="profile-image">
                         </button>
                         <div class="profile-dropdown" style="display: none;">
                             <button class="dropdown-item mypage">마이페이지</button>
@@ -582,7 +593,7 @@ function moveMapToDistrict(districtInfo) {
     // 주차장 마커 표시
     function displayParkingMarkers(parkingInfos) {
     parkingInfos.forEach((info) => {
-        const markerPosition = new kakao.maps.LatLng(info.parkLatitude, info.parkLongitude);
+        const markerPosition = new kakao.maps.LatLng(info.latitude, info.longitude);
 
         // 커스텀 오버레이 컨텐츠 생성
         const content = document.createElement('div');
@@ -740,6 +751,7 @@ function setupRegistrationModal() {
                 // 폼 데이터 수집
                 const carNum = registrationModal.querySelector('[name="carNum"]').value;
                 const parkNum = registrationModal.querySelector('[name="parkNum"]').value;
+                const parkAdd = registrationModal.querySelector('[name="parkAdd"]').value;
                 const startTime = registrationModal.querySelector('.start-time-input').value;
                 const endTime = registrationModal.querySelector('.end-time-input').value;
                 const price = registrationModal.querySelector('[name="price"]').value;
@@ -752,6 +764,7 @@ function setupRegistrationModal() {
                 const keyData = {
                     carNum: carNum,
                     parkNum: parkNum,
+                    parkAdd: parkAdd,
                     startTime: startTime,
                     endTime: endTime,
                     price: price,

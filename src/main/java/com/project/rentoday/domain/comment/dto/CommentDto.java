@@ -22,9 +22,13 @@ public class CommentDto {
     @Getter
     @JsonFormat(pattern = "yy.MM.dd")
     public static class ReadResponse {
+        private Long id;
         private String content;
-        private String email;
+        private String name;
+        private int depth;
+        private Long parentId;
         private LocalDateTime createdAt;
+        private Boolean isAuth = false;
     }
 
     //댓글 수정
@@ -41,7 +45,7 @@ public class CommentDto {
     @Getter
     public static class DeleteRequest {
         private String email;
-        private Long parentId;
+        private Long commentId;
     }
 
     //대댓글 작성

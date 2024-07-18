@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.SimpleTimeZone;
 
 @RestController
 @RequestMapping("/api/comment")
@@ -18,9 +19,11 @@ public class CommentApiController {
     private final CommentService commentService;
 
     //댓글 조회
-    @GetMapping(value = "/{id}", produces = "text/plain; charset=UTF-8")
-    public ResponseEntity<List<CommentDto.ReadResponse>> readCommment(@PathVariable("id") Long id) {
-        List<CommentDto.ReadResponse> responses = commentService.readComment(id);
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<List<CommentDto.ReadResponse>> readCommment(@PathVariable(name = "id") Long id,
+                                                                      @AuthenticationPrincipal UserDetails principal) {
+        String email = principal.getUsername();
+        List<CommentDto.ReadResponse> responses = commentService.readComment(id, email);
 
         return ResponseEntity.ok().body(responses);
     }
@@ -59,13 +62,13 @@ public class CommentApiController {
     }
 
     //댓글 삭제
-    @DeleteMapping(value = "/{id}", produces = "text/plain; charset=UTF-8")
+    @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> updateComment(@AuthenticationPrincipal UserDetails principal
             ,@PathVariable("id") Long id
             ,@RequestBody CommentDto.DeleteRequest deleteRequest) {
         deleteRequest.setEmail(principal.getUsername());
-        deleteRequest.setParentId(id);
-        commentService.delateComment(deleteRequest);
+        deleteRequest.setCommentId(id);
+        commentService.deleteComment(deleteRequest);
         return ResponseEntity.ok().body("삭제되었습니다.");
     }
 }

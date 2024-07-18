@@ -106,6 +106,7 @@
   margin: 0 35px 224.1px 0;
   width: 212px;
   height: 212px;
+  border-radius: 50%;
 }
 .frame-page-join .container-password-check {
   margin-bottom: 4px;

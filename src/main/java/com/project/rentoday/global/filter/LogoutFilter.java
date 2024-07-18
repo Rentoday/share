@@ -68,10 +68,20 @@ public class LogoutFilter extends GenericFilterBean {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals("Refresh")) {
                     System.out.println(cookie.getValue());
+                    System.out.println(cookie.getValue());
+                    System.out.println(cookie.getValue());
+                    System.out.println(cookie.getValue());
+                    System.out.println(cookie.getValue());
+
                     refresh = cookie.getValue();
                 }
             }
 
+            System.out.println(refresh);
+            System.out.println(refresh);
+            System.out.println(refresh);
+            System.out.println(refresh);
+            System.out.println(refresh);
             System.out.println(refresh);
 
             //refresh null check
@@ -79,6 +89,11 @@ public class LogoutFilter extends GenericFilterBean {
 
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
+
+            System.out.println("토큰있따!!!!");
+            System.out.println("토큰있따!!!!");
+            System.out.println(refresh);
+            System.out.println("토큰있따!!!!");
 
             //expired check
             if(jwtService.isExpired(refresh)) {
