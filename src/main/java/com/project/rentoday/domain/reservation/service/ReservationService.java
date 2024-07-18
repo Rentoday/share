@@ -56,9 +56,9 @@ public class ReservationService {
             throw new ReservationNotAvailableException("선택한 예약 시간은 이용하실 수 없습니다.");
         }
 
-        if (!isDuplicatedCheckIn(park, checkIn)) {
-            throw new ReservationAlreadyExistsException("이미 예약된 시간입니다.");
-        }
+//        if (!isDuplicatedCheckIn(park, checkIn)) {
+//            throw new ReservationAlreadyExistsException("이미 예약된 시간입니다.");
+//        }
 
         Reservation reservation = new Reservation(member, park, null, checkIn, reservationUid, reservationName);
         Reservation savedReservation = reservationRepository.save(reservation);
@@ -120,12 +120,12 @@ public class ReservationService {
         return !checkIn.isBefore(park.getStartTime()) && !checkIn.isAfter(park.getEndTime());
     }
 
-    //사용자들끼리의 체크인 시간이 겹치지 않는지
-    private boolean isDuplicatedCheckIn(Park park, LocalTime checkIn) {
-        LocalTime checkOut = checkIn.plusMinutes(59);
-        List<Reservation> overlappingReservations = reservationRepository.findByParkAndCheckInBetween(park, checkIn, checkOut);
-        return !overlappingReservations.isEmpty();
-    }
+//    //사용자들끼리의 체크인 시간이 겹치지 않는지
+//    private boolean isDuplicatedCheckIn(Park park, LocalTime checkIn) {
+//        LocalTime checkOut = checkIn.plusMinutes(59);
+//        List<Reservation> overlappingReservations = reservationRepository.findByParkAndCheckInBetween(park, checkIn, checkOut);
+//        return !overlappingReservations.isEmpty();
+//    }
 
     private Reservation getReservationById(Long id) {
         return reservationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("해당 번호로 예약을 찾을 수 없습니다."));

@@ -15,7 +15,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -112,10 +111,11 @@ public class ParkController {
         return ResponseEntity.ok(parkDetail);
     }
 
-    @GetMapping("/{parkId}/reserved-times")
-    public ResponseEntity<List<LocalTime>> getReservedTimes(@PathVariable Long parkId) {
-        List<LocalTime> reservedTimes = parkService.getReservedTimes(parkId);
-        return ResponseEntity.ok(reservedTimes);
+    @GetMapping("/{parkId}/available-times")
+    public ResponseEntity<List<String>> getAvailableTimes(@PathVariable Long parkId) {
+        List<String> availableTimes = parkService.getReservedTimes(parkId);
+        System.out.println("availableTimes = " + availableTimes);
+        return ResponseEntity.ok(availableTimes);
     }
 
     @GetMapping("/filter")

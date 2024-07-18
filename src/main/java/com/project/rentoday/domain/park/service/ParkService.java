@@ -29,10 +29,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import java.io.IOException;
-import java.time.LocalDateTime;
+
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -120,14 +122,18 @@ public class ParkService {
         return new ParkDetailRequest(park);
     }
     @Transactional(readOnly = true)
-    public List<LocalTime> getReservedTimes(Long parkId) {
+    public List<String> getReservedTimes(Long parkId) {
+        LocalTime startTime = LocalTime.of(0, 0); // 오늘 00:00
+        LocalTime endTime = LocalTime.of(23, 59); // 오늘 23:59
+
         return reservationRepository.findByParkIdAndCheckInBetween(
                         parkId,
-                        LocalDateTime.now(),
-                        LocalDateTime.now().plusDays(1)
+                        startTime,
+                        endTime
                 ).stream()
-                .map(Reservation::getCheckIn)
+                .map(reservation -> reservation.getCheckIn().format(DateTimeFormatter.ofPattern("HH:mm")))
                 .collect(Collectors.toList());
+
     }
 
     @Transactional(readOnly = true)
@@ -247,6 +253,41 @@ public class ParkService {
 
         return new DistrictResponse(district.getLatitude(), district.getLongitude(), filteredParks);
     }
+
+    @Transactional
+    public List<String> getAvailableTimes(Long parkId) {
+        Park park = parkRepository.findById(parkId).orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
+        LocalTime startTime = park.getStartTime();
+        LocalTime endTime = park.getEndTime();
+
+        List<Reservation> reservations = reservationRepository.findByParkIdAndCheckInBetween(
+                parkId,
+                startTime,
+                endTime
+        );
+
+        List<LocalTime> reservedTimes = reservations.stream()
+                .flatMap(reservation -> {
+                    LocalTime checkIn = reservation.getCheckIn();
+                    LocalTime checkOut = reservation.getCheckOut();
+                    List<LocalTime> times = new ArrayList<>();
+                    for (LocalTime time = checkIn; time.isBefore(checkOut.plusMinutes(1)); time = time.plusHours(1)) {
+                        times.add(time);
+                    }
+                    return times.stream();
+                })
+                .collect(Collectors.toList());
+
+        List<String> availableTimes = new ArrayList<>();
+        for (LocalTime time = startTime; time.isBefore(endTime.plusMinutes(1)); time = time.plusHours(1)) {
+            if (!reservedTimes.contains(time)) {
+                availableTimes.add(time.format(DateTimeFormatter.ofPattern("HH:mm")));
+            }
+        }
+
+        return availableTimes;
+    }
+
     private boolean isParkAvailableAtTime(Park park, LocalTime searchTime) {
         LocalTime parkStartTime = park.getStartTime();
         LocalTime parkEndTime = park.getEndTime();
