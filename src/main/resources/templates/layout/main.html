@@ -137,11 +137,21 @@
             <div class="container-time">
                 <span class="text-title-time">시간</span>
                 <div class="container-3">
-                    <input type="text" class="text-input-start-time" placeholder="시작 시간" name="startTime">
+                    <div class="time-selector start-time-selector">
+                        <input type="text" class="time-input start-time-input" placeholder="시작 시간" readonly>
+                        <div class="time-dropdown start-time-dropdown">
+                            <div class="time-list start-time-list"></div>
+                        </div>
+                    </div>
                 </div>
                 <span class="text-wave">~</span>
                 <div class="container-4">
-                    <input type="text" class="text-input-end-time" placeholder="종료 시간" name="endTime">
+                    <div class="time-selector end-time-selector">
+                        <input type="text" class="time-input end-time-input" placeholder="종료 시간" readonly>
+                        <div class="time-dropdown end-time-dropdown">
+                            <div class="time-list end-time-list"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="container-time-price">
@@ -677,47 +687,18 @@ function moveMapToDistrict(districtInfo) {
         });
 }
 
+//
 
-
-    function setupRegistrationModal() {
-        const registrationButton = document.querySelector('.icon-button.panmaetotal');
-        const registrationModal = document.getElementById('registrationModal');
-        const closeRegistrationModal = document.getElementById('closeRegistrationModal');
-
-        if (registrationButton && registrationModal && closeRegistrationModal) {
-            registrationButton.addEventListener('click', function() {
-                registrationModal.style.display = 'flex';
-            });
-
-            closeRegistrationModal.addEventListener('click', function() {
-                registrationModal.style.display = 'none';
-            });
-
-            window.addEventListener('click', function(event) {
-                if (event.target == registrationModal) {
-                    registrationModal.style.display = 'none';
-                }
-            });
-
-            const requestButton = registrationModal.querySelector('.button-request');
-            if (requestButton) {
-                requestButton.addEventListener('click', function() {
-                    console.log('등록 요청');
-                    // 여기에 등록 요청 처리 로직을 추가하세요
-                });
-            }
-        } else {
-            console.error('판매등록 모달 요소를 찾을 수 없습니다.');
-        }
-    }
-
-    function setupRegistrationModal() {
+function setupRegistrationModal() {
     const registrationButton = document.querySelector('.icon-button.panmaetotal');
     const registrationModal = document.getElementById('registrationModal');
     const closeRegistrationModal = document.getElementById('closeRegistrationModal');
     const pdfUpload = registrationModal.querySelector('#pdfUpload');
     const pdfFileName = registrationModal.querySelector('#pdfFileName');
     const pdfUploadLabel = registrationModal.querySelector('.pdf-upload-label');
+    const requestButton = registrationModal.querySelector('.button-request');
+    const imageUpload = registrationModal.querySelector('#imageUpload');
+    const imagePreview = registrationModal.querySelector('#imagePreview');
 
     if (pdfUpload && pdfFileName && pdfUploadLabel) {
         pdfUpload.addEventListener('change', function(event) {
@@ -752,17 +733,68 @@ function moveMapToDistrict(districtInfo) {
             }
         });
 
-        const requestButton = registrationModal.querySelector('.button-request');
         if (requestButton) {
             requestButton.addEventListener('click', function() {
                 console.log('등록 요청');
-                // 여기에 등록 요청 처리 로직을 추가하세요
+
+                // 폼 데이터 수집
+                const carNum = registrationModal.querySelector('[name="carNum"]').value;
+                const parkNum = registrationModal.querySelector('[name="parkNum"]').value;
+                const startTime = registrationModal.querySelector('.start-time-input').value;
+                const endTime = registrationModal.querySelector('.end-time-input').value;
+                const price = registrationModal.querySelector('[name="price"]').value;
+                const content = registrationModal.querySelector('[name="content"]').value;
+                const imageFiles = imageUpload.files;
+                const pdfFile = pdfUpload.files[0];
+
+                // FormData 객체 생성
+                const formData = new FormData();
+                const keyData = {
+                    carNum: carNum,
+                    parkNum: parkNum,
+                    startTime: startTime,
+                    endTime: endTime,
+                    price: price,
+                    content: content
+                };
+
+                formData.append('key', new Blob([JSON.stringify(keyData)], { type: 'application/json' }));
+
+                // 이미지 파일 추가
+                for (let i = 0; i < imageFiles.length; i++) {
+                    formData.append('photo', imageFiles[i]);
+                }
+
+                // PDF 파일 추가
+                if (pdfFile) {
+                    formData.append('pdf', pdfFile);
+                }
+
+                // API 요청 보내기
+                api.post('/api/parks', formData, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'multipart/form-data'
+                    }
+                })
+                .then(response => {
+                    console.log('등록 성공:', response.data);
+                    alert('주차장이 성공적으로 등록되었습니다.');
+                    registrationModal.style.display = 'none'; // 모달 닫기
+                    loadParkingInfo(); // 주차장 정보 새로고침
+                })
+                .catch(error => {
+                    if (error.response) {
+                        // 서버가 응답한 에러
+                        alert(error.response.data);
+                    } else {
+                        // 요청을 보내지 못한 경우의 에러
+                        alert('등록 중 오류가 발생했습니다. 다시 시도해주세요.');
+                    }
+                    console.error('Error:', error);
+                });
             });
         }
-
-        // 이미지 업로드 기능 추가
-        const imageUpload = registrationModal.querySelector('#imageUpload');
-        const imagePreview = registrationModal.querySelector('#imagePreview');
 
         if (imageUpload && imagePreview) {
             imageUpload.addEventListener('change', function(event) {
@@ -793,6 +825,68 @@ function moveMapToDistrict(districtInfo) {
 }
 
 
+function setupTimeSelectors() {
+    const startTimeInput = document.querySelector('.start-time-input');
+    const startTimeDropdown = document.querySelector('.start-time-dropdown');
+    const startTimeList = document.querySelector('.start-time-list');
+    const endTimeInput = document.querySelector('.end-time-input');
+    const endTimeDropdown = document.querySelector('.end-time-dropdown');
+    const endTimeList = document.querySelector('.end-time-list');
+
+    function createTimeOptions(container, isEndTime = false) {
+        container.innerHTML = '';
+        for (let i = 0; i < 24; i++) {
+            const timeOption = document.createElement('div');
+            timeOption.classList.add('time-option');
+            timeOption.textContent = `${i.toString().padStart(2, '0')}:00`;
+            timeOption.addEventListener('click', function() {
+                if (isEndTime) {
+                    endTimeInput.value = this.textContent;
+                    endTimeDropdown.style.display = 'none';
+                } else {
+                    startTimeInput.value = this.textContent;
+                    startTimeDropdown.style.display = 'none';
+                    updateEndTimeOptions(i);
+                }
+            });
+            container.appendChild(timeOption);
+        }
+    }
+
+    function updateEndTimeOptions(startHour) {
+        createTimeOptions(endTimeList, true);
+        const endTimeOptions = endTimeList.querySelectorAll('.time-option');
+        endTimeOptions.forEach((option, index) => {
+            if (index <= startHour) {
+                option.style.display = 'none';
+            } else {
+                option.style.display = 'block';
+            }
+        });
+    }
+
+    createTimeOptions(startTimeList);
+    createTimeOptions(endTimeList, true);
+
+    startTimeInput.addEventListener('click', () => {
+        startTimeDropdown.style.display = startTimeDropdown.style.display === 'none' ? 'block' : 'none';
+    });
+
+    endTimeInput.addEventListener('click', () => {
+        endTimeDropdown.style.display = endTimeDropdown.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!startTimeInput.contains(event.target) && !startTimeDropdown.contains(event.target)) {
+            startTimeDropdown.style.display = 'none';
+        }
+        if (!endTimeInput.contains(event.target) && !endTimeDropdown.contains(event.target)) {
+            endTimeDropdown.style.display = 'none';
+        }
+    });
+}
+
+
     // 초기화 및 이벤트 리스너 설정
     await updateUI();
     await fetchAndUpdateNotices();
@@ -803,6 +897,7 @@ function moveMapToDistrict(districtInfo) {
     loadParkingInfo();
     setupProfileDropdown(); // 프로필 드롭다운 설정 추가
     setupRegistrationModal(); // 판매등록 모달 설정 추가
+    setupTimeSelectors();
 
     // 검색 버튼 이벤트 리스너
     document.querySelector('.search-button').addEventListener('click', filterParkingInfo);

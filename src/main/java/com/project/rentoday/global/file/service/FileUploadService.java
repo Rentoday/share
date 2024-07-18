@@ -47,5 +47,33 @@ public class FileUploadService {
 
         return saveFileName;
     }
+
+    //프로필 이미지
+    public String pdfUpload(MultipartFile uploadImage) throws IOException {
+        String originalFileExtension = "";
+        String fileName = uploadImage.getOriginalFilename();
+        String fileExtension = uploadImage.getOriginalFilename().substring(fileName.lastIndexOf(".")+1);
+
+        if (uploadImage.getSize() > 10 * 1024 * 1024) { // 10MB 제한
+            throw new FileException(FileErrorCode.FILE_MAX_SIZE_ERROR);
+        }
+        System.out.println(fileExtension);
+        switch (fileExtension) {
+            case "pdf":
+                originalFileExtension = ".pdf";
+                break;
+            case "PDF":
+                originalFileExtension = ".PDF";
+                break;
+            default:
+                throw new FileException(FileErrorCode.FILE_EXTENSION_ERROR);
+        }
+        String saveFileName = UUID.randomUUID().toString() + originalFileExtension;
+        File upload = new File(UPLOAD_ROOT, saveFileName);
+
+        uploadImage.transferTo(upload);
+
+        return saveFileName;
+    }
 }
 
