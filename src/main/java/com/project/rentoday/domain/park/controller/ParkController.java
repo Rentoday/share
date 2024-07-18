@@ -14,7 +14,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -98,8 +97,8 @@ public class ParkController {
     }
 
     @GetMapping("/{parkId}/reserved-times")
-    public ResponseEntity<List<LocalTime>> getReservedTimes(@PathVariable Long parkId) {
-        List<LocalTime> reservedTimes = parkService.getReservedTimes(parkId);
+    public ResponseEntity<List<String>> getReservedTimes(@PathVariable Long parkId) {
+        List<String> reservedTimes = parkService.getReservedTimes(parkId);
         return ResponseEntity.ok(reservedTimes);
     }
 

@@ -57,8 +57,8 @@ if (!parkId) {
     window.location.href = '/';
 }
 
-let parkDetail;
-let reservedTimes;
+let parkDetail = {};
+let reservedTimes = [];
 let selectedTime;
 let currentUser;
 
@@ -77,79 +77,107 @@ async function fetchParkDetail() {
         const response = await api.get(`/api/parks/${parkId}`);
         parkDetail = response.data;
         displayParkDetail();
+        await fetchReservedTimes();
     } catch (error) {
-        console.error('주차장 정보를 가져오는데 실패했습니다:', error);
-        throw error;
+        console.error('주차장 상세 정보를 가져오는데 실패했습니다:', error);
     }
 }
 
 async function fetchReservedTimes() {
     try {
         const response = await api.get(`/api/parks/${parkId}/reserved-times`);
-        reservedTimes = response.data;
+        reservedTimes = response.data.map(time => {
+            const [hours, minutes] = time.split(':');
+            return { hours: parseInt(hours), minutes: parseInt(minutes) };
+        });
         displayTimeSlots();
     } catch (error) {
         console.error('예약된 시간을 가져오는데 실패했습니다:', error);
-        throw error;
     }
 }
 
 function displayParkDetail() {
-    document.getElementById('parkingNum').textContent = parkDetail.parkingNum;
-    document.getElementById('address').textContent = parkDetail.address;
-    document.getElementById('operatingHours').textContent = `${formatTime(parkDetail.startTime)} - ${formatTime(parkDetail.endTime)}`;
-    document.getElementById('price').textContent = parkDetail.price;
-    document.getElementById('agency').textContent = parkDetail.agency;
-    document.getElementById('agNum').textContent = parkDetail.agNum;
-    document.getElementById('content').textContent = parkDetail.content;
+    if (!parkDetail) {
+        console.error('주차장 상세 정보가 없습니다.');
+        return;
+    }
+
+    document.getElementById('parkingNum').textContent = parkDetail.parkingNum || '';
+    document.getElementById('address').textContent = parkDetail.address || '';
+    document.getElementById('operatingHours').textContent = parkDetail.startTime && parkDetail.endTime
+        ? `${formatTime(parseTime(parkDetail.startTime))} - ${formatTime(parseTime(parkDetail.endTime))}`
+        : '운영 시간 정보 없음';
+    document.getElementById('price').textContent = parkDetail.price || '';
+    document.getElementById('agency').textContent = parkDetail.agency || '';
+    document.getElementById('agNum').textContent = parkDetail.agNum || '';
+    document.getElementById('content').textContent = parkDetail.content || '';
 
     const imageContainer = document.getElementById('imageContainer');
-    parkDetail.parkImages.slice(0, 3).forEach(image => {
-        const img = document.createElement('img');
-        img.src = image.imageUrl;
-        imageContainer.appendChild(img);
-    });
+    imageContainer.innerHTML = ''; // 기존 이미지 제거
+    if (parkDetail.parkImages && parkDetail.parkImages.length > 0) {
+        parkDetail.parkImages.slice(0, 3).forEach(image => {
+            const img = document.createElement('img');
+            img.src = image.imageUrl;
+            imageContainer.appendChild(img);
+        });
+    }
 }
 
-    function displayTimeSlots() {
-        const timeSlotsContainer = document.getElementById('timeSlots');
-        const startTime = new Date(parkDetail.startTime);
-        const endTime = new Date(parkDetail.endTime);
+function displayTimeSlots() {
+    const timeSlotsContainer = document.getElementById('timeSlots');
+    timeSlotsContainer.innerHTML = ''; // 기존 슬롯 제거
 
-        while (startTime < endTime) {
-            const button = document.createElement('button');
-            button.textContent = formatTime(startTime);
-            button.classList.add('time-slot');
+    if (!parkDetail.startTime || !parkDetail.endTime) {
+        console.error('운영 시간 정보가 없습니다.');
+        return;
+    }
 
-            if (isReserved(startTime)) {
-                button.classList.add('reserved');
-                button.disabled = true;
-            } else {
-                button.onclick = () => selectTimeSlot(startTime);
-            }
+    let currentTime = parseTime(parkDetail.startTime);
+    const endTime = parseTime(parkDetail.endTime);
 
-            timeSlotsContainer.appendChild(button);
-            startTime.setHours(startTime.getHours() + 1);
+    while (currentTime.hours < endTime.hours || (currentTime.hours === endTime.hours && currentTime.minutes < endTime.minutes)) {
+        const button = document.createElement('button');
+        button.textContent = formatTime(currentTime);
+        button.classList.add('time-slot');
+
+        if (isReserved(currentTime)) {
+            button.classList.add('reserved');
+            button.disabled = true;
+        } else {
+            button.onclick = () => selectTimeSlot(currentTime);
         }
-    }
 
-    function isReserved(time) {
-        return reservedTimes.some(reservedTime =>
-            new Date(reservedTime).getTime() === time.getTime()
-        );
+        timeSlotsContainer.appendChild(button);
+        currentTime = addHour(currentTime);
     }
+}
 
-    function selectTimeSlot(time) {
-        selectedTime = time;
-        document.getElementById('selectedTime').textContent = formatTime(time);
-        document.getElementById('estimatedPrice').textContent = parkDetail.price;
+function isReserved(time) {
+    return reservedTimes.some(reservedTime =>
+        reservedTime.hours === time.hours &&
+        reservedTime.minutes === time.minutes
+    );
+}
+
+function formatTime(time) {
+    return `${time.hours.toString().padStart(2, '0')}:${time.minutes.toString().padStart(2, '0')}`;
+}
+
+function parseTime(timeString) {
+    if (!timeString) return { hours: 0, minutes: 0 };
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return { hours, minutes };
+}
+
+function addHour(time) {
+    let newHours = time.hours + 1;
+    if (newHours >= 24) {
+        newHours -= 24;
     }
+    return { hours: newHours, minutes: time.minutes };
+}
 
-    function formatTime(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-
+document.addEventListener('DOMContentLoaded', fetchParkDetail);
     document.getElementById('reserveButton').onclick = async () => {
     if (!selectedTime) {
         alert('시간을 선택해주세요.');

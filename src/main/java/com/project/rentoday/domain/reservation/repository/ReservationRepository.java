@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +20,13 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByParkAndCheckInBetween(Park park, LocalTime checkIn, LocalTime checkOut);
 
-    List<Reservation> findByParkIdAndCheckInBetween(Long parkId, LocalDateTime checkIn, LocalDateTime checkOut);
+    @Query("SELECT r FROM Reservation r WHERE r.park.id = :parkId AND r.checkIn BETWEEN :checkIn AND :checkOut")
+    List<Reservation> findByParkIdAndCheckInBetween(
+            @Param("parkId") Long parkId,
+            @Param("checkIn") LocalTime checkIn,
+            @Param("checkOut") LocalTime checkOut
+    );
+
 
     Page<Reservation> findByMember(Member member, Pageable pageable);
 

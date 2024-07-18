@@ -37,11 +37,11 @@ public class Reservation extends BaseEntity {
 
     @NotNull
     @FutureOrPresent
-    @Column(name = "check_in")
+    @Column(name = "check_in", columnDefinition = "TIME")
     private LocalTime checkIn;
 
     @NotNull
-    @Column(name = "check_out")
+    @Column(name = "check_out", columnDefinition = "TIME")
     private LocalTime checkOut;
 
     @Convert(converter = DurationConverter.class)

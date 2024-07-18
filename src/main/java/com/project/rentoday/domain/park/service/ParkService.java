@@ -26,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -96,13 +97,17 @@ public class ParkService {
         return new ParkDetailRequest(park);
     }
     @Transactional(readOnly = true)
-    public List<LocalTime> getReservedTimes(Long parkId) {
+    public List<String> getReservedTimes(Long parkId) {
+        LocalDate today = LocalDate.now();
+        LocalTime startTime = LocalTime.of(0, 0); // 오늘 00:00
+        LocalTime endTime = LocalTime.of(23, 59); // 오늘 23:59
+
         return reservationRepository.findByParkIdAndCheckInBetween(
                         parkId,
-                        LocalDateTime.now(),
-                        LocalDateTime.now().plusDays(1)
+                        startTime,
+                        endTime
                 ).stream()
-                .map(Reservation::getCheckIn)
+                .map(reservation -> reservation.getCheckIn().format(DateTimeFormatter.ofPattern("HH:mm")))
                 .collect(Collectors.toList());
     }
 
