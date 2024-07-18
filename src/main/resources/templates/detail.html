@@ -39,7 +39,7 @@
         <p>주차장 좋습니다.</p>
     </div>
     <div class="review-section">
-        <h3>리뷰</h3>
+        <h3>댓글</h3>
         <div id="comments"></div>
         <textarea id="commentText" placeholder="댓글을 입력하세요" name="content"></textarea>
         <button id="submitComment">댓글 작성</button>
@@ -117,7 +117,7 @@ function displayParkDetail() {
     if (parkDetail.parkImages && parkDetail.parkImages.length > 0) {
         parkDetail.parkImages.slice(0, 3).forEach(image => {
             const img = document.createElement('img');
-            img.src = image.imageUrl;
+            img.src = `/uploads/${image.imageUrl}`;
             imageContainer.appendChild(img);
         });
     }
@@ -227,7 +227,104 @@ async function submitComment() {
     }
 }
 
-async function updateComment(commentId, newContent) {
+
+function displayComments(comments) {
+    const commentsContainer = document.getElementById('comments');
+    commentsContainer.innerHTML = '';
+
+    // 댓글을 ID를 키로 하는 맵으로 변환
+    const commentMap = new Map();
+    comments.forEach(comment => {
+        commentMap.set(comment.id, {...comment, children: []});
+    });
+
+    // 대댓글을 부모 댓글의 children 배열에 추가
+    comments.forEach(comment => {
+        if (comment.parentId) {
+            const parentComment = commentMap.get(comment.parentId);
+            if (parentComment) {
+                parentComment.children.push(comment);
+            }
+        }
+    });
+
+    // 최상위 댓글만 렌더링 (대댓글은 재귀적으로 렌더링됨)
+    comments.filter(comment => comment.depth === 0).forEach(comment => {
+        renderComment(comment, commentsContainer, commentMap);
+    });
+}
+
+function renderComment(comment, container, commentMap) {
+    const commentElement = document.createElement('div');
+    commentElement.classList.add('comment');
+
+    if (comment.depth === 1) {
+        commentElement.classList.add('reply-comment');
+    }
+
+    let commentHTML = '';
+    if (comment.depth === 1) {
+        commentHTML += '<span class="reply-indicator">ㄴ</span>';
+    }
+
+    commentHTML += `
+        <div class="comment-header">
+            <span class="comment-author">${comment.name}</span>
+            <span class="comment-date">${comment.createdAt}</span>
+        </div>
+        <p class="comment-content">${comment.content}</p>
+        <div class="comment-actions">
+    `;
+
+    if (comment.depth === 0) {
+        commentHTML += `<button onclick="showReplyForm(${comment.id})">답글</button>`;
+    }
+
+    if (comment.isAuth) {
+        commentHTML += `
+            <button onclick="updateComment(${comment.id})">수정</button>
+            <button onclick="deleteComment(${comment.id})">삭제</button>
+        `;
+    }
+
+    commentHTML += `</div>`;
+
+    if (comment.depth === 0) {
+        commentHTML += `
+            <div id="replyForm-${comment.id}" class="reply-form" style="display: none;">
+                <textarea id="replyText-${comment.id}" placeholder="답글을 입력하세요" name="content"></textarea>
+                <button onclick="submitReply(${comment.id})">답글 작성</button>
+            </div>
+        `;
+    }
+
+    commentElement.innerHTML = commentHTML;
+    container.appendChild(commentElement);
+
+    const childComments = commentMap.get(comment.id).children;
+    if (childComments && childComments.length > 0) {
+        childComments.forEach(childComment => {
+            renderComment(childComment, container, commentMap);
+        });
+    }
+}
+
+window.fetchComments = async function() {
+    try {
+        const response = await api.get(`/api/comment/${parkId}`);
+        displayComments(response.data);
+    } catch (error) {
+        console.error('댓글을 가져오는데 실패했습니다:', error);
+        alert('댓글을 가져오는데 실패했습니다.');
+    }
+}
+
+window.updateComment = async function(commentId) {
+    const newContent = prompt('수정할 내용을 입력하세요:');
+    if (!newContent) {
+        return; // 사용자가 취소를 누르거나 빈 문자열을 입력한 경우
+    }
+
     const updateRequest = {
         content: newContent
     };
@@ -242,50 +339,56 @@ async function updateComment(commentId, newContent) {
     }
 }
 
-async function deleteComment(commentId) {
-    try {
-        await api.delete(`/api/comment/${commentId}`);
-        alert('댓글이 삭제되었습니다.');
-        fetchComments();
-    } catch (error) {
-        console.error('댓글 삭제에 실패했습니다:', error);
-        alert('댓글 삭제에 실패했습니다.');
+    window.showReplyForm = function(commentId) {
+        const replyForm = document.getElementById(`replyForm-${commentId}`);
+        replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
     }
-}
 
-async function fetchComments() {
-    try {
-        const response = await api.get(`/api/comment/${parkId}`);
-        displayComments(response.data);
-    } catch (error) {
-        console.error('댓글을 가져오는데 실패했습니다:', error);
-        alert('댓글을 가져오는데 실패했습니다.');
+    window.submitReply = async function(commentId) {
+        const replyText = document.getElementById(`replyText-${commentId}`).value;
+        if (replyText.trim()) {
+            const createReplyRequest = {
+                content: replyText
+            };
+
+            try {
+                await api.post(`/api/comment/reply/${commentId}`, createReplyRequest);
+                alert('답글이 작성되었습니다.');
+                document.getElementById(`replyForm-${commentId}`).style.display = 'none';
+                document.getElementById(`replyText-${commentId}`).value = '';
+                fetchComments(); // 댓글 목록을 새로고침
+            } catch (error) {
+                console.error('답글 작성에 실패했습니다:', error);
+                alert('답글 작성에 실패했습니다.');
+            }
+        } else {
+            alert('답글 내용을 입력해주세요.');
+        }
     }
-}
 
-    function displayComments(comments) {
-        const commentsContainer = document.getElementById('comments');
-        commentsContainer.innerHTML = '';
 
-        comments.forEach(comment => {
-            const commentElement = document.createElement('div');
-            commentElement.classList.add('comment');
-            commentElement.innerHTML = `
-                <p>${comment.content}</p>
-                <button onclick="updateComment(${comment.id}, prompt('수정할 내용을 입력하세요:'))">수정</button>
-                <button onclick="deleteComment(${comment.id})">삭제</button>
-            `;
-            commentsContainer.appendChild(commentElement);
-        });
+     window.deleteComment = async function(commentId) {
+        const confirmDelete = confirm("댓글을 삭제하시겠습니까?");
+        if (confirmDelete) {
+            try {
+                await api.delete(`/api/comment/${commentId}`);
+                alert('댓글이 삭제되었습니다.');
+                fetchComments(); // 댓글 목록을 새로고침
+            } catch (error) {
+                console.error('댓글 삭제에 실패했습니다:', error);
+                alert('댓글 삭제에 실패했습니다.');
+            }
+        }
     }
+
 
     document.getElementById('submitComment').onclick = submitComment;
 
     // 페이지 로드 시 실행
     fetchCurrentUser().catch(error => alert(error.message));
-    fetchParkDetail().catch(error => alert(error.message));
-    fetchReservedTimes().catch(error => alert(error.message));
-    fetchComments().catch(error => alert(error.message));
+fetchParkDetail().catch(error => alert(error.message));
+fetchReservedTimes().catch(error => alert(error.message));
+fetchComments().catch(error => alert(error.message));
     });
 </script>
 </body>

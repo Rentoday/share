@@ -21,6 +21,7 @@ public class CreateParkRequest {
     private String member;
     private String carNum;
     private String parkNum;
+    private String parkAdd;
     private LocalTime startTime;
     private LocalTime endTime;
     private double price;
@@ -29,6 +30,8 @@ public class CreateParkRequest {
     private String latitude;
     private String longitude;
     private String confirmation;
+    private String institutionNm;
+    private String phone;
     private MultipartFile[] photo;
     private MultipartFile pdf;
 
@@ -36,11 +39,12 @@ public class CreateParkRequest {
     private List<ParkImageRequest> parkImages;
 
     @Builder
-    public CreateParkRequest(String member, String carNum, String parkNum, String address,
+    public CreateParkRequest(String member, String carNum, String parkAdd, String parkNum, String address,
                              LocalTime startTime, LocalTime endTime, String latitude, String longitude,
                              double price, String content, String confirmation, List<ParkImageRequest> parkImages) {
         this.member = member;
         this.carNum = carNum;
+        this.parkAdd = parkAdd;
         this.parkNum = parkNum;
         this.address = address;
         this.startTime = startTime;

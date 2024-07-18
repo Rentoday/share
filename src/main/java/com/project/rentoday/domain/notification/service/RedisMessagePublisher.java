@@ -32,7 +32,16 @@ public class RedisMessagePublisher {
     }
 
     public void publish(ChannelTopic topic, NotificationDto.CreateRequest createRequest) {
-        System.out.println("메시지 전송");
+        System.out.println("메시지 전송@@@@");
+        System.out.println("메시지 전송@@@@");
+        System.out.println("메시지 전송@@@@");
+        System.out.println("메시지 전송@@@@");
+        System.out.println("메시지 전송@@@@");
+        System.out.println("메시지 전송@@@@");
+        System.out.println("메시지 전송@@@@");
+        System.out.println("메시지 전송@@@@");
+        System.out.println("메시지 전송@@@@");
+        System.out.println("메시지 전송@@@@");
         redisTemplate.convertAndSend(topic.getTopic(), createRequest);
     }
 

@@ -27,7 +27,7 @@ public class MemberService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
 
-        return new MemberDto.ReadResponse(member.getEmail(), member.getName(), member.getPhone(), member.getProfileImage(), member.getCreatedDate());
+        return new MemberDto.ReadResponse(member.getEmail(), member.getName(), member.getPhone(), member.getProfileImage(), member.getOauthId(), member.getCreatedDate());
     }
 
     //회원 조회
@@ -60,7 +60,7 @@ public class MemberService {
         member.updateProfile(bCryptPasswordEncoder.encode(updateRequest.getPassword()), fileUploadService.profileImageUpload(updateRequest.getProfileImage()));
         memberRepository.save(member);
 
-        return new MemberDto.ReadResponse(member.getEmail(), member.getName(), member.getPhone(), member.getProfileImage(), member.getCreatedDate());
+        return new MemberDto.ReadResponse(member.getEmail(), member.getName(), member.getPhone(), member.getProfileImage(), member.getOauthId(), member.getCreatedDate());
     }
 
     //회원 탈퇴

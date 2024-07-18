@@ -105,6 +105,11 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         //HTTP 인증 방식은 RFC7235정의에 따라서 아래 인증 헤더 형태를 가져야한다. Bearer 접두사가 필수다
         response.addHeader("Authorization", "Bearer " + accessToken);
         response.addCookie(createCookie("Refresh", refreshToken));
+        System.out.println(refreshToken + "발급");
+        System.out.println(refreshToken + "발급");
+        System.out.println(refreshToken + "발급");
+        System.out.println(refreshToken + "발급");
+        System.out.println(refreshToken + "발급");
         response.setStatus(HttpStatus.OK.value());
     }
 
@@ -129,9 +134,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         Cookie cookie = new Cookie(key, value);
         //쿠키의 생명주기
-        cookie.setMaxAge(24*60*60);
+        cookie.setMaxAge(60*60*60);
 //        cookie.setSecure(true);
-//        cookie.setPath("/");
+       cookie.setPath("/");
         //js의 접근을 막는다.
         cookie.setHttpOnly(false);
 

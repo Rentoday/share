@@ -47,6 +47,7 @@ public class MemberDto {
         private String name;
         private String phone;
         private String profileImage;
+        private String oauthId;
         private LocalDateTime createdAt;
     }
 
