@@ -6,16 +6,19 @@ import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
 @Getter
+@Setter
 @NoArgsConstructor
 public class CreateParkRequest {
 
-    private Member member;
+    private String member;
     private String carNum;
     private String parkNum;
     private LocalTime startTime;
@@ -26,12 +29,14 @@ public class CreateParkRequest {
     private String latitude;
     private String longitude;
     private String confirmation;
+    private MultipartFile[] photo;
+    private MultipartFile pdf;
 
     @Size(max = 3)
     private List<ParkImageRequest> parkImages;
 
     @Builder
-    public CreateParkRequest(Member member, String carNum, String parkNum, String address,
+    public CreateParkRequest(String member, String carNum, String parkNum, String address,
                              LocalTime startTime, LocalTime endTime, String latitude, String longitude,
                              double price, String content, String confirmation, List<ParkImageRequest> parkImages) {
         this.member = member;
@@ -48,26 +53,4 @@ public class CreateParkRequest {
         this.parkImages = parkImages;
     }
 
-    public Park toEntity() {
-        Park park = Park.builder()
-                .member(member)
-                .carNum(carNum)
-                .parkingNum(parkNum)
-                .address(address)
-                .latitude(latitude)
-                .longitude(longitude)
-                .startTime(startTime)
-                .endTime(endTime)
-                .price(price)
-                .content(content)
-                .confirmation(confirmation)
-                .build();
-
-        if (parkImages != null) {
-            for (ParkImageRequest parkImage : parkImages) {
-                park.addParkImages(parkImage.toEntity());
-            }
-        }
-        return park;
-    }
 }

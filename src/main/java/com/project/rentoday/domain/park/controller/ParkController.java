@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalTime;
 import java.util.List;
@@ -27,10 +28,24 @@ public class ParkController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
-    public Park registerPark(@RequestBody final CreateParkRequest request) {
-        Park registeredPark = parkService.register(request);
+    public Park registerPark(@RequestPart(value = "key") CreateParkRequest createRequest,
+                             @RequestPart(value = "photo", required = false) MultipartFile[] photos,
+                             @RequestPart(value = "pdf", required = false) MultipartFile pdf,
+                             @AuthenticationPrincipal UserDetails principal) {
+        createRequest.setMember(principal.getUsername());
+        createRequest.setPhoto(photos);
+        createRequest.setPdf(pdf);
+        System.out.println(createRequest.getParkNum());
+        System.out.println(createRequest.getAddress());
+        System.out.println(createRequest.getContent());
+        System.out.println(createRequest.getEndTime());
+        System.out.println("진입");
+        Park registeredPark = parkService.register(createRequest);
+
         return registeredPark;
     }
+
+
 
     //멤버가 등록한 주차
     @GetMapping("/member")

@@ -30,11 +30,52 @@ public class OpenApiClientImpl implements OpenApiClient {
 
 
 
-        public boolean validateParkNum(String parkNum) {
-            String url = String.format("%s?encodingKey=%s&guhakNo=%s", endPoint, encodingKey, parkNum);
-            ValidationResponse response = restTemplate.getForObject(url, ValidationResponse.class);
-            return response != null && response.isValid();
+    public boolean validateParkNum(String parkNum) {
+        String encodedKey = "1VzA6081jcO2iM6qu859rtrrZe1Owr9IXbAi0XAvg344mzs8uMDgzW8qKvmlAk8PzqtJirYGw%2FEbkYRD3YB9GA%3D%3D";
+        String decodedKey = "1VzA6081jcO2iM6qu859rtrrZe1Owr9IXbAi0XAvg344mzs8uMDgzW8qKvmlAk8PzqtJirYGw/EbkYRD3YB9GA==";
+
+        String url = UriComponentsBuilder.fromHttpUrl(endPoint)
+                .queryParam("ServiceKey", encodedKey) // 'ServiceKey'로 변경하고 인코딩된 키 사용
+                .queryParam("parkplaceNo", parkNum)
+                .queryParam("type", "json")
+                .build(false) // false를 전달하여 자동 인코딩 방지
+                .toUriString();
+
+        log.debug("API Request URL: {}", url);
+
+        try {
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                String body = response.getBody();
+                log.debug("Full API Response: {}", body);
+
+                if (body != null) {
+                    JSONObject jsonObject = new JSONObject(body);
+                    JSONObject responseObj = jsonObject.getJSONObject("response");
+                    JSONObject headerObj = responseObj.getJSONObject("header");
+
+                    String resultCode = headerObj.getString("resultCode");
+                    String resultMsg = headerObj.getString("resultMsg");
+
+                    if ("00".equals(resultCode)) {
+                        JSONObject bodyObj = responseObj.getJSONObject("body");
+                        int totalCount = bodyObj.getInt("totalCount");
+                        return totalCount > 0;
+                    } else {
+                        log.warn("API returned error code: {}, message: {}", resultCode, resultMsg);
+                        return false;
+                    }
+                }
+            } else {
+                log.warn("API request failed with status: {}", response.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("Error occurred while calling API", e);
         }
+
+        return false;
+    }
 
     @Override
     public ParkLocationInfo getParkLocationInfo(String parkNum) {

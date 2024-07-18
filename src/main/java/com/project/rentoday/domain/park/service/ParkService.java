@@ -14,10 +14,12 @@ import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.entity.ParkImage;
 import com.project.rentoday.domain.park.entity.ParkStatus;
 import com.project.rentoday.domain.park.exception.*;
+import com.project.rentoday.domain.park.repository.ParkImageRepository;
 import com.project.rentoday.domain.park.repository.ParkRepository;
 import com.project.rentoday.domain.reservation.entity.Reservation;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
 import com.project.rentoday.global.exception.ErrorCode;
+import com.project.rentoday.global.file.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,7 +27,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -38,10 +42,12 @@ import java.util.stream.Collectors;
 public class ParkService {
 
     private final ParkRepository parkRepository;
+    private final ParkImageRepository parkImageRepository;
     private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
     private final OpenApiClient openApiClient;
     private final DistrictRepository districtRepository;
+    private final FileUploadService fileUploadService;
 
     @Transactional
     public Park register(final CreateParkRequest request) {
@@ -49,7 +55,7 @@ public class ParkService {
         validateRequest(request);
 
         //회원 조회
-        Member member = memberRepository.findById(request.getMember().getId())
+        Member member = memberRepository.findByEmail(request.getMember())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
 
         //주차 구획번호 유효성 검사
@@ -70,21 +76,39 @@ public class ParkService {
                 .endTime(request.getEndTime())
                 .price(request.getPrice())
                 .content(request.getContent())
-                .confirmation(request.getConfirmation())
                 .build();
 
         //주차 이미지 처리
         if (request.getParkImages() != null) {
-            for (ParkImageRequest parkImageRequest : request.getParkImages()) {
-                park.addParkImages(parkImageRequest.toEntity());
+            for (MultipartFile photo : request.getPhoto()) {
+                try {
+                    String fileName = fileUploadService.profileImageUpload(photo);
+                    ParkImage images = ParkImage.builder()
+                                    .park(park)
+                                    .parkingImageUrl(fileName)
+                                    .build();
+                    parkImageRepository.save(images);
+                } catch (IOException e) {
+                    e.getMessage();
+                    e.getStackTrace();
+                }
             }
         }
+
+        if (request.getPdf() != null) {
+            try {
+                String fileName = fileUploadService.pdfUpload(request.getPdf());
+                park.setConfirmation(fileName);
+            } catch (IOException e) {
+                e.getMessage();
+                e.getStackTrace();
+            }
+        }
+
         //주차장 상태 초기 설정
         return parkRepository.save(park);
 
-
         //주차장 정보 저장
-
 
     }
 
