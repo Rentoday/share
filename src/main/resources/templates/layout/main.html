@@ -582,14 +582,14 @@ function moveMapToDistrict(districtInfo) {
     // 주차장 마커 표시
     function displayParkingMarkers(parkingInfos) {
     parkingInfos.forEach((info) => {
-        const markerPosition = new kakao.maps.LatLng(info.parkLatitude, info.parkLongitude);
+        const markerPosition = new kakao.maps.LatLng(info.latitude, info.longitude);
 
         // 커스텀 오버레이 컨텐츠 생성
         const content = document.createElement('div');
         content.className = 'custom-overlay';
         content.innerHTML = `
             <div class="price-box">
-                <span class="price">${info.price}원</span>
+                <span class="currency">₩</span><span class="price">${info.price}</span>
             </div>
             <span class="tail"></span>
         `;

@@ -6,6 +6,7 @@ import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.notification.dto.NotificationDto;
 import com.project.rentoday.domain.notification.service.MessageService;
+import com.project.rentoday.domain.notification.service.RedisMessagePublisher;
 import com.project.rentoday.domain.payment.dto.request.PayCallbackRequestDto;
 import com.project.rentoday.domain.payment.dto.request.PayRequestDto;
 import com.project.rentoday.domain.payment.dto.response.PayInfoResponse;
@@ -18,11 +19,11 @@ import com.project.rentoday.domain.reservation.repository.ReservationRepository;
 import com.project.rentoday.global.type.NotificationType;
 import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.request.CancelData;
-import com.siot.IamportRestClient.response.AccessToken;
 import com.siot.IamportRestClient.response.IamportResponse;
 import com.siot.IamportRestClient.response.Payment;
 import com.siot.IamportRestClient.exception.IamportResponseException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,13 +34,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class PayService {
 
     private final ReservationRepository reservationRepository;
@@ -48,17 +47,17 @@ public class PayService {
     private final IamportClient iamportClient;
     private final MessageService messageService;
     private final ApplicationEventPublisher publisher;
+    private final RedisMessagePublisher redisMessagePublisher;
+
 
     public PayRequestDto requestPay(String reservationUid) {
-
         Reservation reservation = reservationRepository.findReservationAndPayAndMember(reservationUid)
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문이 없습니다."));
 
         return PayRequestDto.builder()
                 .buyerName(reservation.getMember().getName())
                 .buyerEmail(reservation.getMember().getEmail())
-                .price(reservation.getPay().getAmount())
-                .reservationName(reservation.getReservationName())
+                .price(reservation.getAmount())
                 .reservationUid(reservation.getReservationUid())
                 .build();
     }
@@ -73,6 +72,7 @@ public class PayService {
         return reservations.map(reservation -> new PayInfoResponse(reservation.getPay().getId(), reservation.getPay()));
     }
 
+    @Transactional
     public void payByCallback(PayCallbackRequestDto requestDto) {
         try {
             IamportResponse<Payment> iamportResponse = iamportClient.paymentByImpUid(requestDto.getPaymentUid());
@@ -81,38 +81,32 @@ public class PayService {
                     .orElseThrow(() -> new IllegalArgumentException("예약 내역이 없습니다."));
 
             validatePayment(iamportResponse, reservation);
-
-            updatePaymentStatus(reservation, iamportResponse);
-
-            // 결제 완료 알림 발송
+            Pay savedPay = savePaymentInfo(reservation, iamportResponse.getResponse());
+            updatePaymentStatus(reservation, savedPay);
             sendPaymentCompletionNotification(reservation);
 
-        } catch (IamportResponseException e) {
-            throw new RuntimeException("Iamport 응답 처리 중 오류가 발생했습니다.", e);
-        } catch (IOException e) {
-            throw new RuntimeException("네트워크 통신 중 오류가 발생했습니다.", e);
+        } catch (Exception e) {
+            log.error("결제 처리 중 오류가 발생했습니다.", e);
+            try {
+                // 결제 취소 시도
+                cancelPaymentByImpUid(requestDto.getPaymentUid());
+            } catch (Exception cancelException) {
+                log.error("결제 취소 중 오류가 발생했습니다.", cancelException);
+            }
+            throw new RuntimeException("결제 처리 중 오류가 발생했습니다.", e);
         }
     }
 
-    public void cancelPayment(Long paymentId, String email) {
-        Pay pay = payRepository.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 결제 내역이 없습니다."));
-
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-
-        if (!pay.getReservation().getMember().equals(member)) {
-            throw new IllegalArgumentException("해당 사용자의 결제 내역이 아닙니다.");
-        }
-
-        if (pay.getStatus() != PaymentStatus.OK) {
-            throw new IllegalArgumentException("이미 취소되었거나 취소할 수 없는 상태입니다.");
-        }
-
+    @Transactional
+    public void cancelPaymentByImpUid(String impUid) {
         try {
             // Iamport에서 결제 정보 조회
-            IamportResponse<Payment> paymentResponse = iamportClient.paymentByImpUid(pay.getImpUid());
+            IamportResponse<Payment> paymentResponse = iamportClient.paymentByImpUid(impUid);
             Payment iamportPayment = paymentResponse.getResponse();
+
+            // 결제 정보로 Pay 엔티티 조회
+            Pay pay = payRepository.findByImpUid(impUid)
+                    .orElseThrow(() -> new IllegalArgumentException("해당 결제 내역이 없습니다."));
 
             // 취소 요청
             CancelData cancelData = new CancelData(iamportPayment.getImpUid(), true, BigDecimal.valueOf(pay.getAmount()));
@@ -131,11 +125,29 @@ public class PayService {
             } else {
                 throw new RuntimeException("결제 취소에 실패했습니다.");
             }
-        } catch (IamportResponseException e) {
-            throw new RuntimeException("Iamport 응답 처리 중 오류가 발생했습니다.", e);
-        } catch (IOException e) {
-            throw new RuntimeException("네트워크 통신 중 오류가 발생했습니다.", e);
+        } catch (IamportResponseException | IOException e) {
+            throw new RuntimeException("결제 취소 중 오류가 발생했습니다.", e);
         }
+    }
+
+    private Pay savePaymentInfo(Reservation reservation, Payment payment) {
+        Pay pay = new Pay();
+        pay.setReservation(reservation);
+        pay.setAmount(payment.getAmount().doubleValue());
+        pay.setStatus(PaymentStatus.OK);
+        pay.setPaymentUid(payment.getImpUid());
+        pay.setImpUid(payment.getImpUid());
+
+        Pay savedPay = payRepository.save(pay);
+
+        // 결제 완료 후 알림 메시지 생성 및 발송
+        NotificationDto.CreateRequest message = new NotificationDto.CreateRequest(
+                messageService.commentMessage(pay.getReservation().getMember().getName()),
+                pay.getReservation().getPark().getMember().getEmail(),
+                NotificationType.PAYMENT);
+        redisMessagePublisher.publishTopic(pay.getReservation().getPark().getMember().getEmail(), message);
+
+        return savedPay;
     }
 
     private void validatePayment(IamportResponse<Payment> iamportResponse, Reservation reservation) {
@@ -170,8 +182,8 @@ public class PayService {
         }
     }
 
-    private void updatePaymentStatus(Reservation reservation, IamportResponse<Payment> iamportResponse) {
-        reservation.getPay().changePayBySuccess(PaymentStatus.OK, iamportResponse.getResponse().getImpUid());
+    private void updatePaymentStatus(Reservation reservation, Pay iamportResponse) {
+        reservation.getPay().changePayBySuccess(PaymentStatus.OK, iamportResponse.getImpUid());
         payRepository.save(reservation.getPay());
     }
 

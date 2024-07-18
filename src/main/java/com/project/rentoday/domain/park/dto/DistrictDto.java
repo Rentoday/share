@@ -10,13 +10,13 @@ import lombok.Data;
 public class DistrictDto {
     private Long id;  // 추가된 필드
     private double price;
-    private String parkLatitude;
-    private String parkLongitude;
+    private String latitude;
+    private String longitude;
 
     public DistrictDto(Park park, District district) {
         this.id = park.getId();  // Park 엔티티에 getId() 메서드가 있다고 가정
         this.price = park.getPrice();
-        this.parkLatitude = park.getLatitude();
-        this.parkLongitude = park.getLongitude();
+        this.latitude = park.getLatitude();
+        this.longitude = park.getLongitude();
     }
 }

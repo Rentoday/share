@@ -113,9 +113,20 @@ public class ParkController {
 
     @GetMapping("/{parkId}/available-times")
     public ResponseEntity<List<String>> getAvailableTimes(@PathVariable Long parkId) {
-        List<String> availableTimes = parkService.getReservedTimes(parkId);
+        List<String> availableTimes = parkService.getAvailableTimes(parkId);
         System.out.println("availableTimes = " + availableTimes);
         return ResponseEntity.ok(availableTimes);
+    }
+
+    @GetMapping("/{parkId}/details")
+    public ResponseEntity<ParkDetailsDto> getParkDetails(@PathVariable Long parkId, @RequestParam String reservationUid) {
+        try {
+            ParkDetailsDto details = parkService.getParkDetailsWithReservation(parkId, reservationUid);
+            return ResponseEntity.ok(details);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 
     @GetMapping("/filter")

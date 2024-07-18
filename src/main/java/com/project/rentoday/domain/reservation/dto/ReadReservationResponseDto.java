@@ -20,7 +20,7 @@ public class ReadReservationResponseDto {
 
     private LocalTime checkOut;
 
-    private double amount;
+    private double price;
 
     private LocalDateTime regDate;
 
@@ -30,7 +30,7 @@ public class ReadReservationResponseDto {
         this.address = reservation.getPark().getAddress();
         this.checkIn = reservation.getCheckIn();
         this.checkOut = reservation.getCheckOut();
-        this.amount = reservation.getAmount();
+        this.price = reservation.getAmount();
         this.regDate = reservation.getCreatedDate();
     }
 
