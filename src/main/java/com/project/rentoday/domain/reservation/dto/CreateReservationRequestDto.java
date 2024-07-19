@@ -4,25 +4,22 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class CreateReservationRequestDto {
 
+    private String email;
     //주차 아이디
     private Long parkId;
 
-    //멤버 아이디
-    private Long memberId;
-
     //시간
-    private LocalTime checkIn;
+    private List<LocalTime> checkInTimes;
 
-    //결제
-    private Long paymentId;
+    //총 금액
+    private double estimatedPrice;
 
-    private String reservationUid;
+    private LocalTime checkOutTime;
 
-    private String reservationName;
 }

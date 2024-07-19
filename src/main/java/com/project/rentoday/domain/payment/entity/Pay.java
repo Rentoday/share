@@ -3,14 +3,14 @@ package com.project.rentoday.domain.payment.entity;
 import com.project.rentoday.domain.reservation.entity.Reservation;
 import com.project.rentoday.global.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Pay extends BaseEntity {
 
     @Id

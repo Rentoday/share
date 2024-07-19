@@ -3,16 +3,13 @@ package com.project.rentoday.domain.reservation.entity;
 import com.project.rentoday.domain.member.entity.Member;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.payment.entity.Pay;
-import com.project.rentoday.domain.reservation.converter.DurationConverter;
 import com.project.rentoday.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.UUID;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -44,10 +41,6 @@ public class Reservation extends BaseEntity {
     @Column(name = "check_out", columnDefinition = "TIME")
     private LocalTime checkOut;
 
-    @Convert(converter = DurationConverter.class)
-    @Column(name = "rental_duration")
-    private Duration rentalDuration;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "reservation_status")
     private ReservationStatus reservationStatus;
@@ -57,9 +50,6 @@ public class Reservation extends BaseEntity {
 
     @Column(name = "reservation_uid")
     private String reservationUid;
-
-    @Column(name = "name", nullable = false)
-    private String reservationName;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Pay pay;
@@ -72,22 +62,17 @@ public class Reservation extends BaseEntity {
     public Reservation(
             Member member,
             Park park,
-            Pay pay,
             LocalTime checkIn,
-            String reservationUid,
-            String reservationName
+            double price,
+            LocalTime checkOut
     ) {
         this.member = member;
         this.park = park;
-        this.pay = pay;
         this.checkIn = checkIn;
-        this.checkOut = calculateCheckOut(checkIn);
+        this.checkOut = checkOut;
         this.reservationStatus = ReservationStatus.RESERVE;
-        this.reservationUid = reservationUid;
-        this.reservationName = reservationName;
-        this.rentalDuration = calculateRentalDuration(checkIn, checkOut);
-        this.amount = calculateAmount(park);
-
+        this.reservationUid = UUID.randomUUID().toString();
+        this.amount = price;
         validate();
     }
 
@@ -110,22 +95,7 @@ public class Reservation extends BaseEntity {
             throw new IllegalArgumentException("예약번호는 항상 있어야 합니다.");
         }
     }
-    //checkIn 시간부터 checkOut 시간까지 계산하기.
-    public Duration calculateRentalDuration(LocalTime checkIn, LocalTime checkOut) {
-        return Duration.between(checkIn, checkOut);
-    }
 
-    //체크인 시간에 따른 체크아웃 계산하기, 시간당으로 계산하기.
-    public LocalTime calculateCheckOut(LocalTime checkIn) {
-        return checkIn.plusMinutes(59);
-    }
-
-    //주차 요금 조회
-    public Double calculateAmount(Park park) {
-        double price = park.getPrice();
-        long hours = rentalDuration.toHours();
-        return hours * price;
-    }
     public void cancel() {
         this.reservationStatus = ReservationStatus.CANCEL;
     }

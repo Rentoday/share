@@ -15,8 +15,8 @@
         <div class="parking-info">
             <h2>예약 정보</h2>
             <div class="info-item"><span>구획 번호:</span> <span id="parkingNum"></span></div>
-            <div class="info-item"><span>운영 시간:</span> <span id="operatingHours"></span></div>
-            <div class="info-item"><span>시간당 요금:</span> <span id="hourlyRate"></span></div>
+            <div class="info-item"><span>예약 시간:</span> <span id="operatingHours"></span></div>
+            <div class="info-item"><span>총 요금:</span> <span id="hourlyRate"></span></div>
             <div class="info-item"><span>해당 관할 공단:</span> <span id="agency"></span></div>
             <div class="info-item"><span>공단 전화번호:</span> <span id="agencyPhone"></span></div>
             <div class="info-item"><span>주차구역 상세설명:</span> <span id="parkingDescription"></span></div>
@@ -39,81 +39,117 @@
     </div>
 </div>
 <script>
-    const IMP = window.IMP;
-IMP.init("your_imp_key");
+    let parkDetails;
 
-let reservationDetails;
-
-document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
+    const parkId = urlParams.get('parkId');
     const reservationUid = urlParams.get('reservationUid');
 
-    if (!reservationUid) {
-        alert('유효하지 않은 예약입니다.');
+    if (!parkId || !reservationUid) {
+        alert('유효하지 않은 주차장 또는 예약입니다.');
         window.location.href = '/';
         return;
     }
 
-    fetchReservationDetails(reservationUid)
-        .then(displayReservationDetails)
-        .catch(error => {
-            console.error('예약 정보를 불러오는 중 오류가 발생했습니다:', error);
-            alert('예약 정보를 불러오는 중 오류가 발생했습니다.');
-        });
+    try {
+        const details = await fetchParkDetails(parkId, reservationUid);
+        displayDetails(details);
+    } catch (error) {
+        console.error('정보를 불러오는 중 오류가 발생했습니다:', error);
+        alert('정보를 불러오는 중 오류가 발생했습니다.');
+    }
 });
 
-async function fetchReservationDetails(reservationUid) {
+async function fetchParkDetails(parkId, reservationUid) {
     try {
-        const response = await api.get(`/api/reservation/details?uid=${reservationUid}`);
+        const response = await api.get(`/api/parks/${parkId}/details?reservationUid=${reservationUid}`);
         return response.data;
     } catch (error) {
-        console.error('예약 정보를 가져오는데 실패했습니다:', error);
+        console.error('주차장 정보를 가져오는데 실패했습니다:', error);
         throw error;
     }
 }
 
-function displayReservationDetails(details) {
-    reservationDetails = details;
-    document.getElementById('parkingNum').textContent = details.parkingNum;
-    document.getElementById('operatingHours').textContent = `${details.startTime} ~ ${details.endTime}`;
-    document.getElementById('hourlyRate').textContent = `시간당 ${details.price}원`;
-    document.getElementById('agency').textContent = details.agency;
-    document.getElementById('agencyPhone').textContent = details.agencyPhone;
-    document.getElementById('parkingDescription').textContent = details.description;
-    document.getElementById('parkImage').style.backgroundImage = `url(${details.imageUrl})`;
-    document.getElementById('priceSummary').textContent = `${details.duration}시간 x ${details.price}원`;
-    document.getElementById('totalPrice').textContent = `총 ${details.totalPrice} 원`;
+function displayDetails(details) {
+    if (!details) {
+        console.error('주차장 상세 정보가 없습니다.');
+        return;
+    }
+
+    document.getElementById('parkingNum').textContent = details.parkingNum || '정보 없음';
+    document.getElementById('operatingHours').textContent = details.parkStartTime && details.parkEndTime
+        ? `${details.parkStartTime} ~ ${details.parkEndTime}`
+        : '정보 없음';
+    document.getElementById('hourlyRate').textContent = details.price ? ` ${details.price}원` : '정보 없음';
+    document.getElementById('agency').textContent = details.agency || '정보 없음';
+    document.getElementById('agencyPhone').textContent = details.agencyPhone || '정보 없음';
+    document.getElementById('parkingDescription').textContent = details.description || '정보 없음';
+
+    if (details.reservationStartTime && details.reservationEndTime) {
+        const duration = calculateDuration(details.reservationStartTime, details.reservationEndTime);
+
+        document.getElementById('priceSummary').textContent = `체크인: ${details.parkStartTime} ~ 체크아웃: ${details.parkEndTime}`;
+        document.getElementById('totalPrice').textContent = `총 요금: ${details.price} 원`;
+    } else {
+        document.getElementById('priceSummary').textContent = '정보 없음';
+        document.getElementById('totalPrice').textContent = '정보 없음';
+    }
+
+    parkDetails = details;
 }
 
-function requestPayment() {
-    IMP.request_pay({
-        pg: "html5_inicis",
-        pay_method: "card",
-        merchant_uid: reservationDetails.reservationUid,
-        name: reservationDetails.reservationName,
-        amount: reservationDetails.totalPrice,
-        buyer_email: reservationDetails.buyerEmail,
-        buyer_name: reservationDetails.buyerName,
-    }, function (rsp) {
-        if (rsp.success) {
-            // 결제 성공 시 백엔드에 결과 전송
-            api.post('/api/payments/callback', {
-                paymentUid: rsp.imp_uid,
-                reservationUid: rsp.merchant_uid,
-            })
-            .then(response => {
-                alert("결제가 완료되었습니다!");
-                // 결제 완료 후 예약 확인 페이지로 이동
-                window.location.href = `/reservation-confirmation?reservationUid=${reservationDetails.reservationUid}`;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert("결제 처리 중 오류가 발생했습니다.");
-            });
-        } else {
-            alert("결제에 실패하였습니다. 에러 내용: " + rsp.error_msg);
-        }
-    });
+function calculateDuration(startTime, endTime) {
+    const start = new Date(`1970-01-01T${startTime}`);
+    const end = new Date(`1970-01-01T${endTime}`);
+    return Math.round((end - start) / (1000 * 60 * 60));
+}
+
+    async function requestPayment() {
+    try {
+        // 아임포트 초기화
+        IMP.init('imp38815102');
+
+        const response = await api.post('/api/pays/request', {
+            reservationUid: parkDetails.reservationUid
+        });
+        const paymentData = response.data;
+
+        IMP.request_pay({
+            pg: "html5_inicis",
+            pay_method: "card",
+            merchant_uid: paymentData.reservationUid,
+            name: `주차장 예약 - ${parkDetails.parkingNum}`,
+            amount: paymentData.price,
+            buyer_email: paymentData.buyerEmail,
+            buyer_name: paymentData.buyerName,
+        }, async function (rsp) {
+            if (rsp.success) {
+                try {
+                    const callbackResponse = await api.post('/api/pays/callback', {
+                        paymentUid: rsp.imp_uid,
+                        reservationUid: rsp.merchant_uid,
+                    });
+
+                    if (callbackResponse.status === 200) {
+                        alert("결제가 완료되었습니다!");
+                        window.location.href = `/reservation-confirmation?reservationUid=${paymentData.reservationUid}`;
+                    } else {
+                        throw new Error('서버 응답 오류');
+                    }
+                } catch (error) {
+                    console.error('결제 콜백 처리 중 오류:', error);
+                    alert("결제는 성공했지만 서버 처리 중 오류가 발생했습니다. 고객센터에 문의해주세요.");
+                }
+            } else {
+                console.error('결제 실패:', rsp.error_msg);
+                alert("결제에 실패하였습니다. 에러 내용: " + rsp.error_msg);
+            }
+        });
+    } catch (error) {
+        console.error('결제 요청 중 오류가 발생했습니다:', error);
+        alert('결제 요청 중 오류가 발생했습니다.');
+    }
 }
 </script>
 </body>
