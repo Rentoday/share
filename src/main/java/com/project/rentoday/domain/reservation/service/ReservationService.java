@@ -58,14 +58,14 @@ public class ReservationService {
         LocalTime latestCheckIn = requestDto.getCheckInTimes().stream()
                 .max(Comparator.naturalOrder())
                 .orElseThrow(() -> new IllegalArgumentException("체크인 시간이 비어 있습니다."));
-        LocalTime earliestCheckIn = requestDto.getCheckInTimes().stream()
-                .min(Comparator.naturalOrder())
-                .orElseThrow(() -> new IllegalArgumentException("체크인 시간이 비어있습니다."));
-
         LocalTime checkOutTime = latestCheckIn.plusHours(1);
 
         requestDto.setCheckOutTime(checkOutTime);
         System.out.println("checkOutTime = " + checkOutTime);
+
+        LocalTime earliestCheckIn = requestDto.getCheckInTimes().stream()
+                .min(Comparator.naturalOrder())
+                .orElseThrow(() -> new IllegalArgumentException("체크인 시간이 비어있습니다."));
 
         Reservation savedReservation = null;
         for (LocalTime checkIn : requestDto.getCheckInTimes()) {
@@ -137,12 +137,6 @@ public class ReservationService {
         return new PageImpl<>(dtoList, pageable, reservationsPage.getTotalElements());
     }
 
-    private String formatDateTime(@NotNull @FutureOrPresent LocalTime dateTime) {
-        return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-    }
 
-    private Reservation getReservationById(Long id) {
-        return reservationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("해당 번호로 예약을 찾을 수 없습니다."));
-    }
 
 }

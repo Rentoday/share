@@ -105,6 +105,7 @@ public class ParkController {
         return ResponseEntity.ok(parkDetail);
     }
 
+    //판매 가능 시간을 시간 단위로 추출하는 요청 (timeSlot)
     @GetMapping("/{parkId}/available-times")
     public ResponseEntity<List<String>> getAvailableTimes(@PathVariable Long parkId) {
         List<String> availableTimes = parkService.getAvailableTimes(parkId);

@@ -46,7 +46,7 @@ public class ReservationController {
 
     @GetMapping("/details")
     public ResponseEntity<ReservationDetailsDto> getReservationDetails(@RequestParam("uid") String reservationUid) {
-        ReservationDetailsDto details = reservationService.getReservationDetails(reservationUid);
+        ReservationDetailsDto details = reservationService.getReservationDetailsByUid(reservationUid);
         return ResponseEntity.ok(details);
     }
     //예약 삭제
@@ -66,4 +66,6 @@ public class ReservationController {
         Page<ReadReservationAllResponseDto> response = reservationService.findReservationByMember(email, page, size);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+
 }

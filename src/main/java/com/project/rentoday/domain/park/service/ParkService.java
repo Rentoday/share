@@ -303,17 +303,7 @@ public class ParkService {
         return allTimes;
     }
 
-    private List<String> generateTimeSlots(LocalTime startTime, LocalTime endTime) {
-        List<String> timeSlots = new ArrayList<>();
-        LocalTime currentTime = startTime;
 
-        while (currentTime.isBefore(endTime)) {
-            timeSlots.add(currentTime.format(DateTimeFormatter.ofPattern("HH:mm")));
-            currentTime = currentTime.plusHours(1);
-        }
-
-        return timeSlots;
-    }
 
     @Transactional(readOnly = true)
     public List<String> getReservedTimes(Long parkId) {
@@ -329,30 +319,15 @@ public class ParkService {
                 .collect(Collectors.toList());
     }
 
+    private List<String> generateTimeSlots(LocalTime startTime, LocalTime endTime) {
+        List<String> timeSlots = new ArrayList<>();
+        LocalTime currentTime = startTime;
 
-
-
-    private void validateRequest(CreateParkRequest request) {
-        if (request.getEndTime().isBefore(request.getStartTime())) {
-            throw new EndTimeBeforeStartTimeException(ErrorCode.INVALID_END_TIME);
+        while (currentTime.isBefore(endTime)) {
+            timeSlots.add(currentTime.format(DateTimeFormatter.ofPattern("HH:mm")));
+            currentTime = currentTime.plusHours(1);
         }
-        if (request.getPrice() <= 0) {
-            throw new PriceUnderZeroException(ErrorCode.INVALID_PRICE);
-        }
+
+        return timeSlots;
     }
-
-//    private void validateParkNum(String parkNum) {
-//        boolean isValid = openApiClient.validateParkNum(parkNum);
-//        if (!isValid) {
-//            throw new ParkingNumException(ErrorCode.INVALID_PARK_NUM);
-//        }
-//    }
-//
-//    private ParkLocationInfo getParkLocationInfo(String parkNum) {
-//        ParkLocationInfo parkLocationInfo = openApiClient.getParkLocationInfo(parkNum);
-//        if (parkLocationInfo == null) {
-//            throw new ParkLocationNotFoundException(ErrorCode.PARK_LOCATION_NOT_FOUND);
-//        }
-//        return parkLocationInfo;
-//    }
 }

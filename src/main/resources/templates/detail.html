@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -8,6 +9,11 @@
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="/js/common/apiClient.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var parkId = /*[[${parkId}]]*/ null;
+        /*]]>*/
+    </script>
 </head>
 <body>
 <div class="container">
@@ -33,7 +39,7 @@
         <p>주차장 좋습니다.</p>
     </div>
     <div class="review-section">
-        <h3>댓글</h3>
+        <h3>리뷰</h3>
         <div id="comments"></div>
         <textarea id="commentText" placeholder="댓글을 입력하세요" name="content"></textarea>
         <button id="submitComment">댓글 작성</button>
@@ -42,110 +48,109 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', async function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const parkId = urlParams.get('parkId');
+    const urlParams = new URLSearchParams(window.location.search);
+    const parkId = urlParams.get('parkId');
 
-        if (!parkId) {
-            alert('주차장 ID가 없습니다.');
-            window.location.href = '/';
+    if (!parkId) {
+        alert('주차장 ID가 없습니다.');
+        window.location.href = '/';
+        return;
+    }
+
+    let parkDetail = {};
+    let selectedTimes = [];
+    let currentUser;
+
+    async function fetchCurrentUser() {
+        try {
+            const response = await api.get('/api/member/info'); // axios를 사용하여 사용자 정보 가져오기
+            currentUser = response.data;
+        } catch (error) {
+            console.error('사용자 정보를 가져오는데 실패했습니다:', error);
+            throw error;
+        }
+    }
+
+    async function fetchParkDetail() {
+        try {
+            const response = await api.get(`/api/parks/${parkId}`); // axios를 사용하여 주차장 상세 정보 가져오기
+            parkDetail = response.data;
+            displayParkDetail();
+            await fetchAvailableTimes();
+        } catch (error) {
+            console.error('주차장 상세 정보를 가져오는데 실패했습니다:', error);
+        }
+    }
+
+    async function fetchAvailableTimes() {
+        try {
+            const response = await api.get(`/api/parks/${parkId}/available-times`); // 가능한 시간 가져오기
+            const availableTimes = response.data.map(time => {
+                const [hours, minutes] = time.split(':');
+                return { hours: parseInt(hours), minutes: parseInt(minutes) };
+            });
+            displayTimeSlots(availableTimes);
+        } catch (error) {
+            console.error('사용 가능한 시간을 가져오는데 실패했습니다:', error);
+        }
+    }
+
+    function displayParkDetail() {
+        if (!parkDetail) {
+            console.error('주차장 상세 정보가 없습니다.');
+            return;
         }
 
-        let parkDetail = {};
-        let reservedTimes = [];
-        let selectedTimes = [];
-        let currentUser;
+        document.getElementById('parkingNum').textContent = parkDetail.parkingNum || '';
+        document.getElementById('address').textContent = parkDetail.address || '';
+        document.getElementById('operatingHours').textContent = parkDetail.startTime && parkDetail.endTime
+            ? `${formatTime(parseTime(parkDetail.startTime))} - ${formatTime(parseTime(parkDetail.endTime))}`
+            : '운영 시간 정보 없음';
+        document.getElementById('price').textContent = parkDetail.price || '';
+        document.getElementById('agency').textContent = parkDetail.agency || '';
+        document.getElementById('agNum').textContent = parkDetail.agNum || '';
+        document.getElementById('content').textContent = parkDetail.content || '';
 
-        async function fetchCurrentUser() {
-            try {
-                const response = await api.get('/api/member/info');
-                currentUser = response.data;
-            } catch (error) {
-                console.error('사용자 정보를 가져오는데 실패했습니다:', error);
-                throw error;
-            }
-        }
-
-        async function fetchParkDetail() {
-            try {
-                const response = await api.get(`/api/parks/${parkId}`);
-                parkDetail = response.data;
-                displayParkDetail();
-                await fetchAvailableTimes();
-            } catch (error) {
-                console.error('주차장 상세 정보를 가져오는데 실패했습니다:', error);
-            }
-        }
-
-        async function fetchAvailableTimes() {
-            try {
-                const response = await api.get(`/api/parks/${parkId}/available-times`);
-                const availableTimes = response.data.map(time => {
-                    const [hours, minutes] = time.split(':');
-                    return { hours: parseInt(hours), minutes: parseInt(minutes) };
-                });
-                displayTimeSlots(availableTimes);
-            } catch (error) {
-                console.error('사용 가능한 시간을 가져오는데 실패했습니다:', error);
-            }
-        }
-
-        function displayParkDetail() {
-            if (!parkDetail) {
-                console.error('주차장 상세 정보가 없습니다.');
-                return;
-            }
-
-            document.getElementById('parkingNum').textContent = parkDetail.parkingNum || '';
-            document.getElementById('address').textContent = parkDetail.address || '';
-            document.getElementById('operatingHours').textContent = parkDetail.startTime && parkDetail.endTime
-                ? `${formatTime(parseTime(parkDetail.startTime))} - ${formatTime(parseTime(parkDetail.endTime))}`
-                : '운영 시간 정보 없음';
-            document.getElementById('price').textContent = parkDetail.price || '';
-            document.getElementById('agency').textContent = parkDetail.agency || '';
-            document.getElementById('agNum').textContent = parkDetail.agNum || '';
-            document.getElementById('content').textContent = parkDetail.content || '';
-
-            const imageContainer = document.getElementById('imageContainer');
-            imageContainer.innerHTML = ''; // 기존 이미지 제거
-            if (parkDetail.parkImages && parkDetail.parkImages.length > 0) {
-                parkDetail.parkImages.slice(0, 3).forEach(image => {
-                    const img = document.createElement('img');
-                    img.src = image.imageUrl;
-                    imageContainer.appendChild(img);
-                });
-            }
-        }
-
-        function displayTimeSlots(availableTimes) {
-            const timeSlotsContainer = document.getElementById('timeSlots');
-            timeSlotsContainer.innerHTML = ''; // 기존 슬롯 제거
-
-            if (!parkDetail.startTime || !parkDetail.endTime) {
-                console.error('운영 시간 정보가 없습니다.');
-                return;
-            }
-
-            availableTimes.forEach(time => {
-                const button = document.createElement('button');
-                button.textContent = formatTime(time);
-                button.classList.add('time-slot');
-                button.onclick = () => selectTimeSlot(time, button);
-                timeSlotsContainer.appendChild(button);
+        const imageContainer = document.getElementById('imageContainer');
+        imageContainer.innerHTML = '';
+        if (parkDetail.parkImages && parkDetail.parkImages.length > 0) {
+            parkDetail.parkImages.slice(0, 3).forEach(image => {
+                const img = document.createElement('img');
+                img.src = image.imageUrl;
+                imageContainer.appendChild(img);
             });
         }
+    }
 
-        function formatTime(time) {
-            return `${time.hours.toString().padStart(2, '0')}:${time.minutes.toString().padStart(2, '0')}`;
+    function displayTimeSlots(availableTimes) {
+        const timeSlotsContainer = document.getElementById('timeSlots');
+        timeSlotsContainer.innerHTML = '';
+
+        if (!parkDetail.startTime || !parkDetail.endTime) {
+            console.error('운영 시간 정보가 없습니다.');
+            return;
         }
 
+        availableTimes.forEach(time => {
+            const button = document.createElement('button');
+            button.textContent = formatTime(time);
+            button.classList.add('time-slot');
+            button.onclick = () => selectTimeSlot(time, button);
+            timeSlotsContainer.appendChild(button);
+        });
+    }
 
-        function parseTime(timeString) {
-            if (!timeString) return { hours: 0, minutes: 0 };
-            const [hours, minutes] = timeString.split(':').map(Number);
-            return { hours, minutes };
-        }
+    function formatTime(time) {
+        return `${time.hours.toString().padStart(2, '0')}:${time.minutes.toString().padStart(2, '0')}`;
+    }
 
-        function addHour(time) {
+    function parseTime(timeString) {
+        if (!timeString) return { hours: 0, minutes: 0 };
+        const [hours, minutes] = timeString.split(':').map(Number);
+        return { hours, minutes };
+    }
+
+    function addHour(time) {
         let newHours = time.hours + 1;
         if (newHours >= 24) {
             newHours -= 24;
@@ -153,33 +158,33 @@
         return { hours: newHours, minutes: time.minutes };
     }
 
-        function selectTimeSlot(time, button) {
-            const timeIndex = selectedTimes.findIndex(
-                selectedTime => selectedTime.hours === time.hours && selectedTime.minutes === time.minutes
-            );
+    function selectTimeSlot(time, button) {
+        const timeIndex = selectedTimes.findIndex(
+            selectedTime => selectedTime.hours === time.hours && selectedTime.minutes === time.minutes
+        );
 
-            if (timeIndex !== -1) {
-                selectedTimes.splice(timeIndex, 1);
-                button.classList.remove('selected');
-            } else {
-                selectedTimes.push(time);
-                button.classList.add('selected');
-            }
-
-            updateSelectedTimeAndPrice();
+        if (timeIndex !== -1) {
+            selectedTimes.splice(timeIndex, 1);
+            button.classList.remove('selected');
+        } else {
+            selectedTimes.push(time);
+            button.classList.add('selected');
         }
 
-        function updateSelectedTimeAndPrice() {
-            const selectedTimeContainer = document.getElementById('selectedTime');
-            const estimatedPriceContainer = document.getElementById('estimatedPrice');
+        updateSelectedTimeAndPrice();
+    }
 
-            selectedTimeContainer.textContent = selectedTimes.map(time => formatTime(time)).join(', ');
+    function updateSelectedTimeAndPrice() {
+        const selectedTimeContainer = document.getElementById('selectedTime');
+        const estimatedPriceContainer = document.getElementById('estimatedPrice');
 
-            const totalPrice = selectedTimes.length * (parkDetail.price || 0);
-            estimatedPriceContainer.textContent = totalPrice;
-        }
+        selectedTimeContainer.textContent = selectedTimes.map(time => formatTime(time)).join(', ');
 
-        document.getElementById('reserveButton').addEventListener('click', async () => {
+        const totalPrice = selectedTimes.length * (parkDetail.price || 0);
+        estimatedPriceContainer.textContent = totalPrice;
+    }
+
+    document.getElementById('reserveButton').addEventListener('click', async () => {
         if (!selectedTimes || selectedTimes.length === 0) {
             alert('시간을 선택해주세요.');
             return;
@@ -190,7 +195,14 @@
             return;
         }
 
-            const latestCheckInTime = selectedTimes.reduce((latest, time) => {
+        const earliestCheckInTime = selectedTimes.reduce((earliest, time) => {
+            if (time.hours < earliest.hours || (time.hours === earliest.hours && time.minutes < earliest.minutes)) {
+                return time;
+            }
+            return earliest;
+        }, selectedTimes[0]);
+
+        const latestCheckInTime = selectedTimes.reduce((latest, time) => {
             if (time.hours > latest.hours || (time.hours === latest.hours && time.minutes > latest.minutes)) {
                 return time;
             }
@@ -200,51 +212,33 @@
         const checkOutTime = addHour(latestCheckInTime);
 
         const reservationData = {
-    email: currentUser.email,
-    parkId: parseInt(parkId),
-    checkInTimes: selectedTimes.map(time =>
-        `${time.hours.toString().padStart(2, '0')}:${time.minutes.toString().padStart(2, '0')}`
-    ),
-    estimatedPrice: selectedTimes.length * parkDetail.price,
-    checkOutTime: `${checkOutTime.hours.toString().padStart(2, '0')}:${checkOutTime.minutes.toString().padStart(2, '0')}`
-};
+            email: currentUser.email,
+            parkId: parseInt(parkId),
+            checkInTimes: selectedTimes.map(time =>
+                `${time.hours.toString().padStart(2, '0')}:${time.minutes.toString().padStart(2, '0')}`
+            ),
+            estimatedPrice: selectedTimes.length * parkDetail.price,
+            checkOutTime: `${checkOutTime.hours.toString().padStart(2, '0')}:${checkOutTime.minutes.toString().padStart(2, '0')}`
+        };
 
+        try {
+            const response = await api.post('/api/reservations', reservationData);
+            const reservationUid = response.data.reservationUid;
+            window.location.href = `/pay?parkId=${parkId}&reservationUid=${reservationUid}`;
+        } catch (error) {
+            console.error('예약 생성에 실패했습니다:', error);
+            alert('예약 생성에 실패했습니다.');
+        }
+    });
 
-
-                 try {
-        const response = await api.post('/api/reservations', reservationData);
-        const reservationUid = response.data.reservationUid;
-        window.location.href = `/pay?parkId=${parkId}&reservationUid=${reservationUid}`;
-    } catch (error) {
-        console.error('예약 생성에 실패했습니다:', error);
-        alert('예약 생성에 실패했습니다.');
-    }
+    await fetchCurrentUser();
+    await fetchParkDetail();
 });
 
-        async function submitComment() {
-            const commentText = document.getElementById('commentText').value;
-            if (!commentText) {
-                alert('댓글을 입력해주세요.');
-                return;
-            }
-
-            const createRequest = {
-                content: commentText
-            };
-
-            try {
-                await api.post(`/api/comment/${parkId}`, createRequest);
-                alert('댓글이 작성되었습니다.');
-                document.getElementById('commentText').value = '';
-                fetchComments();
-            } catch (error) {
-                console.error('댓글 작성에 실패했습니다:', error);
-                alert('댓글 작성에 실패했습니다.');
-            }
-        }
 
 
-    });
+
 </script>
-
+</body>
+</html>
 
