@@ -25,7 +25,7 @@ public class OpenApiClientService {
     public OpenApiResponse getTotalPages(String parkNum, String parkAdd) throws IOException {
 
         StringBuilder urlBuilder = new StringBuilder("http://api.data.go.kr/openapi/tn_pubr_public_residnt_prior_parkng_api");
-        urlBuilder.append("?" + URLEncoder.encode("serviceKey", "UTF-8") + "=1VzA6081jcO2iM6qu859rtrrZe1Owr9IXbAi0XAvg344mzs8uMDgzW8qKvmlAk8PzqtJirYGw%2FEbkYRD3YB9GA%3D%3D");
+        urlBuilder.append("?" + URLEncoder.encode("serviceKey", "UTF-8") + "=fAE8k5HHp4hTgUUUqxBXAoiB6bRZN8yRylIcq6IcQ8o%2F2vQ90%2BjHK98ADbKbrEBCigAWumlLdDvaShJdXpIxiQ%3D%3D");
         urlBuilder.append("&" + URLEncoder.encode("pageNo", "UTF-8") + "=" + URLEncoder.encode("1", "UTF-8")); /*페이지 번호*/
         urlBuilder.append("&" + URLEncoder.encode("numOfRows", "UTF-8") + "=" + URLEncoder.encode("100", "UTF-8")); /*한 페이지 결과 수*/
         urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("json", "UTF-8")); /*XML/JSON 여부*/
