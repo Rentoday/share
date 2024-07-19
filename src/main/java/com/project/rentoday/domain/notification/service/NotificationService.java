@@ -68,20 +68,9 @@ public class NotificationService {
         });
 
         // 연결 직후, 데이터 전송이 없을 시 503 에러 발생. 에러 방지 위한 더미데이터 전송
-        NotificationDto.CreateRequest notificationDto = new NotificationDto.CreateRequest("메시지 입니다", email, NotificationType.COMMENT);
-        NotificationDto.CreateRequest notificationDto1 = new NotificationDto.CreateRequest("메시지 입니다1", email, NotificationType.COMMENT);
-        NotificationDto.CreateRequest notificationDto2 = new NotificationDto.CreateRequest("메시지 입니다2", email, NotificationType.COMMENT);
-        NotificationDto.CreateRequest notificationDto3 = new NotificationDto.CreateRequest("메시지 입니다3", email, NotificationType.COMMENT);
-        NotificationDto.CreateRequest notificationDto4 = new NotificationDto.CreateRequest("메시지 입니다4", email, NotificationType.COMMENT);
-        redisMessagePublisher.publishTopic(email, notificationDto);
-        redisMessagePublisher.publishTopic(email, notificationDto1);
-        redisMessagePublisher.publishTopic(email, notificationDto2);
-        redisMessagePublisher.publishTopic(email, notificationDto3);
-        redisMessagePublisher.publishTopic(email, notificationDto4);
 
         //클라이언트가 미수신한 메시지 발생시 메시지 전송
 //        sendUnreadNotifications(member, sseEmitter);
-        System.out.println("메시지 발송");
 
         return sseEmitter;
     }

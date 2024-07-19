@@ -37,6 +37,9 @@ public class FileUploadService {
             case "png":
                 originalFileExtension = ".png";
                 break;
+            case "PNG":
+                originalFileExtension = ".PNG";
+                break;
             default:
                 throw new FileException(FileErrorCode.FILE_EXTENSION_ERROR);
         }
@@ -49,12 +52,12 @@ public class FileUploadService {
     }
 
     //프로필 이미지
-    public String pdfUpload(MultipartFile uploadImage) throws IOException {
+    public String pdfUpload(MultipartFile uploadPdf) throws IOException {
         String originalFileExtension = "";
-        String fileName = uploadImage.getOriginalFilename();
-        String fileExtension = uploadImage.getOriginalFilename().substring(fileName.lastIndexOf(".")+1);
+        String fileName = uploadPdf.getOriginalFilename();
+        String fileExtension = uploadPdf.getOriginalFilename().substring(fileName.lastIndexOf(".")+1);
 
-        if (uploadImage.getSize() > 10 * 1024 * 1024) { // 10MB 제한
+        if (uploadPdf.getSize() > 10 * 1024 * 1024) { // 10MB 제한
             throw new FileException(FileErrorCode.FILE_MAX_SIZE_ERROR);
         }
         System.out.println(fileExtension);
@@ -71,7 +74,7 @@ public class FileUploadService {
         String saveFileName = UUID.randomUUID().toString() + originalFileExtension;
         File upload = new File(UPLOAD_ROOT, saveFileName);
 
-        uploadImage.transferTo(upload);
+        uploadPdf.transferTo(upload);
 
         return saveFileName;
     }

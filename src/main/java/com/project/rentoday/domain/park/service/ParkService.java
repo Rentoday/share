@@ -9,6 +9,7 @@ import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 
 import com.project.rentoday.domain.park.client.OpenApiClient;
+import com.project.rentoday.domain.park.client.OpenApiClientService;
 import com.project.rentoday.domain.park.dto.*;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.entity.ParkImage;
@@ -21,6 +22,8 @@ import com.project.rentoday.domain.reservation.repository.ReservationRepository;
 import com.project.rentoday.global.exception.ErrorCode;
 import com.project.rentoday.global.file.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,83 +39,100 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ParkService {
 
     private final ParkRepository parkRepository;
     private final ParkImageRepository parkImageRepository;
     private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
-    private final OpenApiClient openApiClient;
+    private final OpenApiClientService openApiClientService;
     private final DistrictRepository districtRepository;
     private final FileUploadService fileUploadService;
 
     @Transactional
-    public Park register(final CreateParkRequest request) {
-        //입력값 유효성 검사부터
-        validateRequest(request);
+    public void register(final CreateParkRequest request) {
 
         //회원 조회
         Member member = memberRepository.findByEmail(request.getMember())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
 
-        //주차 구획번호 유효성 검사
-        validateParkNum(request.getParkNum());
-
-        //주차장 위치 정보 조회 (OpenApi)
-        ParkLocationInfo parkLocationInfo = getParkLocationInfo(request.getParkNum());
-
-        //Park 엔티티 생성
-        Park park = Park.builder()
-                .member(member)
-                .carNum(request.getCarNum())
-                .parkingNum(request.getParkNum())
-                .address(parkLocationInfo.getAddress())
-                .latitude(parkLocationInfo.getLatitude())
-                .longitude(parkLocationInfo.getLongitude())
-                .startTime(request.getStartTime())
-                .endTime(request.getEndTime())
-                .price(request.getPrice())
-                .content(request.getContent())
-                .build();
-
-        //주차 이미지 처리
-        if (request.getParkImages() != null) {
-            for (MultipartFile photo : request.getPhoto()) {
-                try {
-                    String fileName = fileUploadService.profileImageUpload(photo);
-                    ParkImage images = ParkImage.builder()
-                                    .park(park)
-                                    .parkingImageUrl(fileName)
-                                    .build();
-                    parkImageRepository.save(images);
-                } catch (IOException e) {
-                    e.getMessage();
-                    e.getStackTrace();
-                }
-            }
+        String replaceAdd = request.getParkAdd().replaceAll("\\s+", "");
+        try {
+            OpenApiResponse apiResponse = openApiClientService.getTotalPages(request.getParkNum(), replaceAdd);
+            request.setParkNum(apiResponse.getPrkcmprtNo());
+            request.setLatitude(apiResponse.getLatitude());
+            request.setLongitude(apiResponse.getLongitude());
+            request.setAddress(apiResponse.getRdnmadr());
+            request.setInstitutionNm(apiResponse.getInstitutionNm());
+            request.setPhone(apiResponse.getPhoneNumber());
+        }catch (IOException e) {
+            e.getMessage();
+            e.getStackTrace();
         }
+        System.out.println(request.getPdf());
 
+        String fileName = null;
         if (request.getPdf() != null) {
             try {
-                String fileName = fileUploadService.pdfUpload(request.getPdf());
-                park.setConfirmation(fileName);
+                fileName = fileUploadService.pdfUpload(request.getPdf());
             } catch (IOException e) {
                 e.getMessage();
                 e.getStackTrace();
             }
         }
 
+        //Park 엔티티 생성
+        Park park = Park.builder()
+                .member(member)
+                .carNum(request.getCarNum())
+                .parkingNum(request.getParkNum())
+                .address(request.getAddress())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .price(request.getPrice())
+                .content(request.getContent())
+                .agency(request.getInstitutionNm())
+                .agNum(request.getPhone())
+                .confirmation(fileName)
+                .build();
+
+        //주차 이미지 처리
+        saveImage(park, request.getPhoto());
+
         //주차장 상태 초기 설정
-        return parkRepository.save(park);
+        parkRepository.save(park);
 
         //주차장 정보 저장
 
     }
+
+    private void saveImage(Park park, MultipartFile[] images) {
+        if (images != null) {
+            for (MultipartFile photo : images) {
+                try {
+                    String fileName = fileUploadService.profileImageUpload(photo);
+                    ParkImage image = ParkImage.builder()
+                            .park(park)
+                            .parkingImageUrl(fileName)
+                            .build();
+                    parkImageRepository.save(image);
+                } catch (IOException e) {
+                    e.getMessage();
+                    e.getStackTrace();
+                }
+            }
+        }
+    }
+
 
     @Transactional(readOnly = true)
     public ParkDetailsDto getParkDetailsWithReservation(Long parkId, String reservationUid) {
@@ -321,18 +341,18 @@ public class ParkService {
         }
     }
 
-    private void validateParkNum(String parkNum) {
-        boolean isValid = openApiClient.validateParkNum(parkNum);
-        if (!isValid) {
-            throw new ParkingNumException(ErrorCode.INVALID_PARK_NUM);
-        }
-    }
-
-    private ParkLocationInfo getParkLocationInfo(String parkNum) {
-        ParkLocationInfo parkLocationInfo = openApiClient.getParkLocationInfo(parkNum);
-        if (parkLocationInfo == null) {
-            throw new ParkLocationNotFoundException(ErrorCode.PARK_LOCATION_NOT_FOUND);
-        }
-        return parkLocationInfo;
-    }
+//    private void validateParkNum(String parkNum) {
+//        boolean isValid = openApiClient.validateParkNum(parkNum);
+//        if (!isValid) {
+//            throw new ParkingNumException(ErrorCode.INVALID_PARK_NUM);
+//        }
+//    }
+//
+//    private ParkLocationInfo getParkLocationInfo(String parkNum) {
+//        ParkLocationInfo parkLocationInfo = openApiClient.getParkLocationInfo(parkNum);
+//        if (parkLocationInfo == null) {
+//            throw new ParkLocationNotFoundException(ErrorCode.PARK_LOCATION_NOT_FOUND);
+//        }
+//        return parkLocationInfo;
+//    }
 }

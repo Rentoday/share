@@ -33,7 +33,7 @@
         <p>주차장 좋습니다.</p>
     </div>
     <div class="review-section">
-        <h3>리뷰</h3>
+        <h3>댓글</h3>
         <div id="comments"></div>
         <textarea id="commentText" placeholder="댓글을 입력하세요" name="content"></textarea>
         <button id="submitComment">댓글 작성</button>
@@ -138,6 +138,7 @@
             return `${time.hours.toString().padStart(2, '0')}:${time.minutes.toString().padStart(2, '0')}`;
         }
 
+
         function parseTime(timeString) {
             if (!timeString) return { hours: 0, minutes: 0 };
             const [hours, minutes] = timeString.split(':').map(Number);
@@ -209,6 +210,7 @@
 };
 
 
+
                  try {
         const response = await api.post('/api/reservations', reservationData);
         const reservationUid = response.data.reservationUid;
@@ -241,37 +243,7 @@
             }
         }
 
-        async function fetchComments() {
-            try {
-                const response = await api.get(`/api/comment/${parkId}`);
-                displayComments(response.data);
-            } catch (error) {
-                console.error('댓글을 가져오는데 실패했습니다:', error);
-                alert('댓글을 가져오는데 실패했습니다.');
-            }
-        }
 
-        function displayComments(comments) {
-            const commentsContainer = document.getElementById('comments');
-            commentsContainer.innerHTML = '';
-
-            comments.forEach(comment => {
-                const commentElement = document.createElement('div');
-                commentElement.classList.add('comment');
-                commentElement.innerHTML = `
-                    <p>${comment.content}</p>
-                    <button onclick="updateComment(${comment.id}, prompt('수정할 내용을 입력하세요:'))">수정</button>
-                    <button onclick="deleteComment(${comment.id})">삭제</button>
-                `;
-                commentsContainer.appendChild(commentElement);
-            });
-        }
-
-        document.getElementById('submitComment').onclick = submitComment;
-
-        await fetchCurrentUser();
-        await fetchParkDetail();
-        await fetchComments();
     });
 </script>
 </body>

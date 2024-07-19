@@ -32,19 +32,29 @@ public class CommentService {
     private final MessageService messageService;
     private final RedisMessagePublisher publisher;
 
-    //댓글 작성
+    //댓글 조회
     @Transactional
-    public List<CommentDto.ReadResponse> readComment(Long id) {
+    public List<CommentDto.ReadResponse> readComment(Long id, String email) {
 
-        List<Comment> comments = commentRepository.findAll();
-        System.out.println("댓글조회");
-        System.out.println(comments.get(0).getContent());
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+        Park park = parkRepository.findById(id).orElseThrow(() -> new RuntimeException());
+        List<Comment> comments = commentRepository.findByPark(park);
         List<CommentDto.ReadResponse> readList = new ArrayList<>();
-        CommentDto.ReadResponse response = new CommentDto.ReadResponse();
+
         for (Comment comment : comments) {
-            response.setEmail(comment.getMember().getEmail());
+            CommentDto.ReadResponse response = new CommentDto.ReadResponse();
+            response.setId(comment.getId());
+            response.setName(comment.getMember().getName());
             response.setContent(comment.getContent());
             response.setCreatedAt(comment.getCreatedDate());
+            response.setDepth(comment.getDepth());
+            if (comment.getParent() != null) {
+                response.setParentId(comment.getParent().getId());
+            }
+            if (comment.getMember().equals(member)) {
+                response.setIsAuth(true);
+            }
             readList.add(response);
         }
 
@@ -69,7 +79,7 @@ public class CommentService {
         //메시지 생성
         NotificationDto.CreateRequest message
                 = new NotificationDto.CreateRequest(
-                        messageService.commentMessage(createRequest.getEmail()), park.getMember().getEmail(), NotificationType.COMMENT);
+                        messageService.commentMessage(member.getName()), park.getMember().getEmail(), NotificationType.COMMENT);
         //메시지 발송
         publisher.publishTopic(park.getMember().getEmail(), message);
     }
@@ -77,27 +87,31 @@ public class CommentService {
     //대댓글 작성
     @Transactional
     public void createReply(CommentDto.CreateReplyRequest createReplyRequest) {
-
+        
+        //대댓글 작성자
         Member member = memberRepository.findByEmail(createReplyRequest.getEmail())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-        Comment comment = commentRepository.findByIdAndMemberId(createReplyRequest.getParentId(), member.getId())
+        //원댓글
+        Comment comment = commentRepository.findById(createReplyRequest.getParentId())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+
         Park park = parkRepository.findById(comment.getPark().getId())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
         Comment commentEntity = Comment.createReply()
                 .member(member)
                 .park(park)
                 .content(createReplyRequest.getContent())
-                .parent(comment)
                 .build();
+        commentEntity.setDepth();
+        commentEntity.setParent(comment);
         commentRepository.save(commentEntity);
 
         //메시지 생성
         NotificationDto.CreateRequest message
                 = new NotificationDto.CreateRequest(
-                        messageService.replyMessage(createReplyRequest.getEmail()), comment.getParent().getMember().getEmail(), NotificationType.REPLY);
+                        messageService.replyMessage(createReplyRequest.getEmail()), comment.getMember().getEmail(), NotificationType.REPLY);
         //메시지 발송
-        publisher.publishTopic(comment.getParent().getMember().getEmail(), message);
+        publisher.publishTopic(comment.getMember().getEmail(), message);
 
     }
 
@@ -107,7 +121,7 @@ public class CommentService {
 
         Member member = memberRepository.findByEmail(updateRequest.getEmail())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-        Comment comment = commentRepository.findByIdAndMemberId(updateRequest.getParentId(), member.getId())
+        Comment comment = commentRepository.findByIdAndMember(updateRequest.getParentId(), member)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
         comment.updateComment(updateRequest.getContent());
         commentRepository.save(comment);
@@ -116,11 +130,11 @@ public class CommentService {
     //댓글 삭제
     //depth 구분으로 삭제할것
     @Transactional
-    public void delateComment(CommentDto.DeleteRequest deleteRequest) {
+    public void deleteComment(CommentDto.DeleteRequest deleteRequest) {
 
         Member member = memberRepository.findByEmail(deleteRequest.getEmail())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-        Comment comment = commentRepository.findByIdAndMemberId(deleteRequest.getParentId(), member.getId())
+        Comment comment = commentRepository.findByIdAndMember(deleteRequest.getCommentId(), member)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
         commentRepository.delete(comment);
     }

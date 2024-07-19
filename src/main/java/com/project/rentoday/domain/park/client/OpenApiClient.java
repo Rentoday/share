@@ -1,6 +1,14 @@
 package com.project.rentoday.domain.park.client;
 
 import com.project.rentoday.domain.park.dto.ParkLocationInfo;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 의존성 역전 원칙. 고수준 모듈이 저수준 모듈에 직접 의존하지 않고, 추상화에 의존하게 된다. 이로 인해 코드의 유연성과 재사용성이 향상.
@@ -8,7 +16,7 @@ import com.project.rentoday.domain.park.dto.ParkLocationInfo;
  * 구현 교체 용이성 향상
  */
 public interface OpenApiClient {
-    boolean validateParkNum(String parkNum);
 
-    ParkLocationInfo getParkLocationInfo(String parkNum);
+    public int getTotalPages(String parkNum);
+
 }

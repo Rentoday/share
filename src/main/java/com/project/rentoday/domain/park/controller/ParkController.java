@@ -27,21 +27,15 @@ public class ParkController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
-    public Park registerPark(@RequestPart(value = "key") CreateParkRequest createRequest,
+    public void registerPark(@RequestPart(value = "key") CreateParkRequest createRequest,
                              @RequestPart(value = "photo", required = false) MultipartFile[] photos,
                              @RequestPart(value = "pdf", required = false) MultipartFile pdf,
                              @AuthenticationPrincipal UserDetails principal) {
-        createRequest.setMember(principal.getUsername());
-        createRequest.setPhoto(photos);
+        String email = principal.getUsername();
+        createRequest.setMember(email);
         createRequest.setPdf(pdf);
-        System.out.println(createRequest.getParkNum());
-        System.out.println(createRequest.getAddress());
-        System.out.println(createRequest.getContent());
-        System.out.println(createRequest.getEndTime());
-        System.out.println("진입");
-        Park registeredPark = parkService.register(createRequest);
-
-        return registeredPark;
+        createRequest.setPhoto(photos);
+        parkService.register(createRequest);
     }
 
 

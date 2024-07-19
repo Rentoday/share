@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -29,7 +30,7 @@ public class Comment extends BaseEntity {
     @Size(max = 2500)
     private String content;
 
-    @Column
+    @Column(name = "depth")
     @NotNull
     private int depth;
 
@@ -41,7 +42,7 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "pa_id")
     private Park park;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "parent_id")
     private Comment parent;
 
@@ -67,6 +68,11 @@ public class Comment extends BaseEntity {
             @NotNull Park park,
             @NotNull Comment parent
     ) {
+        Objects.requireNonNull(content, "Content must not be null");
+        Objects.requireNonNull(member, "Member must not be null");
+        Objects.requireNonNull(park, "Park must not be null");
+        Objects.requireNonNull(parent, "Parent comment must not be null");
+
         this.content = content;
         this.depth = 1;
         this.member = member;
@@ -77,4 +83,14 @@ public class Comment extends BaseEntity {
     public void updateComment(String comment) {
         this.content = comment;
     }
+
+    public void setDepth() {
+        this.depth = 1;
+    }
+
+    public void setParent(Comment parent) {
+        this.parent = parent;
+    }
+
+
 }
