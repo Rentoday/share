@@ -2,6 +2,7 @@ package com.project.rentoday.domain.reservation.dto;
 
 import com.project.rentoday.domain.reservation.entity.Reservation;
 import com.project.rentoday.domain.reservation.entity.ReservationStatus;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.Duration;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Data
+@AllArgsConstructor
 public class CreateReservationResponseDto {
 
     //예약 아이디
@@ -24,13 +26,10 @@ public class CreateReservationResponseDto {
 
     private LocalTime checkOut;
 
-    private Duration rentalDuration;
 
     private ReservationStatus reservationStatus;
 
-    private double amount;
-
-    private String reserveNumber;
+    private double price;
 
     public CreateReservationResponseDto(Reservation reservation) {
         this.id = reservation.getId();
@@ -39,9 +38,7 @@ public class CreateReservationResponseDto {
         this.memberId = reservation.getMember().getId();
         this.checkIn = reservation.getCheckIn();
         this.checkOut = reservation.getCheckOut();
-        this.rentalDuration = reservation.getRentalDuration();
         this.reservationStatus = reservation.getReservationStatus();
-        this.amount = reservation.getAmount();
-        this.reserveNumber = reservation.getReservationUid();
+        this.price = reservation.getAmount();
     }
 }

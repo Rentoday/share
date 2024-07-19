@@ -28,9 +28,15 @@ public class FrontController {
     }
 
     @GetMapping("/pay")
-    public String pay() {
+    public String pay(@RequestParam("parkId") Long parkId,
+                      @RequestParam("reservationUid") String reservationUid,
+                      Model model) {
+        model.addAttribute("parkId", parkId);
+        model.addAttribute("reservationUid", reservationUid);
         return "pay.html";
     }
+
+
 
     @GetMapping("/login")
     public String login() {

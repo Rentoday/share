@@ -135,25 +135,38 @@ public class ParkService {
 
 
     @Transactional(readOnly = true)
+    public ParkDetailsDto getParkDetailsWithReservation(Long parkId, String reservationUid) {
+        Park park = parkRepository.findById(parkId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주차장을 찾을 수 없습니다. ID: " + parkId));
+
+        Reservation reservation = reservationRepository.findByReservationUid(reservationUid)
+                .orElseThrow(() -> new IllegalArgumentException("해당 예약을 찾을 수 없습니다. UID: " + reservationUid));
+
+        Member member = reservation.getMember();
+
+        return ParkDetailsDto.builder()
+                .parkId(park.getId())
+                .parkingNum(park.getParkingNum())
+                .parkStartTime(reservation.getCheckIn())
+                .parkEndTime(reservation.getCheckOut())
+                .price(reservation.getAmount())
+                .agency(park.getAgency())
+                .agencyPhone(park.getAgNum())
+                .description(park.getContent())
+                .reservationUid(reservation.getReservationUid())
+                .reservationStartTime(reservation.getCheckIn())
+                .reservationEndTime(reservation.getCheckOut())
+                .buyerEmail(member.getEmail())
+                .buyerName(member.getName())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
     public ParkDetailRequest getParkDetail(Long parkId) {
         Park park = parkRepository.findById(parkId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid park id: " + parkId));
 
         return new ParkDetailRequest(park);
-    }
-    @Transactional(readOnly = true)
-    public List<String> getReservedTimes(Long parkId) {
-        LocalTime startTime = LocalTime.of(0, 0); // 오늘 00:00
-        LocalTime endTime = LocalTime.of(23, 59); // 오늘 23:59
-
-        return reservationRepository.findByParkIdAndCheckInBetween(
-                        parkId,
-                        startTime,
-                        endTime
-                ).stream()
-                .map(reservation -> reservation.getCheckIn().format(DateTimeFormatter.ofPattern("HH:mm")))
-                .collect(Collectors.toList());
-
     }
 
     @Transactional(readOnly = true)
@@ -274,67 +287,47 @@ public class ParkService {
         return new DistrictResponse(district.getLatitude(), district.getLongitude(), filteredParks);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<String> getAvailableTimes(Long parkId) {
-        Park park = parkRepository.findById(parkId).orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
+        Park park = parkRepository.findById(parkId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid park Id:" + parkId));
+
         LocalTime startTime = park.getStartTime();
         LocalTime endTime = park.getEndTime();
 
-        List<Reservation> reservations = reservationRepository.findByParkIdAndCheckInBetween(
-                parkId,
-                startTime,
-                endTime
-        );
+        List<String> allTimes = generateTimeSlots(startTime, endTime);
+        List<String> reservedTimes = getReservedTimes(parkId);
 
-        List<LocalTime> reservedTimes = reservations.stream()
-                .flatMap(reservation -> {
-                    LocalTime checkIn = reservation.getCheckIn();
-                    LocalTime checkOut = reservation.getCheckOut();
-                    List<LocalTime> times = new ArrayList<>();
-                    for (LocalTime time = checkIn; time.isBefore(checkOut.plusMinutes(1)); time = time.plusHours(1)) {
-                        times.add(time);
-                    }
-                    return times.stream();
-                })
+        allTimes.removeAll(reservedTimes);
+
+        return allTimes;
+    }
+
+
+
+    @Transactional(readOnly = true)
+    public List<String> getReservedTimes(Long parkId) {
+        LocalTime startTime = LocalTime.MIN;
+        LocalTime endTime = LocalTime.MAX;
+
+        return reservationRepository.findByParkIdAndCheckInBetween(
+                        parkId,
+                        startTime,
+                        endTime
+                ).stream()
+                .map(reservation -> reservation.getCheckIn().format(DateTimeFormatter.ofPattern("HH:mm")))
                 .collect(Collectors.toList());
-
-        List<String> availableTimes = new ArrayList<>();
-        for (LocalTime time = startTime; time.isBefore(endTime.plusMinutes(1)); time = time.plusHours(1)) {
-            if (!reservedTimes.contains(time)) {
-                availableTimes.add(time.format(DateTimeFormatter.ofPattern("HH:mm")));
-            }
-        }
-
-        return availableTimes;
     }
 
-    private boolean isParkAvailableAtTime(Park park, LocalTime searchTime) {
-        LocalTime parkStartTime = park.getStartTime();
-        LocalTime parkEndTime = park.getEndTime();
-        return !searchTime.isBefore(parkStartTime) && !searchTime.isAfter(parkEndTime);
-    }
+    private List<String> generateTimeSlots(LocalTime startTime, LocalTime endTime) {
+        List<String> timeSlots = new ArrayList<>();
+        LocalTime currentTime = startTime;
 
-    private void validateRequest(CreateParkRequest request) {
-        if (request.getEndTime().isBefore(request.getStartTime())) {
-            throw new EndTimeBeforeStartTimeException(ErrorCode.INVALID_END_TIME);
+        while (currentTime.isBefore(endTime)) {
+            timeSlots.add(currentTime.format(DateTimeFormatter.ofPattern("HH:mm")));
+            currentTime = currentTime.plusHours(1);
         }
-        if (request.getPrice() <= 0) {
-            throw new PriceUnderZeroException(ErrorCode.INVALID_PRICE);
-        }
-    }
 
-//    private void validateParkNum(String parkNum) {
-//        boolean isValid = openApiClient.validateParkNum(parkNum);
-//        if (!isValid) {
-//            throw new ParkingNumException(ErrorCode.INVALID_PARK_NUM);
-//        }
-//    }
-//
-//    private ParkLocationInfo getParkLocationInfo(String parkNum) {
-//        ParkLocationInfo parkLocationInfo = openApiClient.getParkLocationInfo(parkNum);
-//        if (parkLocationInfo == null) {
-//            throw new ParkLocationNotFoundException(ErrorCode.PARK_LOCATION_NOT_FOUND);
-//        }
-//        return parkLocationInfo;
-//    }
+        return timeSlots;
+    }
 }

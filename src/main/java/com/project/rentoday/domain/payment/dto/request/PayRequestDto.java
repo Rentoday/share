@@ -9,7 +9,6 @@ import lombok.Getter;
 public class PayRequestDto {
 
     private String reservationUid;
-    private String reservationName;
     private String buyerName;
     private double price;
     private String buyerEmail;
@@ -17,7 +16,6 @@ public class PayRequestDto {
     @Builder
     public PayRequestDto(String reservationUid, String reservationName, String buyerName, double price, String buyerEmail) {
         this.reservationUid = reservationUid;
-        this.reservationName = reservationName;
         this.buyerName = buyerName;
         this.price = price;
         this.buyerEmail = buyerEmail;

@@ -46,188 +46,189 @@
     </div>
 </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<script>
+    document.addEventListener('DOMContentLoaded', async function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const parkId = urlParams.get('parkId')
+
+
+    if (!parkId) {
+        alert('주차장 ID가 없습니다.');
+        window.location.href = '/';
+        return;
+    }
+    let parkDetail = {};
+    let selectedTimes = [];
+    let currentUser;
+
+    async function fetchCurrentUser() {
+        try {
+            const response = await api.get('/api/member/info'); // axios를 사용하여 사용자 정보 가져오기
+            currentUser = response.data;
+        } catch (error) {
+            console.error('사용자 정보를 가져오는데 실패했습니다:', error);
+            throw error;
+        }
+    }
+
+    async function fetchParkDetail() {
+        try {
+            const response = await api.get(`/api/parks/${parkId}`); // axios를 사용하여 주차장 상세 정보 가져오기
+            parkDetail = response.data;
+            displayParkDetail();
+            await fetchAvailableTimes();
+        } catch (error) {
+            console.error('주차장 상세 정보를 가져오는데 실패했습니다:', error);
+        }
+    }
+
+    async function fetchAvailableTimes() {
+        try {
+            const response = await api.get(`/api/parks/${parkId}/available-times`); // 가능한 시간 가져오기
+            const availableTimes = response.data.map(time => {
+                const [hours, minutes] = time.split(':');
+                return { hours: parseInt(hours), minutes: parseInt(minutes) };
+            });
+            displayTimeSlots(availableTimes);
+        } catch (error) {
+            console.error('사용 가능한 시간을 가져오는데 실패했습니다:', error);
+        }
+    }
+
+    function displayParkDetail() {
+        if (!parkDetail) {
+            console.error('주차장 상세 정보가 없습니다.');
+            return;
+        }
+
+        document.getElementById('parkingNum').textContent = parkDetail.parkingNum || '';
+        document.getElementById('address').textContent = parkDetail.address || '';
+        document.getElementById('operatingHours').textContent = parkDetail.startTime && parkDetail.endTime
+            ? `${formatTime(parseTime(parkDetail.startTime))} - ${formatTime(parseTime(parkDetail.endTime))}`
+            : '운영 시간 정보 없음';
+        document.getElementById('price').textContent = parkDetail.price || '';
+        document.getElementById('agency').textContent = parkDetail.agency || '';
+        document.getElementById('agNum').textContent = parkDetail.agNum || '';
+        document.getElementById('content').textContent = parkDetail.content || '';
+
+        const imageContainer = document.getElementById('imageContainer');
+        imageContainer.innerHTML = '';
+        if (parkDetail.parkImages && parkDetail.parkImages.length > 0) {
+            parkDetail.parkImages.slice(0, 3).forEach(image => {
+                const img = document.createElement('img');
+                img.src = image.imageUrl;
+                imageContainer.appendChild(img);
+            });
+        }
+    }
+
+    function displayTimeSlots(availableTimes) {
+        const timeSlotsContainer = document.getElementById('timeSlots');
+        timeSlotsContainer.innerHTML = '';
+
+        if (!parkDetail.startTime || !parkDetail.endTime) {
+            console.error('운영 시간 정보가 없습니다.');
+            return;
+        }
+
+        availableTimes.forEach(time => {
+            const button = document.createElement('button');
+            button.textContent = formatTime(time);
+            button.classList.add('time-slot');
+            button.onclick = () => selectTimeSlot(time, button);
+            timeSlotsContainer.appendChild(button);
+        });
+    }
+
+    function formatTime(time) {
+        return `${time.hours.toString().padStart(2, '0')}:${time.minutes.toString().padStart(2, '0')}`;
+    }
+
+    function parseTime(timeString) {
+        if (!timeString) return { hours: 0, minutes: 0 };
+        const [hours, minutes] = timeString.split(':').map(Number);
+        return { hours, minutes };
+    }
+
+    function addHour(time) {
+        let newHours = time.hours + 1;
+        if (newHours >= 24) {
+            newHours -= 24;
+        }
+        return { hours: newHours, minutes: time.minutes };
+    }
+
+    function selectTimeSlot(time, button) {
+        const timeIndex = selectedTimes.findIndex(
+            selectedTime => selectedTime.hours === time.hours && selectedTime.minutes === time.minutes
+        );
+
+        if (timeIndex !== -1) {
+            selectedTimes.splice(timeIndex, 1);
+            button.classList.remove('selected');
+        } else {
+            selectedTimes.push(time);
+            button.classList.add('selected');
+        }
+
+        updateSelectedTimeAndPrice();
+    }
+
+    function updateSelectedTimeAndPrice() {
+        const selectedTimeContainer = document.getElementById('selectedTime');
+        const estimatedPriceContainer = document.getElementById('estimatedPrice');
+
+        selectedTimeContainer.textContent = selectedTimes.map(time => formatTime(time)).join(', ');
+
+        const totalPrice = selectedTimes.length * (parkDetail.price || 0);
+        estimatedPriceContainer.textContent = totalPrice;
+    }
+
+    document.getElementById('reserveButton').addEventListener('click', async () => {
+        if (!selectedTimes || selectedTimes.length === 0) {
+            alert('시간을 선택해주세요.');
+            return;
+        }
+
+        if (!currentUser) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
+        const earliestCheckInTime = selectedTimes.reduce((earliest, time) => {
+            if (time.hours < earliest.hours || (time.hours === earliest.hours && time.minutes < earliest.minutes)) {
+                return time;
+            }
+            return earliest;
+        }, selectedTimes[0]);
+
+        const latestCheckInTime = selectedTimes.reduce((latest, time) => {
+            if (time.hours > latest.hours || (time.hours === latest.hours && time.minutes > latest.minutes)) {
+                return time;
+            }
+            return latest;
+        }, selectedTimes[0]);
+
+        const checkOutTime = addHour(latestCheckInTime);
+
+        const reservationData = {
+            email: currentUser.email,
+            parkId: parseInt(parkId),
+            checkInTimes: selectedTimes.map(time =>
+                `${time.hours.toString().padStart(2, '0')}:${time.minutes.toString().padStart(2, '0')}`
+            ),
+            estimatedPrice: selectedTimes.length * parkDetail.price,
+            checkOutTime: `${checkOutTime.hours.toString().padStart(2, '0')}:${checkOutTime.minutes.toString().padStart(2, '0')}`
+        };
+try {
+            const response = await api.post('/api/reservations', reservationData);
+            const reservationUid = response.data.reservationUid;
+            window.location.href = `/pay?parkId=${parkId}&reservationUid=${reservationUid}`;
+        } catch (error) {
+            console.error('예약 생성에 실패했습니다:', error);
+            alert('예약 생성에 실패했습니다.');
+        }
+    });
 
 
 
@@ -235,143 +236,143 @@
 
 
 async function submitComment() {
-const commentText = document.getElementById('commentText').value;
-if (!commentText) {
-alert('댓글을 입력해주세요.');
-return;
-}
+    const commentText = document.getElementById('commentText').value;
+    if (!commentText) {
+        alert('댓글을 입력해주세요.');
+        return;
+    }
 
-const createRequest = {
-content: commentText
-};
+    const createRequest = {
+        content: commentText
+    };
 
-try {
-await api.post(`/api/comment/${parkId}`, createRequest);
-alert('댓글이 작성되었습니다.');
-document.getElementById('commentText').value = '';
-fetchComments();
-} catch (error) {
-console.error('댓글 작성에 실패했습니다:', error);
-alert('댓글 작성에 실패했습니다.');
-}
+    try {
+        await api.post(`/api/comment/${parkId}`, createRequest);
+        alert('댓글이 작성되었습니다.');
+        document.getElementById('commentText').value = '';
+        fetchComments();
+    } catch (error) {
+        console.error('댓글 작성에 실패했습니다:', error);
+        alert('댓글 작성에 실패했습니다.');
+    }
 }
 
 
 function displayComments(comments) {
-const commentsContainer = document.getElementById('comments');
-commentsContainer.innerHTML = '';
+    const commentsContainer = document.getElementById('comments');
+    commentsContainer.innerHTML = '';
 
-// 댓글을 ID를 키로 하는 맵으로 변환
-const commentMap = new Map();
-comments.forEach(comment => {
-commentMap.set(comment.id, {...comment, children: []});
-});
+    // 댓글을 ID를 키로 하는 맵으로 변환
+    const commentMap = new Map();
+    comments.forEach(comment => {
+        commentMap.set(comment.id, {...comment, children: []});
+    });
 
-// 대댓글을 부모 댓글의 children 배열에 추가
-comments.forEach(comment => {
-if (comment.parentId) {
-const parentComment = commentMap.get(comment.parentId);
-if (parentComment) {
-parentComment.children.push(comment);
-}
-}
-});
+    // 대댓글을 부모 댓글의 children 배열에 추가
+    comments.forEach(comment => {
+        if (comment.parentId) {
+            const parentComment = commentMap.get(comment.parentId);
+            if (parentComment) {
+                parentComment.children.push(comment);
+            }
+        }
+    });
 
-// 최상위 댓글만 렌더링 (대댓글은 재귀적으로 렌더링됨)
-comments.filter(comment => comment.depth === 0).forEach(comment => {
-renderComment(comment, commentsContainer, commentMap);
-});
+    // 최상위 댓글만 렌더링 (대댓글은 재귀적으로 렌더링됨)
+    comments.filter(comment => comment.depth === 0).forEach(comment => {
+        renderComment(comment, commentsContainer, commentMap);
+    });
 }
 
 function renderComment(comment, container, commentMap) {
-const commentElement = document.createElement('div');
-commentElement.classList.add('comment');
+    const commentElement = document.createElement('div');
+    commentElement.classList.add('comment');
 
-if (comment.depth === 1) {
-commentElement.classList.add('reply-comment');
-}
+    if (comment.depth === 1) {
+        commentElement.classList.add('reply-comment');
+    }
 
-let commentHTML = '';
-if (comment.depth === 1) {
-commentHTML += '<span class="reply-indicator">ㄴ</span>';
-}
+    let commentHTML = '';
+    if (comment.depth === 1) {
+        commentHTML += '<span class="reply-indicator">ㄴ</span>';
+    }
 
-commentHTML += `
-<div class="comment-header">
-    <span class="comment-author">${comment.name}</span>
-    <span class="comment-date">${comment.createdAt}</span>
-</div>
-<p class="comment-content">${comment.content}</p>
-<div class="comment-actions">
+    commentHTML += `
+        <div class="comment-header">
+            <span class="comment-author">${comment.name}</span>
+            <span class="comment-date">${comment.createdAt}</span>
+        </div>
+        <p class="comment-content">${comment.content}</p>
+        <div class="comment-actions">
     `;
 
     if (comment.depth === 0) {
-    commentHTML += `<button onclick="showReplyForm(${comment.id})">답글</button>`;
+        commentHTML += `<button onclick="showReplyForm(${comment.id})">답글</button>`;
     }
 
     if (comment.isAuth) {
-    commentHTML += `
-    <button onclick="updateComment(${comment.id})">수정</button>
-    <button onclick="deleteComment(${comment.id})">삭제</button>
-    `;
+        commentHTML += `
+            <button onclick="updateComment(${comment.id})">수정</button>
+            <button onclick="deleteComment(${comment.id})">삭제</button>
+        `;
     }
 
     commentHTML += `</div>`;
 
-if (comment.depth === 0) {
-commentHTML += `
-<div id="replyForm-${comment.id}" class="reply-form" style="display: none;">
-    <textarea id="replyText-${comment.id}" placeholder="답글을 입력하세요" name="content"></textarea>
-    <button onclick="submitReply(${comment.id})">답글 작성</button>
-</div>
-`;
-}
+    if (comment.depth === 0) {
+        commentHTML += `
+            <div id="replyForm-${comment.id}" class="reply-form" style="display: none;">
+                <textarea id="replyText-${comment.id}" placeholder="답글을 입력하세요" name="content"></textarea>
+                <button onclick="submitReply(${comment.id})">답글 작성</button>
+            </div>
+        `;
+    }
 
-commentElement.innerHTML = commentHTML;
-container.appendChild(commentElement);
+    commentElement.innerHTML = commentHTML;
+    container.appendChild(commentElement);
 
-const childComments = commentMap.get(comment.id).children;
-if (childComments && childComments.length > 0) {
-childComments.forEach(childComment => {
-renderComment(childComment, container, commentMap);
-});
-}
+    const childComments = commentMap.get(comment.id).children;
+    if (childComments && childComments.length > 0) {
+        childComments.forEach(childComment => {
+            renderComment(childComment, container, commentMap);
+        });
+    }
 }
 
 window.fetchComments = async function() {
-try {
-const response = await api.get(`/api/comment/${parkId}`);
-displayComments(response.data);
-} catch (error) {
-console.error('댓글을 가져오는데 실패했습니다:', error);
-alert('댓글을 가져오는데 실패했습니다.');
-}
+    try {
+        const response = await api.get(`/api/comment/${parkId}`);
+        displayComments(response.data);
+    } catch (error) {
+        console.error('댓글을 가져오는데 실패했습니다:', error);
+        alert('댓글을 가져오는데 실패했습니다.');
+    }
 }
 
 window.updateComment = async function(commentId) {
-const newContent = prompt('수정할 내용을 입력하세요:');
-if (!newContent) {
-return; // 사용자가 취소를 누르거나 빈 문자열을 입력한 경우
+    const newContent = prompt('수정할 내용을 입력하세요:');
+    if (!newContent) {
+        return; // 사용자가 취소를 누르거나 빈 문자열을 입력한 경우
+    }
+
+    const updateRequest = {
+        content: newContent
+    };
+
+    try {
+        await api.put(`/api/comment/${commentId}`, updateRequest);
+        alert('댓글이 수정되었습니다.');
+        fetchComments();
+    } catch (error) {
+        console.error('댓글 수정에 실패했습니다:', error);
+        alert('댓글 수정에 실패했습니다.');
+    }
 }
 
-const updateRequest = {
-content: newContent
-};
-
-try {
-await api.put(`/api/comment/${commentId}`, updateRequest);
-alert('댓글이 수정되었습니다.');
-fetchComments();
-} catch (error) {
-console.error('댓글 수정에 실패했습니다:', error);
-alert('댓글 수정에 실패했습니다.');
-}
-}
-
-window.showReplyForm = function(commentId) {
-const replyForm = document.getElementById(`replyForm-${commentId}`);
-replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
-}
+    window.showReplyForm = function(commentId) {
+        const replyForm = document.getElementById(`replyForm-${commentId}`);
+        replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+    }
 
 window.submitReply = async function(commentId) {
 const replyText = document.getElementById(`replyText-${commentId}`).value;
@@ -396,25 +397,29 @@ alert('답글 내용을 입력해주세요.');
 }
 
 
-window.deleteComment = async function(commentId) {
-const confirmDelete = confirm("댓글을 삭제하시겠습니까?");
-if (confirmDelete) {
-try {
-await api.delete(`/api/comment/${commentId}`);
-alert('댓글이 삭제되었습니다.');
-fetchComments(); // 댓글 목록을 새로고침
-} catch (error) {
-console.error('댓글 삭제에 실패했습니다:', error);
-alert('댓글 삭제에 실패했습니다.');
-}
-}
-}
+     window.deleteComment = async function(commentId) {
+        const confirmDelete = confirm("댓글을 삭제하시겠습니까?");
+        if (confirmDelete) {
+            try {
+                await api.delete(`/api/comment/${commentId}`);
+                alert('댓글이 삭제되었습니다.');
+                fetchComments(); // 댓글 목록을 새로고침
+            } catch (error) {
+                console.error('댓글 삭제에 실패했습니다:', error);
+                alert('댓글 삭제에 실패했습니다.');
+            }
+        }
+    }
 
 
-document.getElementById('submitComment').onclick = submitComment;
+    document.getElementById('submitComment').onclick = submitComment;
+
+    // 페이지 로드 시 실행
 
 fetchComments().catch(error => alert(error.message));
-
+await fetchCurrentUser();
+    await fetchParkDetail();
+    });
 </script>
 </body>
 </html>

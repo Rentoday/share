@@ -18,4 +18,8 @@ public interface PayRepository extends JpaRepository<Pay, Long> {
 
     @Query("SELECT p FROM Pay p WHERE p.reservation.member.id = :memberId")
     List<Pay> findByMemberId(@Param("memberId") Long memberId);
+
+    @Query("SELECT p FROM Pay p WHERE p.impUid = :impUid")
+    Optional<Pay> findByImpUid(@Param("impUid") String impUid);
+
 }
