@@ -25,7 +25,7 @@ public class Reservation extends BaseEntity {
     private Long id;
 
     @ManyToOne(targetEntity = Park.class, fetch = FetchType.LAZY)
-    @JoinColumn(name = "pa_id")
+    @JoinColumn(name = "park_id")
     private Park park;
 
     @ManyToOne(targetEntity = Member.class, fetch = FetchType.LAZY)

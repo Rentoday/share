@@ -76,26 +76,35 @@ public class PayService {
     public void payByCallback(PayCallbackRequestDto requestDto) {
         try {
             IamportResponse<Payment> iamportResponse = iamportClient.paymentByImpUid(requestDto.getPaymentUid());
+            Payment payment = iamportResponse.getResponse();
 
             Reservation reservation = reservationRepository.findReservationAndPay(requestDto.getReservationUid())
                     .orElseThrow(() -> new IllegalArgumentException("예약 내역이 없습니다."));
 
+            //결제 금액 검증
+            if (!payment.getAmount().equals(reservation.getAmount())) {
+                throw new IllegalStateException("결제 금액이 일치하지 않습니다.");
+            }
+            //결제 상태 검증
+            if (!"paid".equals(payment.getStatus())) {
+                throw new IllegalStateException("결제가 완료되지 않았습니다.");
+            }
+
             validatePayment(iamportResponse, reservation);
-            Pay savedPay = savePaymentInfo(reservation, iamportResponse.getResponse());
+            Pay savedPay = savePaymentInfo(reservation, payment);
             updatePaymentStatus(reservation, savedPay);
             sendPaymentCompletionNotification(reservation);
-
         } catch (Exception e) {
-            log.error("결제 처리 중 오류가 발생했습니다.", e);
+            log.error("결제 처리 중 오류가 발생했습니다.");
             try {
-                // 결제 취소 시도
                 cancelPaymentByImpUid(requestDto.getPaymentUid());
             } catch (Exception cancelException) {
                 log.error("결제 취소 중 오류가 발생했습니다.", cancelException);
             }
-            throw new RuntimeException("결제 처리 중 오류가 발생했습니다.", e);
+            throw new RuntimeException("결제 처리 중 오류가 발생했습니다." + e.getMessage(), e);
         }
-    }
+
+       }
 
     @Transactional
     public void cancelPaymentByImpUid(String impUid) {
