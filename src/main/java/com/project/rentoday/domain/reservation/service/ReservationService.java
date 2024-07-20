@@ -60,18 +60,12 @@ public class ReservationService {
                 .orElseThrow(() -> new IllegalArgumentException("체크인 시간이 비어 있습니다."));
         LocalTime checkOutTime = latestCheckIn.plusHours(1);
 
-        requestDto.setCheckOutTime(checkOutTime);
-        System.out.println("checkOutTime = " + checkOutTime);
-
         LocalTime earliestCheckIn = requestDto.getCheckInTimes().stream()
                 .min(Comparator.naturalOrder())
                 .orElseThrow(() -> new IllegalArgumentException("체크인 시간이 비어있습니다."));
 
-        Reservation savedReservation = null;
-        for (LocalTime checkIn : requestDto.getCheckInTimes()) {
-            Reservation reservation = new Reservation(member, park, earliestCheckIn, requestDto.getEstimatedPrice(), checkOutTime);
-            savedReservation = reservationRepository.save(reservation);
-        }
+        Reservation reservation = new Reservation(member, park, earliestCheckIn, requestDto.getEstimatedPrice(), checkOutTime);
+        Reservation savedReservation = reservationRepository.save(reservation);
 
         return savedReservation;
     }

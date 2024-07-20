@@ -20,6 +20,5 @@ public class CreateReservationRequestDto {
     //총 금액
     private double estimatedPrice;
 
-    private LocalTime checkOutTime;
 
 }
