@@ -3,6 +3,8 @@ package com.project.rentoday.domain.park.controller;
 import com.project.rentoday.domain.park.dto.*;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.service.ParkService;
+import com.project.rentoday.domain.reservation.entity.Reservation;
+import com.project.rentoday.domain.reservation.repository.ReservationRepository;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,7 +17,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,6 +29,7 @@ import java.util.List;
 public class ParkController {
 
     private final ParkService parkService;
+    private final ReservationRepository reservationRepository;
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
@@ -107,10 +113,19 @@ public class ParkController {
 
     //판매 가능 시간을 시간 단위로 추출하는 요청 (timeSlot)
     @GetMapping("/{parkId}/available-times")
-    public ResponseEntity<List<String>> getAvailableTimes(@PathVariable Long parkId) {
+    public ResponseEntity<Map<String, Object>> getAvailableTimes(@PathVariable Long parkId) {
         List<String> availableTimes = parkService.getAvailableTimes(parkId);
-        System.out.println("availableTimes = " + availableTimes);
-        return ResponseEntity.ok(availableTimes);
+        List<Reservation> reservations = reservationRepository.findByParkId(parkId);
+
+        List<String> reservedTimes = reservations.stream()
+                        .map(reservation -> reservation.getCheckIn().toString())
+                        .collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("availableTimes", availableTimes);
+        response.put("reservedTimes", reservedTimes);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{parkId}/details")

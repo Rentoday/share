@@ -83,17 +83,21 @@
     }
 
     async function fetchAvailableTimes() {
-        try {
-            const response = await api.get(`/api/parks/${parkId}/available-times`); // 가능한 시간 가져오기
-            const availableTimes = response.data.map(time => {
-                const [hours, minutes] = time.split(':');
-                return { hours: parseInt(hours), minutes: parseInt(minutes) };
-            });
-            displayTimeSlots(availableTimes);
-        } catch (error) {
-            console.error('사용 가능한 시간을 가져오는데 실패했습니다:', error);
-        }
+    try {
+        const response = await api.get(`/api/parks/${parkId}/available-times`);
+        const availableTimes = response.data.availableTimes.map(time => {
+            const [hours, minutes] = time.split(':');
+            return { hours: parseInt(hours), minutes: parseInt(minutes) };
+        });
+        const reservedTimes = response.data.reservedTimes.map(time => {
+            const [hours, minutes] = time.split(':');
+            return { hours: parseInt(hours), minutes: parseInt(minutes) };
+        });
+        displayTimeSlots(availableTimes, reservedTimes);
+    } catch (error) {
+        console.error('사용 가능한 시간을 가져오는데 실패했습니다:', error);
     }
+}
 
     function displayParkDetail() {
         if (!parkDetail) {
@@ -122,23 +126,30 @@
         }
     }
 
-    function displayTimeSlots(availableTimes) {
-        const timeSlotsContainer = document.getElementById('timeSlots');
-        timeSlotsContainer.innerHTML = '';
+    function displayTimeSlots(availableTimes, reservedTimes) {
+    const timeSlotsContainer = document.getElementById('timeSlots');
+    timeSlotsContainer.innerHTML = '';
 
-        if (!parkDetail.startTime || !parkDetail.endTime) {
-            console.error('운영 시간 정보가 없습니다.');
-            return;
-        }
+    if (!parkDetail.startTime || !parkDetail.endTime) {
+        console.error('운영 시간 정보가 없습니다.');
+        return;
+    }
 
-        availableTimes.forEach(time => {
+    availableTimes.forEach(time => {
+        // 이미 예약된 시간대를 제외합니다.
+        const isReserved = reservedTimes.some(reservedTime =>
+            reservedTime.hours === time.hours && reservedTime.minutes === time.minutes
+        );
+
+        if (!isReserved) {
             const button = document.createElement('button');
             button.textContent = formatTime(time);
             button.classList.add('time-slot');
             button.onclick = () => selectTimeSlot(time, button);
             timeSlotsContainer.appendChild(button);
-        });
-    }
+        }
+    });
+}
 
     function formatTime(time) {
         return `${time.hours.toString().padStart(2, '0')}:${time.minutes.toString().padStart(2, '0')}`;

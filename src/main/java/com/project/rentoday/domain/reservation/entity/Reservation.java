@@ -89,11 +89,6 @@ public class Reservation extends BaseEntity {
         if (amount < 0) {
             throw new IllegalArgumentException("총 금액은 양수여야 합니다.");
         }
-
-        //3. reserveNumber 값이 비어 있는 경우 예외를 던집니다.
-        if (reservationUid == null || reservationUid.isEmpty()) {
-            throw new IllegalArgumentException("예약번호는 항상 있어야 합니다.");
-        }
     }
 
     public void cancel() {

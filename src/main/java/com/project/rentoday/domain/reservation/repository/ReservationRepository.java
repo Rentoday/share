@@ -37,4 +37,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r WHERE r.reservationUid = :reservationUid")
     Optional<Reservation> findReservationAndPay(@Param("reservationUid") String reservationUid);
 
+    List<Reservation> findByParkId(Long parkId);
+
 }
