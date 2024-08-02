@@ -6,6 +6,7 @@ import com.project.rentoday.domain.park.service.ParkService;
 import com.project.rentoday.domain.reservation.entity.Reservation;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
 import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/parks")
-@Api(tags = "Park")
+@Tag(name = "주차 API", description = "주차 관련 REST API")
 public class ParkController {
 
     private final ParkService parkService;
