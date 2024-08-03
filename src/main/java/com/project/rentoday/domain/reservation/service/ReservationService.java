@@ -20,8 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,25 +44,24 @@ public class ReservationService {
     }
 
     @Transactional
-    public Reservation createReservation(CreateReservationRequestDto requestDto) {
+    public List<Reservation> createReservations(CreateReservationRequestDto requestDto) {
         Park park = parkRepository.findById(requestDto.getParkId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 주차장을 찾을 수 없습니다."));
         Member member = memberRepository.findByEmail(requestDto.getEmail())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
 
-        LocalTime latestCheckIn = requestDto.getCheckInTimes().stream()
-                .max(Comparator.naturalOrder())
-                .orElseThrow(() -> new IllegalArgumentException("체크인 시간이 비어 있습니다."));
-        LocalTime checkOutTime = latestCheckIn.plusHours(1);
+        List<LocalTime> sortedCheckInTimes = requestDto.getCheckInTimes().stream()
+                .sorted()
+                .collect(Collectors.toList());
 
-        LocalTime earliestCheckIn = requestDto.getCheckInTimes().stream()
-                .min(Comparator.naturalOrder())
-                .orElseThrow(() -> new IllegalArgumentException("체크인 시간이 비어있습니다."));
+        List<Reservation> reservations = new ArrayList<>();
+        for (LocalTime checkIn : sortedCheckInTimes) {
+            LocalTime checkOut = checkIn.plusHours(1);
+            Reservation reservation = new Reservation(member, park, checkIn, requestDto.getEstimatedPrice(), checkOut);
+            reservations.add(reservationRepository.save(reservation));
+        }
 
-        Reservation reservation = new Reservation(member, park, earliestCheckIn, requestDto.getEstimatedPrice(), checkOutTime);
-        Reservation savedReservation = reservationRepository.save(reservation);
-
-        return savedReservation;
+        return reservations;
     }
 
     @Transactional(readOnly = true)

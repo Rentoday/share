@@ -276,10 +276,6 @@ public class ParkService {
 
         List<Park> availableParks = parkRepository.findAvailableParks(address, searchTime);
 
-        System.out.println("Address: " + address);
-        System.out.println("Search Time: " + searchTime);
-        System.out.println("Available Parks: " + availableParks.size());
-
         List<DistrictDto> filteredParks = availableParks.stream()
                 .map(park -> new DistrictDto(park, district))
                 .collect(Collectors.toList());
