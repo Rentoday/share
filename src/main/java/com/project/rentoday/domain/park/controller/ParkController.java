@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -115,7 +116,7 @@ public class ParkController {
     //판매 가능 시간을 시간 단위로 추출하는 요청 (timeSlot)
     @GetMapping("/{parkId}/available-times")
     public ResponseEntity<Map<String, Object>> getAvailableTimes(@PathVariable Long parkId) {
-        List<String> availableTimes = parkService.getAvailableTimes(parkId);
+        List<LocalTime> availableTimes = parkService.getAvailableTimes(parkId);
         List<Reservation> reservations = reservationRepository.findByParkId(parkId);
 
         List<String> reservedTimes = reservations.stream()

@@ -1,6 +1,7 @@
 package com.project.rentoday.domain.reservation.repository;
 
 import com.project.rentoday.domain.member.entity.Member;
+import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.reservation.entity.Reservation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,13 +20,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Optional<Reservation> findByReservationUid(@Param("uid") String uid);
 
 
-    @Query("SELECT r FROM Reservation r WHERE r.park.id = :parkId AND r.checkIn BETWEEN :checkIn AND :checkOut")
-    List<Reservation> findByParkIdAndCheckInBetween(
-            @Param("parkId") Long parkId,
-            @Param("checkIn") LocalTime checkIn,
-            @Param("checkOut") LocalTime checkOut
-    );
+    boolean isTimeSlotOverlapping(Park park, LocalTime checkIn, LocalTime checkOut);
 
+
+    @Query("SELECT r.checkIn, r.checkOut FROM Reservation r WHERE r.park.id = :parkId")
+    List<LocalTime[]> findReservationTimesByParkId(@Param("parkId") Long parkId);
 
     Page<Reservation> findByMember(Member member, Pageable pageable);
 

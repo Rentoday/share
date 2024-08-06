@@ -21,6 +21,7 @@ import com.project.rentoday.domain.reservation.entity.Reservation;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
 import com.project.rentoday.global.exception.ErrorCode;
 import com.project.rentoday.global.file.service.FileUploadService;
+import jakarta.persistence.Cacheable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
@@ -35,9 +36,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -284,46 +287,56 @@ public class ParkService {
     }
 
     @Transactional(readOnly = true)
-    public List<String> getAvailableTimes(Long parkId) {
+    public List<LocalTime> getAvailableTimes(Long parkId) {
         Park park = parkRepository.findById(parkId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid park Id:" + parkId));
 
         LocalTime startTime = park.getStartTime();
         LocalTime endTime = park.getEndTime();
 
-        List<String> allTimes = generateTimeSlots(startTime, endTime);
-        List<String> reservedTimes = getReservedTimes(parkId);
+        List<LocalTime> allTimes = generateTimeSlots(startTime, endTime);
+        List<LocalTime> reservedTimes = getReservedTimes(parkId);
 
         allTimes.removeAll(reservedTimes);
 
         return allTimes;
     }
 
+    public List<LocalTime> getAvailableTimeSlots(Long parkId) {
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+        Park park = parkRepository.findById(parkId)
+                .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
 
+        LocalTime startTime = park.getStartTime();
+        LocalTime endTime = park.getEndTime();
 
-    @Transactional(readOnly = true)
-    public List<String> getReservedTimes(Long parkId) {
-        LocalTime startTime = LocalTime.MIN;
-        LocalTime endTime = LocalTime.MAX;
+        List<LocalTime> allTimeSlots = generateTimeSlots(startTime, endTime);
+        List<LocalTime> reservedTimes = getReservedTimes(parkId);
 
-        return reservationRepository.findByParkIdAndCheckInBetween(
-                        parkId,
-                        startTime,
-                        endTime
-                ).stream()
-                .map(reservation -> reservation.getCheckIn().format(DateTimeFormatter.ofPattern("HH:mm")))
+        allTimeSlots.removeAll(reservedTimes);
+        return allTimeSlots.stream()
+                .filter(time -> time.isAfter(now))
                 .collect(Collectors.toList());
     }
 
-    private List<String> generateTimeSlots(LocalTime startTime, LocalTime endTime) {
-        List<String> timeSlots = new ArrayList<>();
-        LocalTime currentTime = startTime;
+    private List<LocalTime> getReservedTimes(Long parkId) {
+        List<LocalTime[]> reservationTimes = reservationRepository.findReservationTimesByParkId(parkId);
 
-        while (currentTime.isBefore(endTime)) {
-            timeSlots.add(currentTime.format(DateTimeFormatter.ofPattern("HH:mm")));
-            currentTime = currentTime.plusHours(1);
+        return reservationTimes.stream()
+                .flatMap(Arrays::stream)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    private List<LocalTime> generateTimeSlots(LocalTime startTime, LocalTime endTime) {
+        List<LocalTime> timeSlots = new ArrayList<>();
+        LocalTime current = startTime;
+        while (!current.isAfter(endTime)) {
+            timeSlots.add(current);
+            current = current.plusHours(1);
         }
-
         return timeSlots;
     }
 }

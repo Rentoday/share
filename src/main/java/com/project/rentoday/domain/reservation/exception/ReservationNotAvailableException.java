@@ -1,8 +1,10 @@
 package com.project.rentoday.domain.reservation.exception;
 
+import com.project.rentoday.global.exception.ErrorCode;
+
 public class ReservationNotAvailableException extends RuntimeException {
 
-    public ReservationNotAvailableException(String message) {
+    public ReservationNotAvailableException(ErrorCode message) {
         super(message);
     }
 

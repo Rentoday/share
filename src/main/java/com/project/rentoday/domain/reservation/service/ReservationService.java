@@ -6,13 +6,17 @@ import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.entity.ParkImage;
+import com.project.rentoday.domain.park.exception.ParkIdNotFoundException;
 import com.project.rentoday.domain.park.repository.ParkImageRepository;
 import com.project.rentoday.domain.park.repository.ParkRepository;
 import com.project.rentoday.domain.reservation.dto.CreateReservationRequestDto;
 import com.project.rentoday.domain.reservation.dto.ReadReservationAllResponseDto;
 import com.project.rentoday.domain.reservation.dto.ReservationDetailsDto;
 import com.project.rentoday.domain.reservation.entity.Reservation;
+import com.project.rentoday.domain.reservation.exception.ReservationNotAvailableException;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
+import com.project.rentoday.global.exception.ErrorCode;
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -44,9 +48,10 @@ public class ReservationService {
     }
 
     @Transactional
-    public List<Reservation> createReservations(CreateReservationRequestDto requestDto) {
-        Park park = parkRepository.findById(requestDto.getParkId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 주차장을 찾을 수 없습니다."));
+    public List<Reservation> makeReservations(CreateReservationRequestDto requestDto) {
+        Park park = parkRepository.findByIdWithLock(requestDto.getParkId())
+                .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
+
         Member member = memberRepository.findByEmail(requestDto.getEmail())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
 
@@ -55,9 +60,24 @@ public class ReservationService {
                 .collect(Collectors.toList());
 
         List<Reservation> reservations = new ArrayList<>();
+        double pricePerReservation = requestDto.getEstimatedPrice() / sortedCheckInTimes.size();
+
         for (LocalTime checkIn : sortedCheckInTimes) {
             LocalTime checkOut = checkIn.plusHours(1);
-            Reservation reservation = new Reservation(member, park, checkIn, requestDto.getEstimatedPrice(), checkOut);
+
+            // 운영 시간 내인지 확인
+            if (checkIn.isBefore(park.getStartTime()) || checkOut.isAfter(park.getEndTime())) {
+                throw new ReservationNotAvailableException(ErrorCode.INVALID_END_TIME);
+            }
+
+            // 해당 시간에 이미 예약이 있는지 확인
+            boolean isOverlapping = reservationRepository.isTimeSlotOverlapping(park, checkIn, checkOut);
+
+            if (isOverlapping) {
+                throw new ReservationException(ReservationErrorCode.ALREADY_RESERVED);
+            }
+
+            Reservation reservation = new Reservation(member, park, checkIn, pricePerReservation, checkOut);
             reservations.add(reservationRepository.save(reservation));
         }
 
@@ -125,6 +145,9 @@ public class ReservationService {
         return new PageImpl<>(dtoList, pageable, reservationsPage.getTotalElements());
     }
 
-
-
+    @Cacheable(value = "parkCache", key = "#parkId")
+    private Park getParkById(Long parkId) {
+        return parkRepository.findById(parkId)
+                .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
+    }
 }
