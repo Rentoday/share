@@ -302,23 +302,30 @@ public class ParkService {
         return allTimes;
     }
 
-    public List<LocalTime> getAvailableTimeSlots(Long parkId) {
-        LocalDate today = LocalDate.now();
-        LocalTime now = LocalTime.now();
+    public List<LocalTime> getAvailableTimeSlots(Long parkId, LocalTime startTime, LocalTime endTime) {
         Park park = parkRepository.findById(parkId)
                 .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
 
-        LocalTime startTime = park.getStartTime();
-        LocalTime endTime = park.getEndTime();
-
+        // 모든 가능한 타임슬롯을 생성
         List<LocalTime> allTimeSlots = generateTimeSlots(startTime, endTime);
-        List<LocalTime> reservedTimes = getReservedTimes(parkId);
 
-        allTimeSlots.removeAll(reservedTimes);
+        // 이미 예약되었거나 베타 락이 걸린 시간대의 예약을 조회
+        List<LocalTime> reservedTimes = getReservedTimes(parkId);
+        List<Reservation> existedReservations = reservationRepository.findExistedReservationsWithLock(park, startTime, endTime);
+
+        // 해당 시간대의 checkIn 필드를 추출
+        List<LocalTime> reservedOrLockedSlots = existedReservations.stream()
+                .map(Reservation::getCheckIn)
+                .collect(Collectors.toList());
+
+        // 예약된 시간대 또는 예약 진행 중인 시간대를 제외한 타임슬롯 반환
         return allTimeSlots.stream()
-                .filter(time -> time.isAfter(now))
+                .filter(slot -> !reservedTimes.contains(slot) && !reservedOrLockedSlots.contains(slot))
                 .collect(Collectors.toList());
     }
+
+
+
 
     private List<LocalTime> getReservedTimes(Long parkId) {
         List<LocalTime[]> reservationTimes = reservationRepository.findReservationTimesByParkId(parkId);

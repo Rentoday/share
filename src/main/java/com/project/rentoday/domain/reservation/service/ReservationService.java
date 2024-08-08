@@ -49,7 +49,7 @@ public class ReservationService {
 
     @Transactional
     public List<Reservation> makeReservations(CreateReservationRequestDto requestDto) {
-        Park park = parkRepository.findByIdWithLock(requestDto.getParkId())
+        Park park = parkRepository.findById(requestDto.getParkId())
                 .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
 
         Member member = memberRepository.findByEmail(requestDto.getEmail())
@@ -70,19 +70,22 @@ public class ReservationService {
                 throw new ReservationNotAvailableException(ErrorCode.INVALID_END_TIME);
             }
 
-            // 해당 시간에 이미 예약이 있는지 확인
-            boolean isOverlapping = reservationRepository.isTimeSlotOverlapping(park, checkIn, checkOut);
+            // 베타 락을 통해 이미 예약 중인지 확인
+            List<Reservation> startedReservations = reservationRepository
+                    .findExistedReservationsWithLock(park, checkIn, checkOut);
 
-            if (isOverlapping) {
+            if (!startedReservations.isEmpty()) {
                 throw new ReservationException(ReservationErrorCode.ALREADY_RESERVED);
             }
 
+            // 새로운 예약 생성
             Reservation reservation = new Reservation(member, park, checkIn, pricePerReservation, checkOut);
             reservations.add(reservationRepository.save(reservation));
         }
 
         return reservations;
     }
+
 
     @Transactional(readOnly = true)
     public ReservationDetailsDto getReservationDetails(String reservationUid) {

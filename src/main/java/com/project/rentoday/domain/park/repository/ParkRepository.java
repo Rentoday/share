@@ -27,9 +27,4 @@ public interface ParkRepository extends JpaRepository<Park, Long> {
             "OR (p.startTime > p.endTime AND (:searchTime >= p.startTime OR :searchTime <= p.endTime)))")
     List<Park> findAvailableParks(@Param("address") String address, @Param("searchTime") LocalTime searchTime);
 
-
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT p FROM Park p WHERE p.id = :id")
-    Optional<Park> findByIdWithLock(@Param("id") Long id);
 }
