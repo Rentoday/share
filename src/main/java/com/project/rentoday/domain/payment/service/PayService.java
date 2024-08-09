@@ -49,6 +49,8 @@ public class PayService {
     private final ApplicationEventPublisher publisher;
     private final RedisMessagePublisher redisMessagePublisher;
 
+    private static final int MAX_RETRY_COUNT = 3;  // 최대 3번 재시도
+    private static final long RETRY_DELAY = 2000L; // 2초(2000 밀리초) 대기
 
     public PayRequestDto requestPay(String reservationUid) {
         Reservation reservation = reservationRepository.findReservationAndPayAndMember(reservationUid)
@@ -117,10 +119,11 @@ public class PayService {
             Pay pay = payRepository.findByImpUid(impUid)
                     .orElseThrow(() -> new IllegalArgumentException("해당 결제 내역이 없습니다."));
 
-            // 취소 요청
+            // 환불 요청
             CancelData cancelData = new CancelData(iamportPayment.getImpUid(), true, BigDecimal.valueOf(pay.getAmount()));
             IamportResponse<Payment> cancelResponse = iamportClient.cancelPaymentByImpUid(cancelData);
 
+            // 환불 상태 확인 및 처리
             if (cancelResponse.getResponse().getStatus().equals("cancelled")) {
                 pay.changePayByCancel(PaymentStatus.CANCELLED);
                 payRepository.save(pay);
@@ -135,8 +138,60 @@ public class PayService {
                 throw new RuntimeException("결제 취소에 실패했습니다.");
             }
         } catch (IamportResponseException | IOException e) {
-            throw new RuntimeException("결제 취소 중 오류가 발생했습니다.", e);
+            log.error("결제 취소 중 오류가 발생했습니다.", e);
+
+            // 환불 실패 시 자동 재시도 로직 실행
+            retryCancelPayment(impUid);
         }
+    }
+
+    private void retryCancelPayment(String impUid) {
+        int retryCount = 0; // 재시도 횟수
+        boolean success = false; // 기본값
+
+        while (retryCount < MAX_RETRY_COUNT && !success) {
+
+            try {
+                //일정 시간 대기 후 재시도
+                Thread.sleep(RETRY_DELAY);
+                IamportResponse<Payment> paymentIamportResponse = iamportClient.paymentByImpUid(impUid);
+                Payment iamportPayment = paymentIamportResponse.getResponse();
+
+                //환불 요청 재시도
+                CancelData cancelData = new CancelData(
+                        iamportPayment.getImpUid(),
+                        true,
+                        BigDecimal.valueOf(iamportPayment.getAmount().doubleValue()));
+                IamportResponse<Payment> cancelResponse = iamportClient.cancelPaymentByImpUid(cancelData);
+
+                if (cancelResponse.getResponse().getStatus().equals("cancelled")) {
+                    success = true;
+                    //결제 취소 성공 처리
+                    handleSuccessfulCancellation(iamportPayment);
+                }
+            } catch (IamportResponseException | IOException | InterruptedException exception) {
+                log.error("환불 재시도 중 오류가 발생했습니다.", exception);
+                retryCount++;
+            }
+        }
+        if (!success) {
+            sendErrorNotification("환불 실패", new RuntimeException("최대 재시도 횟수를 초과했습니다."));
+        }
+    }
+
+    private void handleSuccessfulCancellation(Payment iamportPayment) {
+        //환불 성공 시 DB 업데이트
+        Pay pay = payRepository.findByImpUid(iamportPayment.getImpUid())
+                .orElseThrow(() -> new IllegalArgumentException("해당 결제 내역이 없습니다."));
+        pay.changePayByCancel(PaymentStatus.CANCELLED);
+        payRepository.save(pay);
+
+        Reservation reservation = pay.getReservation();
+        reservation.setStatus(ReservationStatus.CANCEL);
+        reservationRepository.save(reservation);
+
+        //사용자에게 결제 취소 및 환불 성공 알림 전송
+        sendPaymentCancellationNotification(reservation);
     }
 
     private Pay savePaymentInfo(Reservation reservation, Payment payment) {
