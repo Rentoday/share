@@ -4,8 +4,7 @@ package com.project.rentoday.domain.park.service;
 import com.project.rentoday.domain.district.entity.District;
 import com.project.rentoday.domain.district.repository.DistrictRepository;
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 
 import com.project.rentoday.domain.park.client.OpenApiClient;
@@ -19,7 +18,6 @@ import com.project.rentoday.domain.park.repository.ParkImageRepository;
 import com.project.rentoday.domain.park.repository.ParkRepository;
 import com.project.rentoday.domain.reservation.entity.Reservation;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
-import com.project.rentoday.global.exception.ErrorCode;
 import com.project.rentoday.global.file.service.FileUploadService;
 import jakarta.persistence.Cacheable;
 import lombok.RequiredArgsConstructor;
@@ -64,7 +62,7 @@ public class ParkService {
 
         //회원 조회
         Member member = memberRepository.findByEmail(request.getMember())
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
 
         String replaceAdd = request.getParkAdd().replaceAll("\\s+", "");
         try {
@@ -79,7 +77,6 @@ public class ParkService {
             e.getMessage();
             e.getStackTrace();
         }
-        System.out.println(request.getPdf());
 
         String fileName = null;
         if (request.getPdf() != null) {
@@ -140,7 +137,8 @@ public class ParkService {
     @Transactional(readOnly = true)
     public ParkDetailsDto getParkDetailsWithReservation(Long parkId, String reservationUid) {
         Park park = parkRepository.findById(parkId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주차장을 찾을 수 없습니다. ID: " + parkId));
+                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
+
 
         Reservation reservation = reservationRepository.findByReservationUid(reservationUid)
                 .orElseThrow(() -> new IllegalArgumentException("해당 예약을 찾을 수 없습니다. UID: " + reservationUid));
@@ -175,7 +173,7 @@ public class ParkService {
     @Transactional(readOnly = true)
     public Page<ParkResponse> getParkByMember(String email, int page, int size) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
         Page<Park> parks = parkRepository.findByMember(member, pageable);
 
@@ -206,14 +204,15 @@ public class ParkService {
     @Transactional
     public Park update(UpdateParkRequest request, Long parkId) {
         Park park = parkRepository.findById(parkId)
-                .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
+                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
+
 
         if (request.getEndTime().isBefore(request.getStartTime())) {
-            throw new EndTimeBeforeStartTimeException(ErrorCode.INVALID_END_TIME);
+            throw new EndTimeBeforeStartTimeException("판매 종료 시간이 시작 시간보다 이전일 수 없습니다.");
         }
 
         if (request.getPrice() <= 0) {
-            throw new PriceUnderZeroException(ErrorCode.INVALID_PRICE);
+            throw new PriceUnderZeroException("판매 금액은 0원 이상이어야 합니다.");
         }
 
         //새로운 값으로 주차 상품 업데이트
@@ -237,7 +236,7 @@ public class ParkService {
     @Transactional(readOnly = true)
     public Page<ParkResponse> getConfirmedParksByMember(String email, int page, int size) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("해당 멤버를 찾을 수 없습니다."));
         Pageable pageable = PageRequest.of(page, size, Sort.by("lastModifiedDate").descending());
         Page<Park> confirmedParks = parkRepository.findByMemberAndParkStatus(member, ParkStatus.CONFIRMED, pageable);
 
@@ -266,7 +265,7 @@ public class ParkService {
     @Transactional
     public void delete(Long parkId) {
         Park park = parkRepository.findById(parkId)
-                .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
+                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
         parkRepository.delete(park);
     }
 
@@ -289,7 +288,7 @@ public class ParkService {
     @Transactional(readOnly = true)
     public List<LocalTime> getAvailableTimes(Long parkId) {
         Park park = parkRepository.findById(parkId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid park Id:" + parkId));
+                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
 
         LocalTime startTime = park.getStartTime();
         LocalTime endTime = park.getEndTime();
@@ -304,7 +303,7 @@ public class ParkService {
 
     public List<LocalTime> getAvailableTimeSlots(Long parkId, LocalTime startTime, LocalTime endTime) {
         Park park = parkRepository.findById(parkId)
-                .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
+                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
 
         // 모든 가능한 타임슬롯을 생성
         List<LocalTime> allTimeSlots = generateTimeSlots(startTime, endTime);

@@ -1,8 +1,7 @@
 package com.project.rentoday.domain.payment.service;
 
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.notification.dto.NotificationDto;
 import com.project.rentoday.domain.notification.service.MessageService;
@@ -12,9 +11,11 @@ import com.project.rentoday.domain.payment.dto.request.PayRequestDto;
 import com.project.rentoday.domain.payment.dto.response.PayInfoResponse;
 import com.project.rentoday.domain.payment.entity.Pay;
 import com.project.rentoday.domain.payment.entity.PaymentStatus;
+import com.project.rentoday.domain.payment.exception.PayNotFoundException;
 import com.project.rentoday.domain.payment.repository.PayRepository;
 import com.project.rentoday.domain.reservation.entity.Reservation;
 import com.project.rentoday.domain.reservation.entity.ReservationStatus;
+import com.project.rentoday.domain.reservation.exception.ReservationNotFoundException;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
 import com.project.rentoday.global.type.NotificationType;
 import com.siot.IamportRestClient.IamportClient;
@@ -54,7 +55,7 @@ public class PayService {
 
     public PayRequestDto requestPay(String reservationUid) {
         Reservation reservation = reservationRepository.findReservationAndPayAndMember(reservationUid)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주문이 없습니다."));
+                .orElseThrow(() -> new ReservationNotFoundException("해당 예약건이 존재하지 않습니다."));
 
         return PayRequestDto.builder()
                 .buyerName(reservation.getMember().getName())
@@ -67,7 +68,7 @@ public class PayService {
     @Transactional(readOnly = true)
     public Page<PayInfoResponse> getPaymentsByMember(String email, int page, int size) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
         Page<Reservation> reservations = reservationRepository.findByMemberAndPayIsNotNull(member, pageable);
 
@@ -117,7 +118,7 @@ public class PayService {
 
             // 결제 정보로 Pay 엔티티 조회
             Pay pay = payRepository.findByImpUid(impUid)
-                    .orElseThrow(() -> new IllegalArgumentException("해당 결제 내역이 없습니다."));
+                    .orElseThrow(() -> new PayNotFoundException("해당 결제 내역이 없습니다."));
 
             // 환불 요청
             CancelData cancelData = new CancelData(iamportPayment.getImpUid(), true, BigDecimal.valueOf(pay.getAmount()));

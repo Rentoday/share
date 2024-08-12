@@ -1,14 +1,9 @@
 package com.project.rentoday.domain.park.exception;
 
-import com.project.rentoday.global.exception.ErrorCode;
-import lombok.AllArgsConstructor;
 
-@AllArgsConstructor
-public class EndTimeBeforeStartTimeException extends RuntimeException{
+public class EndTimeBeforeStartTimeException extends IllegalArgumentException{
 
-    private final ErrorCode errorCode;
-
-    public String getMessage() {
-        return errorCode.getMessage();
+    public EndTimeBeforeStartTimeException(String message) {
+        super(message);
     }
 }

@@ -1,8 +1,7 @@
 package com.project.rentoday.domain.reservation.service;
 
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.entity.ParkImage;
@@ -13,9 +12,10 @@ import com.project.rentoday.domain.reservation.dto.CreateReservationRequestDto;
 import com.project.rentoday.domain.reservation.dto.ReadReservationAllResponseDto;
 import com.project.rentoday.domain.reservation.dto.ReservationDetailsDto;
 import com.project.rentoday.domain.reservation.entity.Reservation;
+import com.project.rentoday.domain.reservation.exception.ReservationAlreadyExistsException;
 import com.project.rentoday.domain.reservation.exception.ReservationNotAvailableException;
+import com.project.rentoday.domain.reservation.exception.ReservationNotFoundException;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
-import com.project.rentoday.global.exception.ErrorCode;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,10 +49,10 @@ public class ReservationService {
     @Transactional
     public List<Reservation> makeReservations(CreateReservationRequestDto requestDto) {
         Park park = parkRepository.findById(requestDto.getParkId())
-                .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
+                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
 
         Member member = memberRepository.findByEmail(requestDto.getEmail())
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
 
         List<LocalTime> sortedCheckInTimes = requestDto.getCheckInTimes().stream()
                 .sorted()
@@ -67,7 +66,7 @@ public class ReservationService {
 
             // 운영 시간 내인지 확인
             if (checkIn.isBefore(park.getStartTime()) || checkOut.isAfter(park.getEndTime())) {
-                throw new ReservationNotAvailableException(ErrorCode.INVALID_END_TIME);
+                throw new ReservationNotAvailableException("해당 예약은 이용하실 수 없습니다.");
             }
 
             // 베타 락을 통해 이미 예약 중인지 확인
@@ -75,7 +74,7 @@ public class ReservationService {
                     .findExistedReservationsWithLock(park, checkIn, checkOut);
 
             if (!startedReservations.isEmpty()) {
-                throw new ReservationException(ReservationErrorCode.ALREADY_RESERVED);
+                throw new ReservationAlreadyExistsException("해당 시간은 이미 예약되었습니다.");
             }
 
             // 새로운 예약 생성
@@ -90,7 +89,7 @@ public class ReservationService {
     @Transactional(readOnly = true)
     public ReservationDetailsDto getReservationDetails(String reservationUid) {
         Reservation reservation = reservationRepository.findByReservationUid(reservationUid)
-                .orElseThrow(() -> new IllegalArgumentException("해당 예약을 찾을 수 없습니다."));
+                .orElseThrow(() -> new ReservationNotFoundException("해당 예약을 찾을 수 없습니다."));
 
         Park park = reservation.getPark();
         Member member = reservation.getMember();
@@ -139,7 +138,7 @@ public class ReservationService {
     @Transactional(readOnly = true)
     public Page<ReadReservationAllResponseDto> findReservationByMember(String email, int page, int size) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
         Page<Reservation> reservationsPage = reservationRepository.findByMember(member, pageable);
 
@@ -151,6 +150,6 @@ public class ReservationService {
     @Cacheable(value = "parkCache", key = "#parkId")
     private Park getParkById(Long parkId) {
         return parkRepository.findById(parkId)
-                .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
+                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
     }
 }
