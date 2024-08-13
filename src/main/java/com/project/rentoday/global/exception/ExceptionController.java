@@ -1,19 +1,15 @@
 package com.project.rentoday.global.exception;
 
-import com.project.rentoday.domain.comment.exception.CommentException;
 import com.project.rentoday.domain.district.exception.DistrictNotFoundException;
 import com.project.rentoday.domain.member.exception.MemberNotFoundException;
-import com.project.rentoday.domain.notification.exception.NotificationException;
 import com.project.rentoday.domain.park.exception.EndTimeBeforeStartTimeException;
 import com.project.rentoday.domain.park.exception.ParkIdNotFoundException;
 import com.project.rentoday.domain.park.exception.PriceUnderZeroException;
 import com.project.rentoday.domain.payment.exception.PayNotFoundException;
 import com.project.rentoday.domain.reservation.exception.ReservationAlreadyExistsException;
 import com.project.rentoday.domain.reservation.exception.ReservationNotFoundException;
-import com.project.rentoday.global.jwt.exception.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 

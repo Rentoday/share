@@ -21,10 +21,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r WHERE r.reservationUid = :uid")
     Optional<Reservation> findByReservationUid(@Param("uid") String uid);
 
-
-    boolean isTimeSlotOverlapping(Park park, LocalTime checkIn, LocalTime checkOut);
-
-
     @Query("SELECT r.checkIn, r.checkOut FROM Reservation r WHERE r.park.id = :parkId")
     List<LocalTime[]> findReservationTimesByParkId(@Param("parkId") Long parkId);
 

@@ -3,8 +3,7 @@ package com.project.rentoday.domain.member.sevice;
 import com.project.rentoday.domain.member.dto.EmailDto;
 import com.project.rentoday.domain.member.dto.MemberDto;
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.global.file.service.FileUploadService;
 import jakarta.mail.MessagingException;
@@ -21,7 +20,6 @@ import java.io.IOException;
 public class JoinService {
 
     private final MemberRepository memberRepository;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final EmailService emailService;
     private final VerificationService verificationService;
     private final FileUploadService fileUploadService;
@@ -33,7 +31,7 @@ public class JoinService {
         Boolean isExist = memberRepository.existsByEmail(email);
 
         if (isExist) {
-            throw new MemberException(MemberErrorCode.MEMBER_DUPLICATE_EMAIL_ERROR);
+            throw new MemberNotFoundException("존재하지 않는 멤버입니다.");
         }
         //redis서버에 이메일을 키로하는 인증번호 저장
         //인증키 생성
@@ -49,14 +47,13 @@ public class JoinService {
 
         //회원 아이디 중복에 대한 처리
         if (memberRepository.existsByEmail(email)) {
-            throw new MemberException(MemberErrorCode.MEMBER_DUPLICATE_EMAIL_ERROR);
+            throw new MemberNotFoundException("존재하지 않는 멤버입니다.");
         }
         //
         if (verificationService.verficationCheck(email)) {
             Member member = Member.createMember()
                     .email(createRequest.getEmail())
                     //bCrypt로 패스워드 암호화
-                    .password(bCryptPasswordEncoder.encode(createRequest.getPassword()))
                     .phone(createRequest.getPhone())
                     .name(createRequest.getName())
                     .profileImage(fileUploadService.profileImageUpload(createRequest.getProfileImage()))

@@ -39,7 +39,7 @@ public class ReservationController {
         String email = principal.getUsername();
         requestDto.setEmail(email);
 
-        List<Reservation> reservations = reservationService.createReservations(requestDto);
+        List<Reservation> reservations = reservationService.makeReservations(requestDto);
 
         return ResponseEntity.ok(reservations);
     }

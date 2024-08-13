@@ -180,6 +180,21 @@ public class PayService {
         }
     }
 
+    private void sendErrorNotification(String errorMessage, Exception e) {
+        log.error(errorMessage, e);
+
+        // 관리자에게 에러 알림 전송
+        NotificationDto.CreateRequest notificationRequest = new NotificationDto.CreateRequest(
+                "결제 시스템 오류 발생: " + errorMessage,
+                "admin@example.com", // 관리자 이메일 주소
+                NotificationType.ERROR
+        );
+        publisher.publishEvent(notificationRequest);
+
+        // 추가적인 에러 처리 로직을 여기에 구현할 수 있습니다.
+        // 예: 모니터링 시스템에 알림 전송, 에러 로그 저장 등
+    }
+
     private void handleSuccessfulCancellation(Payment iamportPayment) {
         //환불 성공 시 DB 업데이트
         Pay pay = payRepository.findByImpUid(iamportPayment.getImpUid())

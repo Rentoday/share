@@ -147,9 +147,4 @@ public class ReservationService {
         return new PageImpl<>(dtoList, pageable, reservationsPage.getTotalElements());
     }
 
-    @Cacheable(value = "parkCache", key = "#parkId")
-    private Park getParkById(Long parkId) {
-        return parkRepository.findById(parkId)
-                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
-    }
 }

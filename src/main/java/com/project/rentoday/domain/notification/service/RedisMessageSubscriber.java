@@ -2,8 +2,7 @@ package com.project.rentoday.domain.notification.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.notification.dto.NotificationDto;
 import com.project.rentoday.domain.notification.entity.Notification;
@@ -38,7 +37,7 @@ public class RedisMessageSubscriber implements MessageListener {
             NotificationDto.CreateRequest createRequest = deserialize(message);
             //수신자 조회
             Member member = memberRepository.findByEmail(createRequest.getReceiver())
-                    .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                    .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
             //수신자 체크해서 수신자 SseEmitter 생성
             SseEmitter sseEmitter = NotificationService.userEmitters.get(createRequest.getReceiver());
             //메시지 발송
@@ -62,7 +61,7 @@ public class RedisMessageSubscriber implements MessageListener {
     
     //SSE 전송
     @Transactional
-    private void sendSse(SseEmitter sseEmitter, Member member, NotificationDto.CreateRequest createRequest) {
+    protected void sendSse(SseEmitter sseEmitter, Member member, NotificationDto.CreateRequest createRequest) {
         try {
             if (sseEmitter != null) {
                 log.info("{}은 로그인 상태", member.getEmail());

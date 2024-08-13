@@ -2,8 +2,7 @@ package com.project.rentoday.domain.member.sevice;
 
 import com.project.rentoday.domain.member.dto.MemberDto;
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.global.file.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,7 @@ public class MemberService {
     public MemberDto.ReadResponse info(String email) {
 
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
 
         return new MemberDto.ReadResponse(member.getEmail(), member.getName(), member.getPhone(), member.getProfileImage(), member.getOauthId(), member.getCreatedDate());
     }
@@ -49,14 +48,14 @@ public class MemberService {
             return memberList;
         }
 
-        throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR);
+        throw new MemberNotFoundException("존재하지 않는 멤버입니다.");
     }
 
     //회원 수정
     public MemberDto.ReadResponse update(MemberDto.UpdateRequest updateRequest, String email) throws IOException {
 
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
         member.updateProfile(bCryptPasswordEncoder.encode(updateRequest.getPassword()), fileUploadService.profileImageUpload(updateRequest.getProfileImage()));
         memberRepository.save(member);
 
@@ -67,13 +66,13 @@ public class MemberService {
     public void delete(MemberDto.DeleteRequest deleteRequest, String email) {
 
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
 
         Boolean pass = bCryptPasswordEncoder.matches(deleteRequest.getPassword(), member.getPassword());
         if (pass) {
             memberRepository.delete(member);
         }
-        throw new MemberException(MemberErrorCode.MEMBER_INVALID_PASSWORD_ERROR);
+        throw new MemberNotFoundException("존재하지 않는 멤버입니다.");
 
     }
 }

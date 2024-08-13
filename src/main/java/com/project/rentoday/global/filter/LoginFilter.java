@@ -3,8 +3,7 @@ package com.project.rentoday.global.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.rentoday.domain.member.dto.MemberDto;
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.global.jwt.entity.RefreshToken;
 import com.project.rentoday.global.jwt.repository.RefreshRepository;
@@ -117,13 +116,13 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
 
-        throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR);
+        throw new MemberNotFoundException("존재하지 않는 멤버입니다.");
     }
 
     //db에 refreshToken 저장
     private void saveRefreshToken(String email, String refreshToken) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
         String expiration = jwtService.expiredDate(refreshToken).toString();
         RefreshToken refresh = new RefreshToken(refreshToken, member, expiration);
         refreshRepository.save(refresh);

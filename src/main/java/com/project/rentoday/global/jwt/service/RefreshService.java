@@ -1,8 +1,6 @@
 package com.project.rentoday.global.jwt.service;
 
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.global.jwt.dto.JwtDto;
 import com.project.rentoday.global.jwt.entity.RefreshToken;
