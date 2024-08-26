@@ -13,6 +13,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +22,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 //요청에 의해 딱 한번만 실행되는 필터
+@Slf4j
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -29,7 +31,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        try {
+
             String requestURI = request.getRequestURI();
 
             // 재발급 API 경로를 제외
@@ -52,7 +54,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
             //토큰 소멸시간 검증
             if (jwtService.isExpired(accessToken)) {
-                System.out.println("토큰 만료");
                 throw new JwtException(JwtErrorCode.JWT_ACCESS_EXPIRATION_ERROR);
             }
 
@@ -62,13 +63,9 @@ public class JwtFilter extends OncePerRequestFilter {
             Member member = memberRepository.findByEmail(username)
                     .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
             String password = member.getPassword();
-            System.out.println(member.getEmail());
-            System.out.println(member.getName());
-            System.out.println(member.getPassword());
 
             MemberDto.CreateDetails memberDto = new MemberDto.CreateDetails(username, role, password);
             CustomMemberDetails customMemberDetails = new CustomMemberDetails(memberDto);
-            System.out.println(customMemberDetails.getUsername());
 
             Authentication authToken = new UsernamePasswordAuthenticationToken(customMemberDetails, null, customMemberDetails.getAuthorities());
             //일시적인 세션을 생성
@@ -76,15 +73,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
 
             filterChain.doFilter(request, response);
-        } catch (JwtException e) {
-            JwtException(response, e);
-        }
+
+//        try {
+//        } catch (JwtException e) {
+//            JwtException(response, e);
+//        }
     }
 
-    private void JwtException(HttpServletResponse response, JwtException e) throws IOException {
-        JwtErrorCode errorCode = e.getJwtErrorCode();
-        response.setStatus(errorCode.getHttpStatus().value());
-        response.setContentType("application/json");
-        response.getWriter().write("{\"errorCode\": \"" + errorCode.getCode() + "\", \"message\": \"" + errorCode.getMessage() + "\"}");
-    }
+//    private void JwtException(HttpServletResponse response, JwtException e) throws IOException {
+//        JwtErrorCode errorCode = e.getJwtErrorCode();
+//        response.setStatus(errorCode.getHttpStatus().value());
+//        response.setContentType("application/json");
+//        response.getWriter().write("{\"errorCode\": \"" + errorCode.getCode() + "\", \"message\": \"" + errorCode.getMessage() + "\"}");
+//    }
 }

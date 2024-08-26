@@ -4,7 +4,9 @@ import com.project.rentoday.domain.member.dto.EmailDto;
 import com.project.rentoday.domain.member.dto.MemberDto;
 import com.project.rentoday.domain.member.sevice.JoinService;
 import com.project.rentoday.domain.member.sevice.VerificationService;
-import jakarta.mail.MessagingException;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,29 +23,39 @@ import java.io.IOException;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/member")
+@Tag(name = "join", description = "member join API")
 public class JoinApiController {
 
     private final JoinService joinService;
     private final VerificationService verificationService;
 
     //이메일 중복체크 및 인증메일 전송
-    @PostMapping(value = "/emailCheck", produces = "text/plain; charset=UTF-8")
-    public ResponseEntity<String> emailCheck(@RequestBody EmailDto.Request emailRequest) throws MessagingException {
+    @Operation(summary = "이메일 검사/인증메일", description = "이메일 중복검사와 검사 후 해당 이메일로 인증코드를 전송합니다.")
+    @PostMapping(value = "/emailcheck",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> emailCheck(@Valid @RequestBody EmailDto.emailRequest emailRequest) {
         joinService.emailCheck(emailRequest);
         return ResponseEntity.status(HttpStatus.OK).body("이메일이 전송되었습니다.");
     }
 
     //이메일 인증번호 검증
-    @PostMapping(value = "/verification", produces = "json/plain; charset=UTF-8")
-    public ResponseEntity<String> verification(@RequestBody EmailDto.codeRequest codeRequest) {
+    @Operation(summary = "이메일 인증코드 체크", description = "입력한 이메일과 인증코드의 일치여부를 검사합니다.")
+    @PostMapping(value = "/verification",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> verification(@Valid @RequestBody EmailDto.codeRequest codeRequest) {
         verificationService.verification(codeRequest);
         return ResponseEntity.status(HttpStatus.OK).body("이메일 인증이 완료되었습니다.");
     }
 
     //회원가입
-    @PostMapping(value = "/join", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "회원가입 진행", description = "인증코드 체크여부를 확인하고 입력한 정보를 토대로 회원가입을 진행합니다.")
+    @PostMapping(value = "/join",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> join(@Valid @RequestPart(value = "key") MemberDto.CreateRequest createRequest,
-                                       @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) throws IOException {
+                                       @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         createRequest.setProfileImage(profileImage);
         joinService.joinProcess(createRequest);
         return ResponseEntity.status(HttpStatus.OK).body("회원가입이 완료되었습니다.");

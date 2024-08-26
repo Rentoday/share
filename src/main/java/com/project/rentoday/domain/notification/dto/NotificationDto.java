@@ -1,6 +1,7 @@
 package com.project.rentoday.domain.notification.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.project.rentoday.domain.notification.entity.Notification;
 import com.project.rentoday.global.type.NotificationType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,25 +24,30 @@ public class NotificationDto  {
         private String message;
         //수신자
         private String receiver;
-
+        //알림유형
         private NotificationType type;
+
+        public CreateRequest(Notification notification) {
+            this.message = notification.getMessage();
+            this.receiver = notification.getMember().getEmail();
+            this.type = notification.getType();
+        }
     }
 
     @Getter
     @Setter
-    @JsonFormat(pattern = "yy.MM.dd HH:mm")
     public static class ReadResponse {
-
         private String message;
+        @JsonFormat(pattern = "yy.MM.dd HH:mm")
         private LocalDateTime date;
     }
 
     @Getter
     @Setter
-    @JsonFormat(pattern = "yy.MM.dd HH:mm")
     @AllArgsConstructor
     public static class sendResponse {
         private String message;
+        @JsonFormat(pattern = "yy.MM.dd HH:mm")
         private LocalDateTime date;
     }
 

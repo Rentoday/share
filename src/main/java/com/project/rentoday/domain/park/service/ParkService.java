@@ -4,10 +4,10 @@ package com.project.rentoday.domain.park.service;
 import com.project.rentoday.domain.district.entity.District;
 import com.project.rentoday.domain.district.repository.DistrictRepository;
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberNotFoundException;
+import com.project.rentoday.domain.member.exception.MemberErrorCode;
+import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 
-import com.project.rentoday.domain.park.client.OpenApiClient;
 import com.project.rentoday.domain.park.client.OpenApiClientService;
 import com.project.rentoday.domain.park.dto.*;
 import com.project.rentoday.domain.park.entity.Park;
@@ -19,10 +19,8 @@ import com.project.rentoday.domain.park.repository.ParkRepository;
 import com.project.rentoday.domain.reservation.entity.Reservation;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
 import com.project.rentoday.global.file.service.FileUploadService;
-import jakarta.persistence.Cacheable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,13 +32,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -62,7 +58,7 @@ public class ParkService {
 
         //회원 조회
         Member member = memberRepository.findByEmail(request.getMember())
-                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
 
         String replaceAdd = request.getParkAdd().replaceAll("\\s+", "");
         try {
@@ -77,15 +73,11 @@ public class ParkService {
             e.getMessage();
             e.getStackTrace();
         }
+        System.out.println(request.getPdf());
 
         String fileName = null;
         if (request.getPdf() != null) {
-            try {
-                fileName = fileUploadService.pdfUpload(request.getPdf());
-            } catch (IOException e) {
-                e.getMessage();
-                e.getStackTrace();
-            }
+            fileName = fileUploadService.uploadFile(request.getPdf());
         }
 
         //Park 엔티티 생성
@@ -118,17 +110,12 @@ public class ParkService {
     private void saveImage(Park park, MultipartFile[] images) {
         if (images != null) {
             for (MultipartFile photo : images) {
-                try {
-                    String fileName = fileUploadService.profileImageUpload(photo);
-                    ParkImage image = ParkImage.builder()
-                            .park(park)
-                            .parkingImageUrl(fileName)
-                            .build();
-                    parkImageRepository.save(image);
-                } catch (IOException e) {
-                    e.getMessage();
-                    e.getStackTrace();
-                }
+                String fileName = fileUploadService.uploadProfildImage(photo);
+                ParkImage image = ParkImage.builder()
+                        .park(park)
+                        .parkingImageUrl(fileName)
+                        .build();
+                parkImageRepository.save(image);
             }
         }
     }
@@ -138,7 +125,6 @@ public class ParkService {
     public ParkDetailsDto getParkDetailsWithReservation(Long parkId, String reservationUid) {
         Park park = parkRepository.findById(parkId)
                 .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
-
 
         Reservation reservation = reservationRepository.findByReservationUid(reservationUid)
                 .orElseThrow(() -> new IllegalArgumentException("해당 예약을 찾을 수 없습니다. UID: " + reservationUid));
@@ -173,7 +159,7 @@ public class ParkService {
     @Transactional(readOnly = true)
     public Page<ParkResponse> getParkByMember(String email, int page, int size) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
         Page<Park> parks = parkRepository.findByMember(member, pageable);
 
@@ -236,7 +222,7 @@ public class ParkService {
     @Transactional(readOnly = true)
     public Page<ParkResponse> getConfirmedParksByMember(String email, int page, int size) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException("해당 멤버를 찾을 수 없습니다."));
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
         Pageable pageable = PageRequest.of(page, size, Sort.by("lastModifiedDate").descending());
         Page<Park> confirmedParks = parkRepository.findByMemberAndParkStatus(member, ParkStatus.CONFIRMED, pageable);
 

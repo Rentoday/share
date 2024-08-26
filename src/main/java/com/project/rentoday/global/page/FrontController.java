@@ -36,8 +36,6 @@ public class FrontController {
         return "pay.html";
     }
 
-
-
     @GetMapping("/login")
     public String login() {
         return "login.html";
@@ -62,5 +60,11 @@ public class FrontController {
     public String join() {
         return "member/join.html";
     }
+
+    @GetMapping("/main")
+    public String main() {
+        return "layout/main.html";
+    }
+
 
 }

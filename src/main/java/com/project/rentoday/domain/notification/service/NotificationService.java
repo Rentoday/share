@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,43 +46,39 @@ public class NotificationService {
         //Sse를 email을 키로 구독 시작
         userEmitters.put(email, sseEmitter);
         //자신의 이메일로 redis topic 구독 시작
-        redisMessagePublisher.subcribeTopic(email);
+        redisMessagePublisher.subscribeTopic(email);
 
         //연결이 해제될 경우 사용자 id를 삭제
         sseEmitter.onCompletion(() -> {
             userEmitters.remove(email);
-            redisMessagePublisher.unSubcribeTopic(email);
+            redisMessagePublisher.unSubscribeTopic(email);
         });
         //연결 시간이 만료될 경우 사용자 id를 삭제
         sseEmitter.onTimeout(() -> {
             userEmitters.remove(email);
-            redisMessagePublisher.unSubcribeTopic(email);
+            redisMessagePublisher.unSubscribeTopic(email);
         });
         //연결 에러가 발생할 경우 사용자 id를 삭제
         sseEmitter.onError((e) -> {
             userEmitters.remove(email);
-            redisMessagePublisher.unSubcribeTopic(email);
+            redisMessagePublisher.unSubscribeTopic(email);
         });
 
-        // 연결 직후, 데이터 전송이 없을 시 503 에러 발생. 에러 방지 위한 더미데이터 전송
-
         //클라이언트가 미수신한 메시지 발생시 메시지 전송
-//        sendUnreadNotifications(member, sseEmitter);
+        sendUnreadNotifications(member);
 
         return sseEmitter;
     }
 
     //미수신 메시지 전송
-    private void sendUnreadNotifications(Member member, SseEmitter sseEmitter) {
-        List<Notification> unreadNotifications = notificationRepository.findUnreadMessages(member);
+    @Transactional
+    private void sendUnreadNotifications(Member member) {
+        List<Notification> unreadNotifications = notificationRepository.findUnreadMessages(member.getId());
         if (!unreadNotifications.isEmpty()) {
             unreadNotifications.forEach(notification -> {
-                try {
-                    sseEmitter.send(SseEmitter.event().name("notification").data(notification.getMessage()));
-                    notification.updateRead();
-                } catch (IOException e) {
-                    log.error("Error sending notification: ", e);
-                }
+                NotificationDto.CreateRequest request = new NotificationDto.CreateRequest(notification);
+                redisMessagePublisher.publishTopic(member.getEmail(), request);
+                notification.updateRead();
             });
             notificationRepository.saveAll(unreadNotifications);
         }
@@ -91,7 +86,7 @@ public class NotificationService {
 
     //로그아웃 시 구독해제
     public void unSubscribe(String email) {
-        redisMessagePublisher.unSubcribeTopic(email);
+        redisMessagePublisher.unSubscribeTopic(email);
         userEmitters.remove(email);
     }
     

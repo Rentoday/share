@@ -1,6 +1,8 @@
 package com.project.rentoday.domain.member.sevice;
 
 import com.project.rentoday.domain.member.dto.EmailDto;
+import com.project.rentoday.domain.member.exception.VerificationErrorCode;
+import com.project.rentoday.domain.member.exception.VerificationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,8 @@ public class VerificationService {
     }
 
     //redis의 인증키 검증
-    public void verification(EmailDto.codeRequest codeRequest) {
+    public void  verification(EmailDto.codeRequest codeRequest) {
+
         String email = codeRequest.getEmail();
         String accessCode = codeRequest.getAccessCode();
         String redisValue = redisTemplate.opsForValue().get(email);
@@ -36,8 +39,11 @@ public class VerificationService {
                 System.out.println("키값 체크 확인");
                 redisTemplate.delete(email);
                 redisTemplate.opsForValue().set(email, "TRUE");
+                return;
             }
+            throw new VerificationException(VerificationErrorCode.VERIFICATION_CODE_NOT_FOUND_ERROR);
         }
+        throw new VerificationException(VerificationErrorCode.VERIFICATION_EXPIRATION_CODE_ERROR);
     }
 
     //이메일 인증 여부 체크
@@ -46,8 +52,10 @@ public class VerificationService {
         if (Boolean.TRUE.equals(redisTemplate.hasKey(email))) {
             if (redisValue.equals("TRUE")) {
                 redisTemplate.delete(email);
+                return true;
             }
+            throw new VerificationException(VerificationErrorCode.VERIFICATION_ERROR);
         }
-        return true;
+        return false;
     }
 }

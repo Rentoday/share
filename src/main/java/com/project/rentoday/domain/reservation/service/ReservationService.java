@@ -1,7 +1,8 @@
 package com.project.rentoday.domain.reservation.service;
 
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberNotFoundException;
+import com.project.rentoday.domain.member.exception.MemberErrorCode;
+import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.park.entity.ParkImage;
@@ -16,15 +17,17 @@ import com.project.rentoday.domain.reservation.exception.ReservationAlreadyExist
 import com.project.rentoday.domain.reservation.exception.ReservationNotAvailableException;
 import com.project.rentoday.domain.reservation.exception.ReservationNotFoundException;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
-import jakarta.persistence.Cacheable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,6 +35,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReservationService {
 
+    private static final Logger log = LoggerFactory.getLogger(ReservationService.class);
     private final ReservationRepository reservationRepository;
     private final MemberRepository memberRepository;
     private final ParkRepository parkRepository;
@@ -52,7 +56,7 @@ public class ReservationService {
                 .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
 
         Member member = memberRepository.findByEmail(requestDto.getEmail())
-                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
 
         List<LocalTime> sortedCheckInTimes = requestDto.getCheckInTimes().stream()
                 .sorted()
@@ -84,7 +88,6 @@ public class ReservationService {
 
         return reservations;
     }
-
 
     @Transactional(readOnly = true)
     public ReservationDetailsDto getReservationDetails(String reservationUid) {
@@ -138,7 +141,7 @@ public class ReservationService {
     @Transactional(readOnly = true)
     public Page<ReadReservationAllResponseDto> findReservationByMember(String email, int page, int size) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
         Page<Reservation> reservationsPage = reservationRepository.findByMember(member, pageable);
 

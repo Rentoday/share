@@ -120,8 +120,8 @@ public class ParkController {
         List<Reservation> reservations = reservationRepository.findByParkId(parkId);
 
         List<String> reservedTimes = reservations.stream()
-                        .map(reservation -> reservation.getCheckIn().toString())
-                        .collect(Collectors.toList());
+                .map(reservation -> reservation.getCheckIn().toString())
+                .collect(Collectors.toList());
 
         Map<String, Object> response = new HashMap<>();
         response.put("availableTimes", availableTimes);

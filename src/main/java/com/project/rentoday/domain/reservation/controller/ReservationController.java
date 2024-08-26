@@ -52,8 +52,8 @@ public class ReservationController {
     //예약 삭제
     @DeleteMapping(value = "/{reservationId}", produces = TEXT_PLAIN_VALUE)
     public ResponseEntity<Void> cancelReservation(@PathVariable Long reservationId) {
-            reservationService.cancelReservation(reservationId);
-            return ResponseEntity.noContent().build();
+        reservationService.cancelReservation(reservationId);
+        return ResponseEntity.noContent().build();
     }
 
     // 사용자별 예약 조회

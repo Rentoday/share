@@ -139,7 +139,7 @@
     // 이메일 인증 요청
     document.querySelector('.button-email-check').addEventListener('click', function() {
         const email = document.querySelector('.text-input-email').value;
-        axios.post('/api/member/emailCheck',
+        axios.post('/api/member/emailcheck',
             JSON.stringify({ email: email }),
             {
                 headers: {
@@ -152,10 +152,24 @@
                 alert(response.data); // 응답 텍스트를 직접 표시
             }
         })
-        .catch(function (error) {
-            alert('이메일 인증 요청 중 오류가 발생했습니다.');
-        });
+         .catch(function (error) {
+        if (error.response && error.response.data && Array.isArray(error.response.data)) {
+            let errorMessage = "유효성 검사 오류:\n";
+            error.response.data.forEach(err => {
+                errorMessage += `${err}\n`;
+                alert(errorMessage);
+            });
+        } else if (error.response && error.response.data) {
+            // 서버에서 반환한 에러 메시지가 있는 경우
+            alert(error.response.data);
+        } else if (error.message) {
+            // Axios에서 생성한 에러 메시지가 있는 경우
+            alert(error.message);
+        } else {
+            alert('이메일 인증 요청 중 알 수 없는 오류가 발생했습니다.');
+        }
     });
+});
 
     // 인증번호 확인
     document.querySelector('.button-check-num').addEventListener('click', function() {

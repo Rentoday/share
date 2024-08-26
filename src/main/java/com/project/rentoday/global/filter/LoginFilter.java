@@ -94,21 +94,14 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         //추출한 id와 권한을 통해서 Access / Refresh Token 생성
         String accessToken = jwtService.createAccessJwt(email, role);
         String refreshToken = jwtService.createRefreshJwt();
-        System.out.println(refreshToken);
 
         //refresh Token db에 저장
         saveRefreshToken(email, refreshToken);
-
 
         //jwt를 헤더를 통해 응답
         //HTTP 인증 방식은 RFC7235정의에 따라서 아래 인증 헤더 형태를 가져야한다. Bearer 접두사가 필수다
         response.addHeader("Authorization", "Bearer " + accessToken);
         response.addCookie(createCookie("Refresh", refreshToken));
-        System.out.println(refreshToken + "발급");
-        System.out.println(refreshToken + "발급");
-        System.out.println(refreshToken + "발급");
-        System.out.println(refreshToken + "발급");
-        System.out.println(refreshToken + "발급");
         response.setStatus(HttpStatus.OK.value());
     }
 

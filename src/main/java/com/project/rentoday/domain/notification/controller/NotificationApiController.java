@@ -2,6 +2,8 @@ package com.project.rentoday.domain.notification.controller;
 
 import com.project.rentoday.domain.notification.dto.NotificationDto;
 import com.project.rentoday.domain.notification.service.NotificationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -17,34 +19,35 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/notification")
 @RequiredArgsConstructor
+@Tag(name = "notification", description = "notification API")
 public class NotificationApiController {
 
     private final NotificationService notificationService;
 
     //구독 요청
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "알림 구독", description = "사용자의 알림을 실시간으로 구독합니다.")
     public ResponseEntity<SseEmitter> subscribe(@AuthenticationPrincipal UserDetails principal) {
         String email = principal.getUsername();
         log.info("{}의 subscribe 요청", email);
         SseEmitter sseEmitter = notificationService.subscribe(email);
-
         return ResponseEntity.ok().body(sseEmitter);
     }
 
     //알림 전체 조회
-    @GetMapping("/read")
+    @GetMapping(value = "/read", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "알림 조회", description = "사용자의 알림 전체를 조회합니다.")
     public ResponseEntity<List<NotificationDto.ReadResponse>> readAllNotification(@AuthenticationPrincipal UserDetails principal) {
         String email = principal.getUsername();
         log.info("{}의 알림목록 전체조회 요청", email);
         List<NotificationDto.ReadResponse> readResponse = notificationService.readAll(email);
-
         return ResponseEntity.ok().body(readResponse);
     }
     
     //알림 삭제
-    @DeleteMapping("/notification")
+    @DeleteMapping(value = "/delete", produces = MediaType.TEXT_PLAIN_VALUE)
+    @Operation(summary = "알림 삭제", description = "사용자의 알림을 삭제합니다.")
     public ResponseEntity<String> deleteNotification(@PathVariable List<Long> notificationIds) {
-
         log.info("선택 알림 삭제 요청");
         notificationService.deleteNotification(notificationIds);
 

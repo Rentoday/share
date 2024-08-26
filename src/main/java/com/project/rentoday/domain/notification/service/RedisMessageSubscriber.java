@@ -55,7 +55,6 @@ public class RedisMessageSubscriber implements MessageListener {
         }catch (IOException e) {
             log.info("직렬화 예외 발생 : {}", e.getMessage());
         }
-
         return null;
     }
     
@@ -78,15 +77,6 @@ public class RedisMessageSubscriber implements MessageListener {
                 String messageDtoJson = objectMapper.writeValueAsString(createRequest);
                 sseEmitter.send(SseEmitter.event().name("notification").data(messageDtoJson));
                 // JSON 문자열을 SSE 이벤트로 전송
-            } else {
-                log.info("{}은 로그아웃 상태", member.getEmail());
-                Notification notification = Notification.createMessage()
-                        .message(createRequest.getMessage())
-                        .member(member)
-                        .isRead(false)
-                        .type(createRequest.getType())
-                        .build();
-                notificationRepository.save(notification);
             }
         }catch (IOException e) {
             log.info("SSE 예외 발생 : {}", e.getMessage());
