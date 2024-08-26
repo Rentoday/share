@@ -629,37 +629,49 @@ cssCopy.time-selector {
 }
 
 
+/*판매 모달*/
 .frame-modal-registration {
+  position: relative;
   background: #FFFFFF;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
-  width: 719px;
+  padding: 14px 20px 40.8px 20px;
+  width: 100%;
+  max-width: 719px;
   box-sizing: border-box;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  text-align: center;
 }
 
 .frame-modal-registration .material-symbolscancel-outline {
-  align-self: flex-end;
+  position: absolute;
+  top: 14px;
+  right: 20px;
+  width: 24px;
+  height: 24px;
   cursor: pointer;
 }
 
+.frame-modal-registration .vector {
+  width: 20px;
+  height: 20px;
+}
+
 .frame-modal-registration .text-modal-title {
+  margin: 0 0 22px 0;
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  font-weight: 600;
   font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 30px;
-    width: 100%; /* 전체 너비 사용 */
-    text-align: center; /* 텍스트 중앙 정렬 */
+  color: #000000;
+  text-align: center;
+  width: 100%;
 }
 
 .frame-modal-registration .container-registration {
   width: 100%;
   display: flex;
-    flex-direction: column;
-    align-items: center; /* 내용 중앙 정렬 */
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .frame-modal-registration .container-car-number,
@@ -670,22 +682,33 @@ cssCopy.time-selector {
 .frame-modal-registration .container-image,
 .frame-modal-registration .container-confirmation {
   display: flex;
-   align-items: center;
-   margin-bottom: 20px;
-   width: 100%; /* 전체 너비 사용 */
-   justify-content: flex-start; /* 왼쪽 정렬 */
+  flex-direction: row;
+  width: 100%;
+  margin-bottom: 22px;
+  align-items: center;
 }
 
 .frame-modal-registration .text-title-car-number,
 .frame-modal-registration .text-title-parking-number,
+.frame-modal-registration .text-title-parking-address,
 .frame-modal-registration .text-title-time,
 .frame-modal-registration .text-title-time-price,
 .frame-modal-registration .text-title-detail,
 .frame-modal-registration .text-title-image,
 .frame-modal-registration .text-title-confirmation {
   width: 100px;
-  font-weight: bold;
-  text-align: left; /* 왼쪽 정렬 */
+  flex-shrink: 0;
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 20px;
+  color: #000000;
+  margin-right: 20px;
+}
+
+.frame-modal-registration .text-title-time-price {
+  width: auto;
+  white-space: nowrap;
 }
 
 .frame-modal-registration .container-2,
@@ -696,17 +719,15 @@ cssCopy.time-selector {
 .frame-modal-registration .box-input-upload-img,
 .frame-modal-registration .box-input-confirmation {
   flex-grow: 1;
-  width: calc(100% - 120px); /* 라벨 너비(100px)와 여백(20px) 제외 */
+  width: calc(100% - 120px);
+  border: 1px solid #1FBC21;
+  background: #FFFFFF;
+  padding: 7px 12px;
+  box-sizing: border-box;
 }
 
-.frame-modal-registration input[type="text"],
-.frame-modal-registration textarea,
-.frame-modal-registration .box-input-upload-img {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #1FBC21;
-  border-radius: 5px;
-  box-sizing: border-box; /* 패딩을 너비에 포함 */
+.frame-modal-registration .container-1 {
+  height: 213px;
 }
 
 .frame-modal-registration .container-time {
@@ -715,53 +736,114 @@ cssCopy.time-selector {
 
 .frame-modal-registration .container-3,
 .frame-modal-registration .container-4 {
-  width: calc(50% - 20px); /* 두 입력 필드 사이의 간격 고려 */
+  width: calc((100% - 140px) / 2);
 }
 
 .frame-modal-registration .text-wave {
   margin: 0 10px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 20px;
+  color: #000000;
 }
 
-.frame-modal-registration .container-1 textarea {
+.frame-modal-registration input[type="text"],
+.frame-modal-registration textarea {
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 20px;
+  color: #000000;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+.frame-modal-registration .box-input-upload-img {
+  height: auto;
+  min-height: 46px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px;
+}
+
+.frame-modal-registration .upload-label {
+  align-self: flex-start;
+  margin-bottom: 10px;
+  display: inline-block;
+  padding: 6px 12px;
+  cursor: pointer;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.frame-modal-registration #imagePreview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+}
+
+.frame-modal-registration #imagePreview img {
+  width: 100px;
   height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.frame-modal-registration .box-input-confirmation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+}
+
+.frame-modal-registration .pdf-upload-label {
+  display: inline-block;
+  padding: 6px 12px;
+  cursor: pointer;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.frame-modal-registration #pdfFileName {
+  margin-left: 10px;
+  font-size: 14px;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-grow: 1;
 }
 
 .frame-modal-registration .button-request {
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.25);
+  border-radius: 50px;
   background: #1FBC21;
-  color: white;
-  border: none;
-  border-radius: 25px;
-  padding: 15px 0;
-  width: calc(100% - 40px); /* 좌우 여백 20px씩 제외 */
-  font-size: 18px;
-  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+  width: 100%;
+  max-width: 525px;
+  margin: 30px auto 0;
   cursor: pointer;
-  margin-top: 20px;
-  text-align: center; /* 텍스트 중앙 정렬 */
 }
 
-/* 추가된 스타일 */
-.frame-modal-registration .container-image input[type="file"],
-.frame-modal-registration .container-confirmation input[type="checkbox"] {
-  display: none;
+.frame-modal-registration .text-request {
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 20px;
+  color: #FFFFFF;
 }
 
-.frame-modal-registration .box-input-upload-img,
-.frame-modal-registration .box-input-confirmation {
-  border: 1px solid #1FBC21;
-  padding: 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  text-align: left; /* 텍스트 왼쪽 정렬 */
-}
-
-.frame-modal-registration .box-input-confirmation {
-  width: 20px;
-  height: 20px;
-}
-
-
-//이미지 업로드
+/*이미지 업로드*/
 .box-input-upload-img {
     border: 1px solid #1FBC21;
     padding: 10px;

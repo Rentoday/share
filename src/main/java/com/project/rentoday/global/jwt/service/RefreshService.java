@@ -64,6 +64,7 @@ public class RefreshService {
         refreshRepository.deleteByRefreshToken(refresh);
     }
 
+//    refreshToken 재발급 로직
 //    private void saveRefreshToken(String email, String refreshToken) {
 //        Member member = memberRepository.findByEmail(email)
 //                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));

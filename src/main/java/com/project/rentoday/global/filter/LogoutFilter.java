@@ -35,8 +35,6 @@ public class LogoutFilter extends GenericFilterBean {
     }
 
     private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
-        try {
-            System.out.println("로그아웃 진입");
             //요청받은 uri 경로가 /logout인지 검증
             String requestUri = request.getRequestURI();
             if (!requestUri.matches("^\\/logout$")) {
@@ -67,33 +65,14 @@ public class LogoutFilter extends GenericFilterBean {
             Cookie[] cookies = request.getCookies();
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals("Refresh")) {
-                    System.out.println(cookie.getValue());
-                    System.out.println(cookie.getValue());
-                    System.out.println(cookie.getValue());
-                    System.out.println(cookie.getValue());
-                    System.out.println(cookie.getValue());
-
                     refresh = cookie.getValue();
                 }
             }
 
-            System.out.println(refresh);
-            System.out.println(refresh);
-            System.out.println(refresh);
-            System.out.println(refresh);
-            System.out.println(refresh);
-            System.out.println(refresh);
-
             //refresh null check
             if (refresh == null) {
-
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
-
-            System.out.println("토큰있따!!!!");
-            System.out.println("토큰있따!!!!");
-            System.out.println(refresh);
-            System.out.println("토큰있따!!!!");
 
             //expired check
             if(jwtService.isExpired(refresh)) {
@@ -114,7 +93,6 @@ public class LogoutFilter extends GenericFilterBean {
             //Refresh 토큰 DB에서 제거
             refreshService.deleteRefresh(refresh);
             notificationService.unSubscribe(email);
-            System.out.println("로그아웃");
 
             //Refresh token cookie 값 0
             Cookie cookie = new Cookie("Refresh", null);
@@ -122,18 +100,7 @@ public class LogoutFilter extends GenericFilterBean {
             cookie.setPath("/");
 
             response.addCookie(cookie);
-            System.out.println("Authentication successful. Redirecting to: http://localhost:81/main");
             response.sendRedirect("http://localhost:81/main");
-        } catch (JwtException e) {
-            JwtException(response, e);
-        }
-    }
-
-    private void JwtException(HttpServletResponse response, JwtException e) throws IOException {
-        JwtErrorCode errorCode = e.getJwtErrorCode();
-        response.setStatus(errorCode.getHttpStatus().value());
-        response.setContentType("application/json");
-        response.getWriter().write("{\"errorCode\": \"" + errorCode.getCode() + "\", \"message\": \"" + errorCode.getMessage() + "\"}");
     }
 
 }

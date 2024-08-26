@@ -8,7 +8,6 @@ import com.project.rentoday.domain.member.exception.MemberErrorCode;
 import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 
-import com.project.rentoday.domain.park.client.OpenApiClient;
 import com.project.rentoday.domain.park.client.OpenApiClientService;
 import com.project.rentoday.domain.park.dto.*;
 import com.project.rentoday.domain.park.entity.Park;
@@ -19,11 +18,9 @@ import com.project.rentoday.domain.park.repository.ParkImageRepository;
 import com.project.rentoday.domain.park.repository.ParkRepository;
 import com.project.rentoday.domain.reservation.entity.Reservation;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
-import com.project.rentoday.global.exception.ErrorCode;
 import com.project.rentoday.global.file.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,8 +35,8 @@ import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -80,12 +77,7 @@ public class ParkService {
 
         String fileName = null;
         if (request.getPdf() != null) {
-            try {
-                fileName = fileUploadService.pdfUpload(request.getPdf());
-            } catch (IOException e) {
-                e.getMessage();
-                e.getStackTrace();
-            }
+            fileName = fileUploadService.uploadFile(request.getPdf());
         }
 
         //Park 엔티티 생성
@@ -118,17 +110,12 @@ public class ParkService {
     private void saveImage(Park park, MultipartFile[] images) {
         if (images != null) {
             for (MultipartFile photo : images) {
-                try {
-                    String fileName = fileUploadService.profileImageUpload(photo);
-                    ParkImage image = ParkImage.builder()
-                            .park(park)
-                            .parkingImageUrl(fileName)
-                            .build();
-                    parkImageRepository.save(image);
-                } catch (IOException e) {
-                    e.getMessage();
-                    e.getStackTrace();
-                }
+                String fileName = fileUploadService.uploadProfildImage(photo);
+                ParkImage image = ParkImage.builder()
+                        .park(park)
+                        .parkingImageUrl(fileName)
+                        .build();
+                parkImageRepository.save(image);
             }
         }
     }
@@ -137,7 +124,7 @@ public class ParkService {
     @Transactional(readOnly = true)
     public ParkDetailsDto getParkDetailsWithReservation(Long parkId, String reservationUid) {
         Park park = parkRepository.findById(parkId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주차장을 찾을 수 없습니다. ID: " + parkId));
+                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
 
         Reservation reservation = reservationRepository.findByReservationUid(reservationUid)
                 .orElseThrow(() -> new IllegalArgumentException("해당 예약을 찾을 수 없습니다. UID: " + reservationUid));
@@ -203,14 +190,15 @@ public class ParkService {
     @Transactional
     public Park update(UpdateParkRequest request, Long parkId) {
         Park park = parkRepository.findById(parkId)
-                .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
+                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
+
 
         if (request.getEndTime().isBefore(request.getStartTime())) {
-            throw new EndTimeBeforeStartTimeException(ErrorCode.INVALID_END_TIME);
+            throw new EndTimeBeforeStartTimeException("판매 종료 시간이 시작 시간보다 이전일 수 없습니다.");
         }
 
         if (request.getPrice() <= 0) {
-            throw new PriceUnderZeroException(ErrorCode.INVALID_PRICE);
+            throw new PriceUnderZeroException("판매 금액은 0원 이상이어야 합니다.");
         }
 
         //새로운 값으로 주차 상품 업데이트
@@ -263,7 +251,7 @@ public class ParkService {
     @Transactional
     public void delete(Long parkId) {
         Park park = parkRepository.findById(parkId)
-                .orElseThrow(() -> new ParkIdNotFoundException(ErrorCode.INVALID_PARK_ID));
+                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
         parkRepository.delete(park);
     }
 
@@ -276,10 +264,6 @@ public class ParkService {
 
         List<Park> availableParks = parkRepository.findAvailableParks(address, searchTime);
 
-        System.out.println("Address: " + address);
-        System.out.println("Search Time: " + searchTime);
-        System.out.println("Available Parks: " + availableParks.size());
-
         List<DistrictDto> filteredParks = availableParks.stream()
                 .map(park -> new DistrictDto(park, district))
                 .collect(Collectors.toList());
@@ -288,46 +272,63 @@ public class ParkService {
     }
 
     @Transactional(readOnly = true)
-    public List<String> getAvailableTimes(Long parkId) {
+    public List<LocalTime> getAvailableTimes(Long parkId) {
         Park park = parkRepository.findById(parkId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid park Id:" + parkId));
+                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
 
         LocalTime startTime = park.getStartTime();
         LocalTime endTime = park.getEndTime();
 
-        List<String> allTimes = generateTimeSlots(startTime, endTime);
-        List<String> reservedTimes = getReservedTimes(parkId);
+        List<LocalTime> allTimes = generateTimeSlots(startTime, endTime);
+        List<LocalTime> reservedTimes = getReservedTimes(parkId);
 
         allTimes.removeAll(reservedTimes);
 
         return allTimes;
     }
 
+    public List<LocalTime> getAvailableTimeSlots(Long parkId, LocalTime startTime, LocalTime endTime) {
+        Park park = parkRepository.findById(parkId)
+                .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
 
+        // 모든 가능한 타임슬롯을 생성
+        List<LocalTime> allTimeSlots = generateTimeSlots(startTime, endTime);
 
-    @Transactional(readOnly = true)
-    public List<String> getReservedTimes(Long parkId) {
-        LocalTime startTime = LocalTime.MIN;
-        LocalTime endTime = LocalTime.MAX;
+        // 이미 예약되었거나 베타 락이 걸린 시간대의 예약을 조회
+        List<LocalTime> reservedTimes = getReservedTimes(parkId);
+        List<Reservation> existedReservations = reservationRepository.findExistedReservationsWithLock(park, startTime, endTime);
 
-        return reservationRepository.findByParkIdAndCheckInBetween(
-                        parkId,
-                        startTime,
-                        endTime
-                ).stream()
-                .map(reservation -> reservation.getCheckIn().format(DateTimeFormatter.ofPattern("HH:mm")))
+        // 해당 시간대의 checkIn 필드를 추출
+        List<LocalTime> reservedOrLockedSlots = existedReservations.stream()
+                .map(Reservation::getCheckIn)
+                .collect(Collectors.toList());
+
+        // 예약된 시간대 또는 예약 진행 중인 시간대를 제외한 타임슬롯 반환
+        return allTimeSlots.stream()
+                .filter(slot -> !reservedTimes.contains(slot) && !reservedOrLockedSlots.contains(slot))
                 .collect(Collectors.toList());
     }
 
-    private List<String> generateTimeSlots(LocalTime startTime, LocalTime endTime) {
-        List<String> timeSlots = new ArrayList<>();
-        LocalTime currentTime = startTime;
 
-        while (currentTime.isBefore(endTime)) {
-            timeSlots.add(currentTime.format(DateTimeFormatter.ofPattern("HH:mm")));
-            currentTime = currentTime.plusHours(1);
+
+
+    private List<LocalTime> getReservedTimes(Long parkId) {
+        List<LocalTime[]> reservationTimes = reservationRepository.findReservationTimesByParkId(parkId);
+
+        return reservationTimes.stream()
+                .flatMap(Arrays::stream)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    private List<LocalTime> generateTimeSlots(LocalTime startTime, LocalTime endTime) {
+        List<LocalTime> timeSlots = new ArrayList<>();
+        LocalTime current = startTime;
+        while (!current.isAfter(endTime)) {
+            timeSlots.add(current);
+            current = current.plusHours(1);
         }
-
         return timeSlots;
     }
 }

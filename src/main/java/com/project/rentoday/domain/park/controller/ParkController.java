@@ -6,6 +6,7 @@ import com.project.rentoday.domain.park.service.ParkService;
 import com.project.rentoday.domain.reservation.entity.Reservation;
 import com.project.rentoday.domain.reservation.repository.ReservationRepository;
 import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +27,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/parks")
-@Api(tags = "Park")
+@Tag(name = "주차 API", description = "주차 관련 REST API")
 public class ParkController {
 
     private final ParkService parkService;
@@ -114,12 +116,12 @@ public class ParkController {
     //판매 가능 시간을 시간 단위로 추출하는 요청 (timeSlot)
     @GetMapping("/{parkId}/available-times")
     public ResponseEntity<Map<String, Object>> getAvailableTimes(@PathVariable Long parkId) {
-        List<String> availableTimes = parkService.getAvailableTimes(parkId);
+        List<LocalTime> availableTimes = parkService.getAvailableTimes(parkId);
         List<Reservation> reservations = reservationRepository.findByParkId(parkId);
 
         List<String> reservedTimes = reservations.stream()
-                        .map(reservation -> reservation.getCheckIn().toString())
-                        .collect(Collectors.toList());
+                .map(reservation -> reservation.getCheckIn().toString())
+                .collect(Collectors.toList());
 
         Map<String, Object> response = new HashMap<>();
         response.put("availableTimes", availableTimes);

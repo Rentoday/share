@@ -18,6 +18,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.util.List;
+
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
@@ -31,17 +33,15 @@ public class ReservationController {
 
     //예약 생성
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CreateReservationResponseDto> insertReservation(
+    public ResponseEntity<List<Reservation>> insertReservation(
             @RequestBody CreateReservationRequestDto requestDto,
             @AuthenticationPrincipal UserDetails principal) {
         String email = principal.getUsername();
         requestDto.setEmail(email);
 
-        Reservation reservation = reservationService.createReservation(requestDto);
-        System.out.println("reservation = " + reservation);
+        List<Reservation> reservations = reservationService.makeReservations(requestDto);
 
-        CreateReservationResponseDto responseDto = new CreateReservationResponseDto(reservation);
-        return ResponseEntity.ok(responseDto);
+        return ResponseEntity.ok(reservations);
     }
 
     @GetMapping("/details")
@@ -52,8 +52,8 @@ public class ReservationController {
     //예약 삭제
     @DeleteMapping(value = "/{reservationId}", produces = TEXT_PLAIN_VALUE)
     public ResponseEntity<Void> cancelReservation(@PathVariable Long reservationId) {
-            reservationService.cancelReservation(reservationId);
-            return ResponseEntity.noContent().build();
+        reservationService.cancelReservation(reservationId);
+        return ResponseEntity.noContent().build();
     }
 
     // 사용자별 예약 조회

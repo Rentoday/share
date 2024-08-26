@@ -16,7 +16,6 @@ public class District {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @Column
     @NotNull
     private String name;

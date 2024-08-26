@@ -25,17 +25,15 @@ public class OpenApiClientService {
     public OpenApiResponse getTotalPages(String parkNum, String parkAdd) throws IOException {
 
         StringBuilder urlBuilder = new StringBuilder("http://api.data.go.kr/openapi/tn_pubr_public_residnt_prior_parkng_api");
-        urlBuilder.append("?" + URLEncoder.encode("serviceKey", "UTF-8") + "=fAE8k5HHp4hTgUUUqxBXAoiB6bRZN8yRylIcq6IcQ8o%2F2vQ90%2BjHK98ADbKbrEBCigAWumlLdDvaShJdXpIxiQ%3D%3D");
+        urlBuilder.append("?" + URLEncoder.encode("serviceKey", "UTF-8") + "=" + "6BDrAeb%2BwLE1YUfJWaU26Lewr31bxukvc9ZyUuK1Dau%2BHHslgnEUKycBz9gc7U%2FapbFQy%2FBman1fWrBqe93Ymw%3D%3D");
         urlBuilder.append("&" + URLEncoder.encode("pageNo", "UTF-8") + "=" + URLEncoder.encode("1", "UTF-8")); /*페이지 번호*/
         urlBuilder.append("&" + URLEncoder.encode("numOfRows", "UTF-8") + "=" + URLEncoder.encode("100", "UTF-8")); /*한 페이지 결과 수*/
         urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("json", "UTF-8")); /*XML/JSON 여부*/
-        urlBuilder.append("&" + URLEncoder.encode("prkcmprtNo", "UTF-8") + "=" + URLEncoder.encode(parkNum, "UTF-8")); /*XML/JSON 여부*/
+        urlBuilder.append("&" + URLEncoder.encode("PRKCMPRT_NO", "UTF-8") + "=" + URLEncoder.encode(parkNum, "UTF-8")); /*XML/JSON 여부*/
         URL url = new URL(urlBuilder.toString());
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Content-type", "application/json");
-
-        System.out.println("Response code: " + conn.getResponseCode());
 
         BufferedReader rd;
         if(conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
@@ -53,10 +51,7 @@ public class OpenApiClientService {
         rd.close();
         conn.disconnect();
 
-        System.out.println(sb.toString());
-
         String jsonString = sb.toString();
-        System.out.println("Received JSON: " + jsonString);
         Gson gson = new Gson();
 
         // JSON 객체에서 실제 데이터 배열을 추출 (API 응답 구조에 따라 다를 수 있음)
@@ -69,11 +64,10 @@ public class OpenApiClientService {
         List<OpenApiResponse> parkingInfoList = gson.fromJson(itemsArray, listType);
 
 
-        // 이제 parkingInfoList를 사용하여 데이터를 처리할 수 있습니다
+        // 이제 parkingInfoList를 사용하여 데이터를 처리가능
         for (OpenApiResponse info : parkingInfoList) {
             String address = info.getRdnmadr().replaceAll("\\s+", "");
             if (info.getPrkcmprtNo().equals(parkNum) && address.equals(parkAdd)) {
-                System.out.println(info.getRdnmadr());
                 return info;
             }
         }

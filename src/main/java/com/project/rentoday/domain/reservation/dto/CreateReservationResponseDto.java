@@ -26,7 +26,6 @@ public class CreateReservationResponseDto {
 
     private LocalTime checkOut;
 
-
     private ReservationStatus reservationStatus;
 
     private double price;

@@ -15,7 +15,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     Boolean existsByMember(Member member);
 
     @Query("SELECT n FROM Notification n " +
-            "WHERE n.member = :member AND n.isRead = false " +
+            "JOIN FETCH n.member m " +
+            "WHERE m.id = :memberId AND n.isRead = false " +
             "ORDER BY n.createdDate DESC")
-    List<Notification> findUnreadMessages(@Param("member") Member member);
+    List<Notification> findUnreadMessages(@Param("memberId") Long memberId);
 }

@@ -27,40 +27,32 @@ public class MemberService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
 
-        return new MemberDto.ReadResponse(member.getEmail(), member.getName(), member.getPhone(), member.getProfileImage(), member.getOauthId(), member.getCreatedDate());
+        return new MemberDto.ReadResponse(member);
     }
 
-    //회원 조회
+    //회원전체 조회
     public List<MemberDto.ReadResponse> allMember() {
 
         List<Member> members = memberRepository.findAll();
         List<MemberDto.ReadResponse> memberList = null;
-        MemberDto.ReadResponse readDto = new MemberDto.ReadResponse();
-        if (members != null) {
 
+        if (members != null) {
             for(Member member : members) {
-                readDto.setEmail(member.getEmail());
-                readDto.setName(member.getName());
-                readDto.setPhone(member.getPhone());
-                readDto.setProfileImage(member.getProfileImage());
+                MemberDto.ReadResponse readDto = new MemberDto.ReadResponse(member);
                 memberList.add(readDto);
             }
-
             return memberList;
         }
-
         throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR);
     }
 
     //회원 수정
-    public MemberDto.ReadResponse update(MemberDto.UpdateRequest updateRequest, String email) throws IOException {
+    public void update(MemberDto.UpdateRequest updateRequest) throws IOException {
 
-        Member member = memberRepository.findByEmail(email)
+        Member member = memberRepository.findByEmail(updateRequest.getEmail())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-        member.updateProfile(bCryptPasswordEncoder.encode(updateRequest.getPassword()), fileUploadService.profileImageUpload(updateRequest.getProfileImage()));
+        member.updateProfile(bCryptPasswordEncoder.encode(updateRequest.getPassword()), fileUploadService.uploadProfildImage(updateRequest.getProfileImage()));
         memberRepository.save(member);
-
-        return new MemberDto.ReadResponse(member.getEmail(), member.getName(), member.getPhone(), member.getProfileImage(), member.getOauthId(), member.getCreatedDate());
     }
 
     //회원 탈퇴
@@ -69,11 +61,11 @@ public class MemberService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
 
-        Boolean pass = bCryptPasswordEncoder.matches(deleteRequest.getPassword(), member.getPassword());
+        boolean pass = bCryptPasswordEncoder.matches(deleteRequest.getPassword(), member.getPassword());
+
         if (pass) {
             memberRepository.delete(member);
         }
         throw new MemberException(MemberErrorCode.MEMBER_INVALID_PASSWORD_ERROR);
-
     }
 }

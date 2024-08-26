@@ -28,9 +28,11 @@ public class VerificationService {
 
     //redis의 인증키 검증
     public void  verification(EmailDto.codeRequest codeRequest) {
+
         String email = codeRequest.getEmail();
         String accessCode = codeRequest.getAccessCode();
         String redisValue = redisTemplate.opsForValue().get(email);
+
         if (Boolean.TRUE.equals(redisTemplate.hasKey(email))) {
             System.out.println("키값 존재 유");
             if (accessCode.equals(redisValue)) {

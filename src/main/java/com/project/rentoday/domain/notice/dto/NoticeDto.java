@@ -20,11 +20,11 @@ public class NoticeDto {
 
     @Getter
     @Setter
-    @JsonFormat(pattern = "yy.MM.dd")
     @NoArgsConstructor
     public static class ReadResponse {
         private String title;
         private String content;
+        @JsonFormat(pattern = "yy.MM.dd")
         private LocalDateTime createdAt;
     }
 

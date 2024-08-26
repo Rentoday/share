@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,18 +43,18 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "pa_id")
     private Park park;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "parent_id")
     private Comment parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> children;
 
-    @Builder(builderMethodName = "createComment")
+    //댓글작성
     public Comment(
             @NotNull @Size(max = 2500) String content,
             @NotNull Member member,
-            @NotNull Park park
+             @NotNull Park park
     ) {
         this.content = content;
         this.depth = 0;
@@ -61,36 +62,23 @@ public class Comment extends BaseEntity {
         this.park = park;
     }
 
-    @Builder(builderMethodName = "createReply")
+    //대댓글 작성
     public Comment(
             @NotNull @Size(max = 2500) String content,
             @NotNull Member member,
             @NotNull Park park,
             @NotNull Comment parent
-    ) {
-        Objects.requireNonNull(content, "Content must not be null");
-        Objects.requireNonNull(member, "Member must not be null");
-        Objects.requireNonNull(park, "Park must not be null");
-        Objects.requireNonNull(parent, "Parent comment must not be null");
-
+            ) {
+        this.parent = parent;
         this.content = content;
-        this.depth = 1;
         this.member = member;
         this.park = park;
-        this.parent = parent;
+        this.depth = 1;
     }
 
+    //댓글 수정
     public void updateComment(String comment) {
         this.content = comment;
     }
-
-    public void setDepth() {
-        this.depth = 1;
-    }
-
-    public void setParent(Comment parent) {
-        this.parent = parent;
-    }
-
 
 }

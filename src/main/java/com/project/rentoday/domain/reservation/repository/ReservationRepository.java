@@ -1,10 +1,13 @@
 package com.project.rentoday.domain.reservation.repository;
 
 import com.project.rentoday.domain.member.entity.Member;
+import com.project.rentoday.domain.park.entity.Park;
 import com.project.rentoday.domain.reservation.entity.Reservation;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -18,14 +21,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r WHERE r.reservationUid = :uid")
     Optional<Reservation> findByReservationUid(@Param("uid") String uid);
 
-
-    @Query("SELECT r FROM Reservation r WHERE r.park.id = :parkId AND r.checkIn BETWEEN :checkIn AND :checkOut")
-    List<Reservation> findByParkIdAndCheckInBetween(
-            @Param("parkId") Long parkId,
-            @Param("checkIn") LocalTime checkIn,
-            @Param("checkOut") LocalTime checkOut
-    );
-
+    @Query("SELECT r.checkIn, r.checkOut FROM Reservation r WHERE r.park.id = :parkId")
+    List<LocalTime[]> findReservationTimesByParkId(@Param("parkId") Long parkId);
 
     Page<Reservation> findByMember(Member member, Pageable pageable);
 
@@ -38,5 +35,13 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Optional<Reservation> findReservationAndPay(@Param("reservationUid") String reservationUid);
 
     List<Reservation> findByParkId(Long parkId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM Reservation r WHERE r.park = :park AND r.checkIn < :checkOut AND r.checkOut > :checkIn")
+    List<Reservation> findExistedReservationsWithLock(
+            @Param("park") Park park,
+            @Param("checkIn") LocalTime checkIn,
+            @Param("checkOut") LocalTime checkOut
+    );
 
 }
