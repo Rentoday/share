@@ -1,8 +1,7 @@
 package com.project.rentoday.domain.payment.service;
 
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.notification.dto.NotificationDto;
 import com.project.rentoday.domain.notification.service.MessageService;
@@ -69,7 +68,7 @@ public class PayService {
     @Transactional(readOnly = true)
     public Page<PayInfoResponse> getPaymentsByMember(String email, int page, int size) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
         Page<Reservation> reservations = reservationRepository.findByMemberAndPayIsNotNull(member, pageable);
 

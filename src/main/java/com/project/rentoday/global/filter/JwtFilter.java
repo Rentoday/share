@@ -2,8 +2,7 @@ package com.project.rentoday.global.filter;
 
 import com.project.rentoday.domain.member.dto.MemberDto;
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.member.sevice.CustomMemberDetails;
 import com.project.rentoday.global.jwt.exception.JwtErrorCode;
@@ -62,7 +61,7 @@ public class JwtFilter extends OncePerRequestFilter {
             String username = jwtService.getUsername(accessToken);
             String role = jwtService.getRole(accessToken);
             Member member = memberRepository.findByEmail(username)
-                    .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                    .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
             String password = member.getPassword();
 
             MemberDto.CreateDetails memberDto = new MemberDto.CreateDetails(username, role, password);

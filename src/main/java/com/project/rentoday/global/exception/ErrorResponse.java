@@ -1,5 +1,9 @@
 package com.project.rentoday.global.exception;
 
+import lombok.Getter;
+
+import java.sql.Timestamp;
+
 
 public class ErrorResponse {
 

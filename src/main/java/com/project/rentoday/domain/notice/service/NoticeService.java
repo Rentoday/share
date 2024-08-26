@@ -1,8 +1,7 @@
 package com.project.rentoday.domain.notice.service;
 
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.notice.dto.NoticeDto;
 import com.project.rentoday.domain.notice.entity.Notice;
@@ -53,7 +52,7 @@ public class NoticeService {
     //공지 작성
     public void createNotice(String email, NoticeDto.CreateRequest request) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
         Notice notice = Notice.createNotice()
                 .title(request.getTitle())
                 .content(request.getContent())

@@ -7,6 +7,7 @@ import com.project.rentoday.domain.member.exception.MemberErrorCode;
 import com.project.rentoday.domain.member.exception.MemberException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.global.file.service.FileUploadService;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;

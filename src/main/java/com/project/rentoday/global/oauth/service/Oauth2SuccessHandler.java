@@ -1,8 +1,7 @@
 package com.project.rentoday.global.oauth.service;
 
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.global.jwt.entity.RefreshToken;
 import com.project.rentoday.global.jwt.repository.RefreshRepository;
@@ -74,7 +73,7 @@ public class Oauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     //db에 refreshToken 저장
     private void saveRefreshToken(String email, String refreshToken) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
         Date date = new Date(System.currentTimeMillis() + 86400000L);
         RefreshToken refresh = new RefreshToken(refreshToken, member, date.toString());
         refreshRepository.save(refresh);

@@ -1,8 +1,7 @@
 package com.project.rentoday.domain.notification.service;
 
 import com.project.rentoday.domain.member.entity.Member;
-import com.project.rentoday.domain.member.exception.MemberErrorCode;
-import com.project.rentoday.domain.member.exception.MemberException;
+import com.project.rentoday.domain.member.exception.MemberNotFoundException;
 import com.project.rentoday.domain.member.repository.MemberRepository;
 import com.project.rentoday.domain.notification.dto.NotificationDto;
 import com.project.rentoday.domain.notification.entity.Notification;
@@ -37,7 +36,7 @@ public class NotificationService {
     //구독
     public SseEmitter subscribe(String email) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
 
         //기존 연결이 있다면 제거
         userEmitters.remove(email);
@@ -95,7 +94,7 @@ public class NotificationService {
     @Transactional
     public List<NotificationDto.ReadResponse> readAll(String email) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 멤버입니다."));
         List<Notification> notificationList = notificationRepository.findByMember(member);
         NotificationDto.ReadResponse readDto = new NotificationDto.ReadResponse();
         List<NotificationDto.ReadResponse> readResponse = null;

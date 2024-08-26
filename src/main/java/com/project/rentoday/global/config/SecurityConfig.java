@@ -75,7 +75,6 @@ public class SecurityConfig {
                                 configuration.setAllowedOrigins(Collections.singletonList("http://localhost:81"));
                                 //GET, POST등의 메서드 허용
                                 configuration.setAllowedMethods(Collections.singletonList("*"));
-                                //★★★★★★★★★★★★★★★★★★
                                 configuration.setAllowCredentials(true);
                                 //허용할 헤더
                                 configuration.setAllowedHeaders(Collections.singletonList("*"));
@@ -114,7 +113,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((auth) -> auth
                         //인증없이도 접근이 가능한 주소에 대한 설정
-                        .requestMatchers("/login", "/main", "/join", "/reissue", "/api/emailCheck", "/api/verification/**","/**").permitAll()
+                        .requestMatchers("/login", "/main", "/join", "/reissue", "/api/emailCheck", "/api/verification/**").permitAll()
                         //ADMIN 사용자만 접근이 가능한 주소에 대한 설정
                         .requestMatchers("/admin").hasRole("ADMIN")
                         //위의 접근 가능한 요청 주소를 제외한 모든 요청은 반드시 인증(로그인)되어야한다.
