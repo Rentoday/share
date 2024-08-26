@@ -40,7 +40,7 @@ public class CommentService {
         //댓글 작성자
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-        //댓글의 상품
+        //댓글 상품
         Park park = parkRepository.findById(id)
                 .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
 
@@ -62,7 +62,7 @@ public class CommentService {
         //댓글 작성자
         Member member = memberRepository.findByEmail(createRequest.getEmail())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND_ERROR));
-        //댓글의 상품
+        //댓글 상품
         Park park = parkRepository.findById(createRequest.getParkId())
                 .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
         //댓글 생성
@@ -87,7 +87,7 @@ public class CommentService {
         //원댓글
         Comment comment = commentRepository.findById(createReplyRequest.getParentId())
                 .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND_ERROR));
-        //댓글의 상품
+        //댓글 상품
         Park park = parkRepository.findById(comment.getPark().getId())
                 .orElseThrow(() -> new ParkIdNotFoundException("해당 주차 공간을 찾을 수 없습니다."));
 
